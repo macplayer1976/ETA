@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>產品品質檢驗記錄系統</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-gray: #f5f5f5;
+            --dark-gray: #7f8c8d;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: #333;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1, h2, h3 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            padding: 30px;
+        }
+        
+        .auth-form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .auth-form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+        }
+        
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 14px;
+            width: auto;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            list-style: none;
+            background-color: var(--light-gray);
+            overflow: hidden;
+        }
+        
+        .nav-tabs li {
+            flex: 1;
+        }
+        
+        .nav-tabs a {
+            display: block;
+            padding: 15px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-tabs a:hover, .nav-tabs a.active {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 25px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: var(--light-gray);
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .measurement-row input {
+            margin-right: 10px;
+        }
+        
+        .status-pass {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        .status-fail {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .dimension-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        
+        .card h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .card .number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .logout-btn {
+            background: var(--danger-color);
+            width: auto;
+            padding: 8px 15px;
+        }
+        
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            background-color: var(--success-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background-color: var(--danger-color);
+        }
+        
+        @media (max-width: 768px) {
+            .dimension-inputs {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 登录/注册页面 -->
+        <div id="auth-page" class="auth-container">
+            <div class="auth-form">
+                <h2>產品品質檢驗記錄系統</h2>
+                <div id="login-form">
+                    <h3>用戶登錄</h3>
+                    <div class="form-group">
+                        <label for="login-email">電子郵件</label>
+                        <input type="email" id="login-email" placeholder="輸入您的電子郵件">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">密碼</label>
+                        <input type="password" id="login-password" placeholder="輸入您的密碼">
+                    </div>
+                    <button id="login-btn">登錄</button>
+                    <p style="text-align: center; margin-top: 15px;">
+                        還沒有帳戶？ <a href="#" id="show-register">註冊新帳戶</a>
+                    </p>
+                </div>
+                
+                <div id="register-form" style="display: none;">
+                    <h3>用戶註冊</h3>
+                    <div class="form-group">
+                        <label for="register-name">姓名</label>
+                        <input type="text" id="register-name" placeholder="輸入您的姓名">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">電子郵件</label>
+                        <input type="email" id="register-email" placeholder="輸入您的電子郵件">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">密碼</label>
+                        <input type="password" id="register-password" placeholder="設定密碼（至少6位）">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm-password">確認密碼</label>
+                        <input type="password" id="register-confirm-password" placeholder="再次輸入密碼">
+                    </div>
+                    <button id="register-btn">註冊</button>
+                    <p style="text-align: center; margin-top: 15px;">
+                        已有帳戶？ <a href="#" id="show-login">返回登錄</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主应用页面（登录后显示） -->
+        <div id="app-page" style="display: none;">
+            <header>
+                <h1>產品品質檢驗記錄系統</h1>
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">YC</div>
+                    <div>
+                        <div id="user-name">歡迎, 楊檢驗員</div>
+                        <button class="logout-btn" id="logout-btn">登出</button>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="dashboard-cards">
+                <div class="card">
+                    <h3>本月檢驗次數</h3>
+                    <div class="number" id="month-count">0</div>
+                </div>
+                <div class="card">
+                    <h3>合格率</h3>
+                    <div class="number" id="pass-rate">0%</div>
+                </div>
+                <div class="card">
+                    <h3>待處理異常</h3>
+                    <div class="number" id="issue-count">0</div>
+                </div>
+            </div>
+            
+            <ul class="nav-tabs">
+                <li><a href="#new-record" class="active">新增檢驗記錄</a></li>
+                <li><a href="#history">歷史記錄查詢</a></li>
+                <li><a href="#specs">產品規格標準</a></li>
+                <li><a href="#profile">用戶資料</a></li>
+            </ul>
+            
+            <div id="new-record" class="tab-content active">
+                <h2>新增檢驗記錄</h2>
+                
+                <div class="form-group">
+                    <label for="product-number">產品圖號</label>
+                    <input type="text" id="product-number" placeholder="輸入產品圖號">
+                </div>
+                
+                <div class="form-group">
+                    <label for="batch-number">批號</label>
+                    <input type="text" id="batch-number" placeholder="輸入產品批號">
+                </div>
+                
+                <div class="form-group">
+                    <label for="inspection-date">檢驗日期</label>
+                    <input type="date" id="inspection-date">
+                </div>
+                
+                <h3>尺寸測量記錄</h3>
+                
+                <div id="measurements-container">
+                    <div class="dimension-inputs">
+                        <div class="form-group">
+                            <label>尺寸名稱</label>
+                            <input type="text" class="dimension-name" placeholder="例如: 長度">
+                        </div>
+                        <div class="form-group">
+                            <label>標準值</label>
+                            <input type="number" step="0.001" class="dimension-standard" placeholder="標準尺寸">
+                        </div>
+                        <div class="form-group">
+                            <label>上公差</label>
+                            <input type="number" step="0.001" class="dimension-upper-tol" placeholder="+0.000">
+                        </div>
+                        <div class="form-group">
+                            <label>下公差</label>
+                            <input type="number" step="0.001" class="dimension-lower-tol" placeholder="-0.000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>實際測量值</label>
+                        <input type="number" step="0.001" class="dimension-actual" placeholder="輸入實際測量值">
+                    </div>
+                    <button class="btn-add-dimension">新增尺寸項目</button>
+                    <hr>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">備註</label>
+                    <textarea id="notes" rows="3" placeholder="輸入檢驗備註信息"></textarea>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="btn-save" class="btn-success">儲存記錄</button>
+                    <button id="btn-reset">重新填寫</button>
+                </div>
+            </div>
+            
+            <div id="history" class="tab-content">
+                <h2>歷史記錄查詢</h2>
+                
+                <div class="form-group">
+                    <input type="text" id="search-input" placeholder="搜尋產品圖號或批號">
+                    <button id="btn-search" style="margin-top: 10px;">搜尋</button>
+                </div>
+                
+                <table id="records-table">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>產品圖號</th>
+                            <th>批號</th>
+                            <th>檢驗員</th>
+                            <th>結果</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="records-body">
+                        <!-- 记录将通过JavaScript动态添加 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="specs" class="tab-content">
+                <h2>產品規格標準</h2>
+                
+                <div class="form-group">
+                    <label for="spec-search">搜尋產品圖號</label>
+                    <input type="text" id="spec-search" placeholder="輸入產品圖號搜尋規格">
+                    <button id="btn-spec-search" style="margin-top: 10px;">搜尋</button>
+                </div>
+                
+                <div id="spec-details">
+                    <p>請輸入產品圖號以查看詳細規格要求，或<a href="#" id="upload-spec">上傳新規格文件</a></p>
+                </div>
+            </div>
+            
+            <div id="profile" class="tab-content">
+                <h2>用戶資料</h2>
+                
+                <div class="form-group">
+                    <label for="profile-name">姓名</label>
+                    <input type="text" id="profile-name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="profile-email">電子郵件</label>
+                    <input type="email" id="profile-email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="profile-department">部門</label>
+                    <input type="text" id="profile-department">
+                </div>
+                
+                <div class="form-group">
+                    <label for="profile-title">職稱</label>
+                    <input type="text" id="profile-title">
+                </div>
+                
+                <button id="btn-update-profile" class="btn-success">更新資料</button>
+                
+                <h3 style="margin-top: 30px;">變更密碼</h3>
+                
+                <div class="form-group">
+                    <label for="current-password">當前密碼</label>
+                    <input type="password" id="current-password" placeholder="輸入當前密碼">
+                </div>
+                
+                <div class="form-group">
+                    <label for="new-password">新密碼</label>
+                    <input type="password" id="new-password" placeholder="輸入新密碼">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm-new-password">確認新密碼</label>
+                    <input type="password" id="confirm-new-password" placeholder="再次輸入新密碼">
+                </div>
+                
+                <button id="btn-change-password">變更密碼</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // 模拟后端API
+        const api = {
+            // 用户相关操作
+            users: {
+                register: (userData) => {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            const users = JSON.parse(localStorage.getItem('users') || '[]');
+                            const existingUser = users.find(u => u.email === userData.email);
+                            
+                            if (existingUser) {
+                                reject({ message: '該電子郵件已被註冊' });
+                            } else {
+                                const newUser = {
+                                    id: Date.now().toString(),
+                                    ...userData,
+                                    createdAt: new Date().toISOString()
+                                };
+                                users.push(newUser);
+                                localStorage.setItem('users', JSON.stringify(users));
+                                resolve(newUser);
+                            }
+                        }, 500);
+                    });
+                },
+                
+                login: (email, password) => {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            const users = JSON.parse(localStorage.getItem('users') || '[]');
+                            const user = users.find(u => u.email === email && u.password === password);
+                            
+                            if (user) {
+                                resolve(user);
+                            } else {
+                                reject({ message: '電子郵件或密碼不正確' });
+                            }
+                        }, 500);
+                    });
+                },
+                
+                updateProfile: (userId, profileData) => {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            const users = JSON.parse(localStorage.getItem('users') || '[]');
+                            const userIndex = users.findIndex(u => u.id === userId);
+                            
+                            if (userIndex !== -1) {
+                                users[userIndex] = { ...users[userIndex], ...profileData };
+                                localStorage.setItem('users', JSON.stringify(users));
+                                resolve(users[userIndex]);
+                            } else {
+                                reject({ message: '用戶不存在' });
+                            }
+                        }, 500);
+                    });
+                },
+                
+                changePassword: (userId, currentPassword, newPassword) => {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            const users = JSON.parse(localStorage.getItem('users') || '[]');
+                            const userIndex = users.findIndex(u => u.id === userId);
+                            
+                            if (userIndex !== -1) {
+                                if (users[userIndex].password === currentPassword) {
+                                    users[userIndex].password = newPassword;
+                                    localStorage.setItem('users', JSON.stringify(users));
+                                    resolve({ message: '密碼更新成功' });
+                                } else {
+                                    reject({ message: '當前密碼不正確' });
+                                }
+                            } else {
+                                reject({ message: '用戶不存在' });
+                            }
+                        }, 500);
+                    });
+                }
+            },
+            
+            // 检验记录相关操作
+            records: {
+                create: (recordData) => {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            try {
+                                const records = JSON.parse(localStorage.getItem('records') || '[]');
+                                const newRecord = {
+                                    id: Date.now().toString(),
+                                    ...recordData,
+                                    createdAt: new Date().toISOString()
+                                };
+                                records.push(newRecord);
+                                localStorage.setItem('records', JSON.stringify(records));
+                                resolve(newRecord);
+                            } catch (error) {
+                                reject({ message: '創建記錄失敗' });
+                            }
+                        }, 500);
+                    });
+                },
+                
+                getAll: (userId) => {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            try {
+                                const records = JSON.parse(localStorage.getItem('records') || '[]');
+                                const userRecords = records.filter(r => r.userId === userId);
+                                resolve(userRecords);
+                            } catch (error) {
+                                reject({ message: '獲取記錄失敗' });
+                            }
+                        }, 500);
+                    });
+                },
+                
+                search: (userId, query) => {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            try {
+                                const records = JSON.parse(localStorage.getItem('records') || '[]');
+                                const userRecords = records.filter(r => 
+                                    r.userId === userId && 
+                                    (r.productNumber.includes(query) || r.batchNumber.includes(query))
+                                );
+                                resolve(userRecords);
+                            } catch (error) {
+                                reject({ message: '搜索記錄失敗' });
+                            }
+                        }, 500);
+                    });
+                },
+                
+                delete: (recordId) => {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            try {
+                                const records = JSON.parse(localStorage.getItem('records') || '[]');
+                                const filteredRecords = records.filter(r => r.id !== recordId);
+                                localStorage.setItem('records', JSON.stringify(filteredRecords));
+                                resolve({ message: '記錄刪除成功' });
+                            } catch (error) {
+                                reject({ message: '刪除記錄失敗' });
+                            }
+                        }, 500);
+                    });
+                }
+            }
+        };
+
+        // 应用状态管理
+        const state = {
+            currentUser: null,
+            records: []
+        };
+
+        // DOM 元素
+        const elements = {
+            authPage: document.getElementById('auth-page'),
+            appPage: document.getElementById('app-page'),
+            loginForm: document.getElementById('login-form'),
+            registerForm: document.getElementById('register-form'),
+            loginBtn: document.getElementById('login-btn'),
+            registerBtn: document.getElementById('register-btn'),
+            showRegister: document.getElementById('show-register'),
+            showLogin: document.getElementById('show-login'),
+            logoutBtn: document.getElementById('logout-btn'),
+            userAvatar: document.getElementById('user-avatar'),
+            userName: document.getElementById('user-name'),
+            monthCount: document.getElementById('month-count'),
+            passRate: document.getElementById('pass-rate'),
+            issueCount: document.getElementById('issue-count'),
+            recordsBody: document.getElementById('records-body'),
+            notification: document.getElementById('notification')
+        };
+
+        // 工具函数
+        const utils = {
+            showNotification: (message, isError = false) => {
+                elements.notification.textContent = message;
+                elements.notification.classList.add('show');
+                if (isError) {
+                    elements.notification.classList.add('error');
+                } else {
+                    elements.notification.classList.remove('error');
+                }
+                
+                setTimeout(() => {
+                    elements.notification.classList.remove('show');
+                }, 3000);
+            },
+            
+            formatDate: (dateString) => {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('zh-TW');
+            },
+            
+            calculatePassRate: (records) => {
+                if (records.length === 0) return 0;
+                const passCount = records.filter(r => r.status === 'pass').length;
+                return Math.round((passCount / records.length) * 100);
+            },
+            
+            getCurrentMonthRecords: (records) => {
+                const now = new Date();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
+                
+                return records.filter(record => {
+                    const recordDate = new Date(record.inspectionDate);
+                    return recordDate.getMonth() === currentMonth && 
+                           recordDate.getFullYear() === currentYear;
+                });
+            },
+            
+            getInitials: (name) => {
+                return name ? name.charAt(0) : 'U';
+            }
+        };
+
+        // 初始化应用
+        function initApp() {
+            // 检查是否有已登录的用户
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                state.currentUser = JSON.parse(savedUser);
+                showAppPage();
+                loadUserData();
+                loadRecords();
+            } else {
+                showAuthPage();
+            }
+            
+            bindEvents();
+        }
+
+        // 显示认证页面
+        function showAuthPage() {
+            elements.authPage.style.display = 'flex';
+            elements.appPage.style.display = 'none';
+        }
+
+        // 显示应用主页面
+        function showAppPage() {
+            elements.authPage.style.display = 'none';
+            elements.appPage.style.display = 'block';
+        }
+
+        // 加载用户数据
+        function loadUserData() {
+            if (state.currentUser) {
+                elements.userName.textContent = `歡迎, ${state.currentUser.name}`;
+                elements.userAvatar.textContent = utils.getInitials(state.currentUser.name);
+                
+                // 填充用户资料表单
+                document.getElementById('profile-name').value = state.currentUser.name;
+                document.getElementById('profile-email').value = state.currentUser.email;
+                document.getElementById('profile-department').value = state.currentUser.department || '';
+                document.getElementById('profile-title').value = state.currentUser.title || '';
+            }
+        }
+
+        // 加载检验记录
+        function loadRecords() {
+            if (!state.currentUser) return;
+            
+            api.records.getAll(state.currentUser.id)
+                .then(records => {
+                    state.records = records;
+                    updateDashboard(records);
+                    renderRecordsTable(records);
+                })
+                .catch(error => {
+                    utils.showNotification(error.message, true);
+                });
+        }
+
+        // 更新仪表板数据
+        function updateDashboard(records) {
+            // 本月检验次数
+            const monthRecords = utils.getCurrentMonthRecords(records);
+            elements.monthCount.textContent = monthRecords.length;
+            
+            // 合格率
+            const passRate = utils.calculatePassRate(records);
+            elements.passRate.textContent = `${passRate}%`;
+            
+            // 待处理异常（假设状态为fail的记录需要处理）
+            const issueRecords = records.filter(r => r.status === 'fail');
+            elements.issueCount.textContent = issueRecords.length;
+        }
+
+        // 渲染记录表格
+        function renderRecordsTable(records) {
+            elements.recordsBody.innerHTML = '';
+            
+            if (records.length === 0) {
+                elements.recordsBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center;">暫無檢驗記錄</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${utils.formatDate(record.inspectionDate)}</td>
+                    <td>${record.productNumber}</td>
+                    <td>${record.batchNumber}</td>
+                    <td>${state.currentUser.name}</td>
+                    <td class="${record.status === 'pass' ? 'status-pass' : 'status-fail'}">
+                        ${record.status === 'pass' ? '合格' : '不合格'}
+                    </td>
+                    <td>
+                        <button class="btn-small btn-view" data-id="${record.id}">查看</button>
+                        <button class="btn-small btn-danger btn-delete" data-id="${record.id}">刪除</button>
+                    </td>
+                `;
+                
+                elements.recordsBody.appendChild(row);
+            });
+            
+            // 绑定查看和删除按钮事件
+            document.querySelectorAll('.btn-view').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const recordId = btn.getAttribute('data-id');
+                    viewRecord(recordId);
+                });
+            });
+            
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const recordId = btn.getAttribute('data-id');
+                    deleteRecord(recordId);
+                });
+            });
+        }
+
+        // 查看记录详情
+        function viewRecord(recordId) {
+            const record = state.records.find(r => r.id === recordId);
+            if (record) {
+                alert(`產品圖號: ${record.productNumber}\n批號: ${record.batchNumber}\n檢驗日期: ${utils.formatDate(record.inspectionDate)}\n結果: ${record.status === 'pass' ? '合格' : '不合格'}`);
+            }
+        }
+
+        // 删除记录
+        function deleteRecord(recordId) {
+            if (confirm('確定要刪除這條記錄嗎？此操作無法撤銷。')) {
+                api.records.delete(recordId)
+                    .then(() => {
+                        utils.showNotification('記錄已刪除');
+                        loadRecords(); // 重新加载记录
+                    })
+                    .catch(error => {
+                        utils.showNotification(error.message, true);
+                    });
+            }
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 认证相关事件
+            elements.showRegister.addEventListener('click', (e) => {
+                e.preventDefault();
+                elements.loginForm.style.display = 'none';
+                elements.registerForm.style.display = 'block';
+            });
+            
+            elements.showLogin.addEventListener('click', (e) => {
+                e.preventDefault();
+                elements.registerForm.style.display = 'none';
+                elements.loginForm.style.display = 'block';
+            });
+            
+            elements.loginBtn.addEventListener('click', handleLogin);
+            elements.registerBtn.addEventListener('click', handleRegister);
+            elements.logoutBtn.addEventListener('click', handleLogout);
+            
+            // 检验记录相关事件
+            document.getElementById('btn-save').addEventListener('click', handleSaveRecord);
+            document.getElementById('btn-reset').addEventListener('click', handleResetForm);
+            document.getElementById('btn-search').addEventListener('click', handleSearchRecords);
+            
+            // 用户资料相关事件
+            document.getElementById('btn-update-profile').addEventListener('click', handleUpdateProfile);
+            document.getElementById('btn-change-password').addEventListener('click', handleChangePassword);
+            
+            // 标签页切换
+            document.querySelectorAll('.nav-tabs a').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = e.target.getAttribute('href').substring(1);
+                    
+                    // 更新活动标签
+                    document.querySelectorAll('.nav-tabs a').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    // 显示对应内容
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(target).classList.add('active');
+                });
+            });
+            
+            // 添加尺寸项目
+            document.querySelector('.btn-add-dimension').addEventListener('click', () => {
+                const container = document.getElementById('measurements-container');
+                const newMeasurement = container.firstElementChild.cloneNode(true);
+                
+                // 清空输入框
+                newMeasurement.querySelectorAll('input').forEach(input => {
+                    input.value = '';
+                });
+                
+                container.appendChild(newMeasurement);
+            });
+        }
+
+        // 处理登录
+        function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (!email || !password) {
+                utils.showNotification('請輸入電子郵件和密碼', true);
+                return;
+            }
+            
+            api.users.login(email, password)
+                .then(user => {
+                    state.currentUser = user;
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    showAppPage();
+                    loadUserData();
+                    loadRecords();
+                    utils.showNotification('登錄成功');
+                })
+                .catch(error => {
+                    utils.showNotification(error.message, true);
+                });
+        }
+
+        // 处理注册
+        function handleRegister() {
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            
+            if (!name || !email || !password || !confirmPassword) {
+                utils.showNotification('請填寫所有欄位', true);
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                utils.showNotification('密碼確認不一致', true);
+                return;
+            }
+            
+            if (password.length < 6) {
+                utils.showNotification('密碼長度至少需要6個字符', true);
+                return;
+            }
+            
+            api.users.register({ name, email, password })
+                .then(user => {
+                    state.currentUser = user;
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    showAppPage();
+                    loadUserData();
+                    utils.showNotification('註冊成功');
+                })
+                .catch(error => {
+                    utils.showNotification(error.message, true);
+                });
+        }
+
+        // 处理登出
+        function handleLogout() {
+            state.currentUser = null;
+            localStorage.removeItem('currentUser');
+            showAuthPage();
+            utils.showNotification('已登出');
+        }
+
+        // 处理保存记录
+        function handleSaveRecord() {
+            if (!state.currentUser) return;
+            
+            const productNumber = document.getElementById('product-number').value;
+            const batchNumber = document.getElementById('batch-number').value;
+            const inspectionDate = document.getElementById('inspection-date').value;
+            const notes = document.getElementById('notes').value;
+            
+            if (!productNumber || !batchNumber || !inspectionDate) {
+                utils.showNotification('請填寫必填欄位', true);
+                return;
+            }
+            
+            // 收集尺寸测量数据
+            const measurements = [];
+            const measurementElements = document.querySelectorAll('#measurements-container > div');
+            
+            measurementElements.forEach(measurementEl => {
+                const name = measurementEl.querySelector('.dimension-name').value;
+                const standard = measurementEl.querySelector('.dimension-standard').value;
+                const upperTol = measurementEl.querySelector('.dimension-upper-tol').value;
+                const lowerTol = measurementEl.querySelector('.dimension-lower-tol').value;
+                const actual = measurementEl.querySelector('.dimension-actual').value;
+                
+                if (name && standard && actual) {
+                    // 简单判断是否合格
+                    const numActual = parseFloat(actual);
+                    const numStandard = parseFloat(standard);
+                    const numUpperTol = parseFloat(upperTol || 0);
+                    const numLowerTol = parseFloat(lowerTol || 0);
+                    
+                    const upperLimit = numStandard + numUpperTol;
+                    const lowerLimit = numStandard + numLowerTol;
+                    
+                    const isPass = numActual >= lowerLimit && numActual <= upperLimit;
+                    
+                    measurements.push({
+                        name,
+                        standard: numStandard,
+                        upperTol: numUpperTol,
+                        lowerTol: numLowerTol,
+                        actual: numActual,
+                        status: isPass ? 'pass' : 'fail'
+                    });
+                }
+            });
+            
+            if (measurements.length === 0) {
+                utils.showNotification('請至少填寫一組完整的尺寸數據', true);
+                return;
+            }
+            
+            // 判断整体是否合格（所有尺寸都合格才算合格）
+            const overallStatus = measurements.every(m => m.status === 'pass') ? 'pass' : 'fail';
+            
+            const recordData = {
+                userId: state.currentUser.id,
+                productNumber,
+                batchNumber,
+                inspectionDate,
+                measurements,
+                notes,
+                status: overallStatus
+            };
+            
+            api.records.create(recordData)
+                .then(() => {
+                    utils.showNotification('檢驗記錄已保存');
+                    handleResetForm();
+                    loadRecords(); // 重新加载记录
+                })
+                .catch(error => {
+                    utils.showNotification(error.message, true);
+                });
+        }
+
+        // 处理重置表单
+        function handleResetForm() {
+            if (confirm('確定要清除所有已輸入的資料嗎？')) {
+                document.querySelectorAll('#new-record input, #new-record textarea').forEach(input => {
+                    input.value = '';
+                });
+                
+                // 只保留一组尺寸输入框
+                const container = document.getElementById('measurements-container');
+                while (container.children.length > 1) {
+                    container.removeChild(container.lastChild);
+                }
+            }
+        }
+
+        // 处理搜索记录
+        function handleSearchRecords() {
+            if (!state.currentUser) return;
+            
+            const query = document.getElementById('search-input').value;
+            
+            if (!query) {
+                loadRecords(); // 如果没有查询条件，加载所有记录
+                return;
+            }
+            
+            api.records.search(state.currentUser.id, query)
+                .then(records => {
+                    renderRecordsTable(records);
+                })
+                .catch(error => {
+                    utils.showNotification(error.message, true);
+                });
+        }
+
+        // 处理更新用户资料
+        function handleUpdateProfile() {
+            if (!state.currentUser) return;
+            
+            const name = document.getElementById('profile-name').value;
+            const email = document.getElementById('profile-email').value;
+            const department = document.getElementById('profile-department').value;
+            const title = document.getElementById('profile-title').value;
+            
+            if (!name || !email) {
+                utils.showNotification('請填寫姓名和電子郵件', true);
+                return;
+            }
+            
+            api.users.updateProfile(state.currentUser.id, { name, email, department, title })
+                .then(updatedUser => {
+                    state.currentUser = updatedUser;
+                    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                    loadUserData();
+                    utils.showNotification('個人資料已更新');
+                })
+                .catch(error => {
+                    utils.showNotification(error.message, true);
+                });
+        }
+
+        // 处理更改密码
+        function handleChangePassword() {
+            if (!state.currentUser) return;
+            
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmNewPassword = document.getElementById('confirm-new-password').value;
+            
+            if (!currentPassword || !newPassword || !confirmNewPassword) {
+                utils.showNotification('請填寫所有密碼欄位', true);
+                return;
+            }
+            
+            if (newPassword !== confirmNewPassword) {
+                utils.showNotification('新密碼確認不一致', true);
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                utils.showNotification('新密碼長度至少需要6個字符', true);
+                return;
+            }
+            
+            api.users.changePassword(state.currentUser.id, currentPassword, newPassword)
+                .then(() => {
+                    // 清空密码字段
+                    document.getElementById('current-password').value = '';
+                    document.getElementById('new-password').value = '';
+                    document.getElementById('confirm-new-password').value = '';
+                    
+                    utils.showNotification('密碼已更新');
+                })
+                .catch(error => {
+                    utils.showNotification(error.message, true);
+                });
+        }
+
+        // 初始化日期字段为今天
+        document.getElementById('inspection-date').valueAsDate = new Date();
+
+        // 启动应用
+        initApp();
+    </script>
+</body>
+</html>
