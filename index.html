@@ -310,6 +310,14 @@
             margin-bottom: 10px;
         }
         
+        .api-key-help {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
         @media (max-width: 768px) {
             .dimension-inputs {
                 grid-template-columns: 1fr 1fr;
@@ -345,6 +353,16 @@
                         <li>在下方輸入API金鑰並點擊"初始化系統"</li>
                         <li>完成後即可註冊帳號開始使用</li>
                     </ol>
+                    
+                    <div class="api-key-help">
+                        <h4>如何獲取API金鑰？</h4>
+                        <ol>
+                            <li>登入JSONBin.io後，點擊右上角您的用戶名</li>
+                            <li>選擇"API Keys"</li>
+                            <li>複製"Access Key"或"Secret Key"</li>
+                            <li>貼到下方的API金鑰欄位</li>
+                        </ol>
+                    </div>
                 </div>
                 
                 <div id="setup-form">
@@ -352,10 +370,12 @@
                     <div class="form-group">
                         <label for="api-key">JSONBin.io API 金鑰</label>
                         <input type="text" id="api-key" placeholder="輸入您的JSONBin.io API金鑰">
+                        <small>請確保複製完整的API金鑰，不要包含多余空格</small>
                     </div>
                     <div class="form-group">
                         <label for="bin-id">BIN ID (選填)</label>
                         <input type="text" id="bin-id" placeholder="留空將自動創建">
+                        <small>如果是現有的BIN，請輸入BIN ID</small>
                     </div>
                     <button id="setup-btn">初始化系統</button>
                     <p style="text-align: center; margin-top: 15px;">
@@ -667,21 +687,29 @@
                 return name ? name.charAt(0) : 'U';
             },
             
+            // 清理API密钥中的特殊字符
+            cleanApiKey: (key) => {
+                return key ? key.replace(/[^\x00-\x7F]/g, "").trim() : '';
+            },
+            
             // 從伺服器獲取數據
             fetchData: async () => {
                 if (!config.binId) {
                     throw new Error('尚未設置BIN ID');
                 }
                 
+                const cleanedApiKey = utils.cleanApiKey(config.apiKey);
+                
                 try {
                     const response = await fetch(`${config.baseURL}/${config.binId}`, {
                         headers: {
-                            'X-Master-Key': config.apiKey
+                            'X-Master-Key': cleanedApiKey,
+                            'Content-Type': 'application/json'
                         }
                     });
                     
                     if (!response.ok) {
-                        throw new Error('獲取數據失敗');
+                        throw new Error('獲取數據失敗: ' + response.status);
                     }
                     
                     const data = await response.json();
@@ -698,18 +726,20 @@
                     throw new Error('尚未設置BIN ID');
                 }
                 
+                const cleanedApiKey = utils.cleanApiKey(config.apiKey);
+                
                 try {
                     const response = await fetch(`${config.baseURL}/${config.binId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-Master-Key': config.apiKey
+                            'X-Master-Key': cleanedApiKey
                         },
                         body: JSON.stringify(newData)
                     });
                     
                     if (!response.ok) {
-                        throw new Error('更新數據失敗');
+                        throw new Error('更新數據失敗: ' + response.status);
                     }
                     
                     return await response.json();
@@ -721,19 +751,22 @@
             
             // 創建新的BIN
             createBin: async (initialData = { users: [], records: [] }) => {
+                const cleanedApiKey = utils.cleanApiKey(config.apiKey);
+                
                 try {
                     const response = await fetch(config.baseURL, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-Master-Key': config.apiKey,
-                            'X-Bin-Name': '產品檢驗記錄系統數據'
+                            'X-Master-Key': cleanedApiKey,
+                            'X-Bin-Name': 'Product Inspection System Data'
                         },
                         body: JSON.stringify(initialData)
                     });
                     
                     if (!response.ok) {
-                        throw new Error('創建數據存儲失敗');
+                        const errorText = await response.text();
+                        throw new Error('創建數據存儲失敗: ' + response.status + ' - ' + errorText);
                     }
                     
                     const data = await response.json();
@@ -773,7 +806,7 @@
                         elements.loginForm.style.display = 'block';
                     }
                 } catch (error) {
-                    utils.showNotification('加載數據失敗，請檢查API金鑰和BIN ID', true);
+                    utils.showNotification('加載數據失敗，請檢查API金鑰和BIN ID: ' + error.message, true);
                     showSetupForm();
                 }
             } else {
@@ -991,7 +1024,7 @@
 
         // 處理系統設置
         async function handleSetup() {
-            const apiKey = document.getElementById('api-key').value;
+            let apiKey = document.getElementById('api-key').value;
             let binId = document.getElementById('bin-id').value;
             
             if (!apiKey) {
@@ -1000,12 +1033,16 @@
             }
             
             try {
+                // 清理API密钥
+                apiKey = utils.cleanApiKey(apiKey);
                 config.apiKey = apiKey;
                 
                 // 如果沒有提供BIN ID，則創建一個新的
                 if (!binId) {
                     binId = await utils.createBin();
                     utils.showNotification('已創建新的數據存儲空間');
+                } else {
+                    binId = binId.trim();
                 }
                 
                 config.binId = binId;
