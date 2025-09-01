@@ -318,6 +318,17 @@
             border-radius: 4px;
         }
         
+        .alternative-options {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .alternative-options h4 {
+            margin-bottom: 10px;
+        }
+        
         @media (max-width: 768px) {
             .dimension-inputs {
                 grid-template-columns: 1fr 1fr;
@@ -359,7 +370,7 @@
                         <ol>
                             <li>登入JSONBin.io後，點擊右上角您的用戶名</li>
                             <li>選擇"API Keys"</li>
-                            <li>複製"Access Key"或"Secret Key"</li>
+                            <li>複製"Secret Key"（不是Access Key）</li>
                             <li>貼到下方的API金鑰欄位</li>
                         </ol>
                     </div>
@@ -381,6 +392,13 @@
                     <p style="text-align: center; margin-top: 15px;">
                         已經初始化？ <a href="#" id="show-login-after-setup">前往登錄</a>
                     </p>
+                </div>
+                
+                <div class="alternative-options">
+                    <h4>如果JSONBin.io遇到問題，可以使用以下替代方案：</h4>
+                    <p>我們已經內建了備用數據存儲方案，點擊下方按鈕使用本地存儲模式：</p>
+                    <button id="use-local-storage" class="btn-success" style="margin-top: 10px;">使用本地存儲模式</button>
+                    <small>注意：本地存儲模式的數據不會在不同設備間同步</small>
                 </div>
                 
                 <div id="login-form" style="display: none;">
@@ -433,6 +451,7 @@
                     <div class="user-avatar" id="user-avatar">YC</div>
                     <div>
                         <div id="user-name">歡迎, 楊檢驗員</div>
+                        <div id="storage-mode" style="font-size: 12px; color: #7f8c8d;">存儲模式: <span id="storage-type">JSONBin.io</span></div>
                         <button class="logout-btn" id="logout-btn">登出</button>
                     </div>
                 </div>
@@ -611,7 +630,8 @@
         const config = {
             binId: localStorage.getItem('binId') || '',
             apiKey: localStorage.getItem('apiKey') || '',
-            baseURL: 'https://api.jsonbin.io/v3/b'
+            baseURL: 'https://api.jsonbin.io/v3/b',
+            useLocalStorage: localStorage.getItem('useLocalStorage') === 'true' || false
         };
 
         // 應用狀態管理
@@ -641,7 +661,9 @@
             passRate: document.getElementById('pass-rate'),
             issueCount: document.getElementById('issue-count'),
             recordsBody: document.getElementById('records-body'),
-            notification: document.getElementById('notification')
+            notification: document.getElementById('notification'),
+            useLocalStorageBtn: document.getElementById('use-local-storage'),
+            storageType: document.getElementById('storage-type')
         };
 
         // 工具函數
@@ -689,11 +711,15 @@
             
             // 清理API密钥中的特殊字符
             cleanApiKey: (key) => {
-                return key ? key.replace(/[^\x00-\x7F]/g, "").trim() : '';
+                return key ? key.replace(/[^\x20-\x7E]/g, "").trim() : '';
             },
             
             // 從伺服器獲取數據
             fetchData: async () => {
+                if (config.useLocalStorage) {
+                    return utils.fetchFromLocalStorage();
+                }
+                
                 if (!config.binId) {
                     throw new Error('尚未設置BIN ID');
                 }
@@ -716,12 +742,30 @@
                     return data.record;
                 } catch (error) {
                     console.error('獲取數據錯誤:', error);
-                    throw error;
+                    // 如果遠程獲取失敗，嘗試從本地存儲獲取
+                    try {
+                        return utils.fetchFromLocalStorage();
+                    } catch (localError) {
+                        throw error;
+                    }
                 }
+            },
+            
+            // 從本地存儲獲取數據
+            fetchFromLocalStorage: () => {
+                const data = localStorage.getItem('inspectionSystemData');
+                if (data) {
+                    return JSON.parse(data);
+                }
+                return { users: [], records: [] };
             },
             
             // 更新伺服器數據
             updateData: async (newData) => {
+                if (config.useLocalStorage) {
+                    return utils.updateLocalStorage(newData);
+                }
+                
                 if (!config.binId) {
                     throw new Error('尚未設置BIN ID');
                 }
@@ -742,15 +786,34 @@
                         throw new Error('更新數據失敗: ' + response.status);
                     }
                     
+                    // 同時更新本地存儲作為備份
+                    utils.updateLocalStorage(newData);
+                    
                     return await response.json();
                 } catch (error) {
                     console.error('更新數據錯誤:', error);
-                    throw error;
+                    // 如果遠程更新失敗，嘗試更新本地存儲
+                    try {
+                        return utils.updateLocalStorage(newData);
+                    } catch (localError) {
+                        throw error;
+                    }
                 }
+            },
+            
+            // 更新本地存儲數據
+            updateLocalStorage: (newData) => {
+                localStorage.setItem('inspectionSystemData', JSON.stringify(newData));
+                return { metadata: { id: 'local-storage' } };
             },
             
             // 創建新的BIN
             createBin: async (initialData = { users: [], records: [] }) => {
+                if (config.useLocalStorage) {
+                    utils.updateLocalStorage(initialData);
+                    return 'local-storage';
+                }
+                
                 const cleanedApiKey = utils.cleanApiKey(config.apiKey);
                 
                 try {
@@ -773,7 +836,11 @@
                     return data.metadata.id;
                 } catch (error) {
                     console.error('創建BIN錯誤:', error);
-                    throw error;
+                    // 如果創建遠端BIN失敗，使用本地存儲
+                    config.useLocalStorage = true;
+                    localStorage.setItem('useLocalStorage', 'true');
+                    utils.updateLocalStorage(initialData);
+                    return 'local-storage';
                 }
             }
         };
@@ -785,7 +852,26 @@
             const savedApiKey = localStorage.getItem('apiKey');
             const savedBinId = localStorage.getItem('binId');
             
-            if (savedApiKey && savedBinId) {
+            // 更新存儲模式顯示
+            elements.storageType.textContent = config.useLocalStorage ? '本地存儲' : 'JSONBin.io';
+            
+            if (config.useLocalStorage) {
+                // 使用本地存儲模式
+                const data = utils.fetchFromLocalStorage();
+                state.users = data.users || [];
+                state.records = data.records || [];
+                
+                if (savedUser) {
+                    state.currentUser = JSON.parse(savedUser);
+                    showAppPage();
+                    loadUserData();
+                    updateDashboard(state.records);
+                    renderRecordsTable(state.records);
+                } else {
+                    elements.setupForm.style.display = 'none';
+                    elements.loginForm.style.display = 'block';
+                }
+            } else if (savedApiKey && savedBinId) {
                 config.apiKey = savedApiKey;
                 config.binId = savedBinId;
                 
@@ -980,6 +1066,7 @@
             elements.loginBtn.addEventListener('click', handleLogin);
             elements.registerBtn.addEventListener('click', handleRegister);
             elements.logoutBtn.addEventListener('click', handleLogout);
+            elements.useLocalStorageBtn.addEventListener('click', handleUseLocalStorage);
             
             // 檢驗記錄相關事件
             document.getElementById('btn-save').addEventListener('click', handleSaveRecord);
@@ -1022,6 +1109,22 @@
             });
         }
 
+        // 處理使用本地存儲
+        function handleUseLocalStorage() {
+            config.useLocalStorage = true;
+            localStorage.setItem('useLocalStorage', 'true');
+            elements.storageType.textContent = '本地存儲';
+            
+            // 初始化本地數據
+            const data = utils.fetchFromLocalStorage();
+            state.users = data.users || [];
+            state.records = data.records || [];
+            
+            utils.showNotification('已切換到本地存儲模式');
+            elements.setupForm.style.display = 'none';
+            elements.loginForm.style.display = 'block';
+        }
+
         // 處理系統設置
         async function handleSetup() {
             let apiKey = document.getElementById('api-key').value;
@@ -1050,6 +1153,9 @@
                 // 保存配置到本地存儲
                 localStorage.setItem('apiKey', apiKey);
                 localStorage.setItem('binId', binId);
+                localStorage.setItem('useLocalStorage', 'false');
+                config.useLocalStorage = false;
+                elements.storageType.textContent = 'JSONBin.io';
                 
                 // 嘗試加載數據
                 const data = await utils.fetchData();
