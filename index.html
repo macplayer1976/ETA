@@ -1,1745 +1,597 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>產品品質檢驗記錄系統</title>
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #2ecc71;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
-            --light-gray: #f5f5f5;
-            --dark-gray: #7f8c8d;
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
-        }
-        
-        body {
-            background-color: #f9f9f9;
-            color: #333;
-            line-height: 1.6;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        h1, h2, h3 {
-            margin-bottom: 0.5rem;
-        }
-        
-        .auth-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 400px;
-            padding: 30px;
-        }
-        
-        .auth-form {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        
-        .auth-form h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: var(--primary-color);
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            transition: border 0.3s;
-        }
-        
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--secondary-color);
-            outline: none;
-        }
-        
-        button {
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 12px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-            width: 100%;
-        }
-        
-        button:hover {
-            background-color: #2980b9;
-        }
-        
-        .btn-danger {
-            background-color: var(--danger-color);
-        }
-        
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-        
-        .btn-success {
-            background-color: var(--success-color);
-        }
-        
-        .btn-success:hover {
-            background-color: #27ae60;
-        }
-        
-        .btn-small {
-            padding: 8px 12px;
-            font-size: 14px;
-            width: auto;
-        }
-        
-        .nav-tabs {
-            display: flex;
-            list-style: none;
-            background-color: var(--light-gray);
-            overflow: hidden;
-        }
-        
-        .nav-tabs li {
-            flex: 1;
-        }
-        
-        .nav-tabs a {
-            display: block;
-            padding: 15px;
-            text-align: center;
-            text-decoration: none;
-            color: var(--primary-color);
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        
-        .nav-tabs a:hover, .nav-tabs a.active {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-        
-        .tab-content {
-            display: none;
-            padding: 25px;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        th {
-            background-color: var(--light-gray);
-            font-weight: bold;
-        }
-        
-        tr:hover {
-            background-color: #f9f9f9;
-        }
-        
-        .status-pass {
-            color: var(--success-color);
-            font-weight: bold;
-        }
-        
-        .status-fail {
-            color: var(--danger-color);
-            font-weight: bold;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .dimension-inputs {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--secondary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .dashboard-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            text-align: center;
-        }
-        
-        .card h3 {
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-        
-        .card .number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--secondary-color);
-        }
-        
-        .logout-btn {
-            background: var(--danger-color);
-            width: auto;
-            padding: 8px 15px;
-        }
-        
-        .logout-btn:hover {
-            background: #c0392b;
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 5px;
-            color: white;
-            background-color: var(--success-color);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transform: translateX(100%);
-            transition: transform 0.3s;
-            z-index: 1000;
-        }
-        
-        .notification.show {
-            transform: translateX(0);
-        }
-        
-        .notification.error {
-            background-color: var(--danger-color);
-        }
-        
-        .setup-guide {
-            background: #e8f4f8;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        
-        .setup-steps {
-            margin: 15px 0;
-            padding-left: 20px;
-        }
-        
-        .setup-steps li {
-            margin-bottom: 10px;
-        }
-        
-        .api-key-help {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 10px 15px;
-            margin: 15px 0;
-            border-radius: 4px;
-        }
-        
-        .alternative-options {
-            background: #e8f4f8;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        
-        .alternative-options h4 {
-            margin-bottom: 10px;
-        }
-        
-        .sync-section {
-            background: #e8f4f8;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        
-        .config-code {
-            font-family: monospace;
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 4px;
-            word-break: break-all;
-            margin: 10px 0;
-        }
-        
-        .copy-btn {
-            background: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .dimension-inputs {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .nav-tabs {
-                flex-direction: column;
-            }
-            
-            .dashboard-cards {
-                grid-template-columns: 1fr;
-            }
-            
-            header {
-                flex-direction: column;
-                gap: 15px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>產品品質檢驗記錄系統（強化版）</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --success-color: #2ecc71;
+      --warning-color: #f39c12;
+      --danger-color: #e74c3c;
+      --light-gray: #f5f5f5;
+      --dark-gray: #7f8c8d;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Microsoft JhengHei','微軟正黑體', Arial, sans-serif; }
+    body { background: linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%); min-height: 100vh; padding: 20px; color:#333; }
+    .container { width:100%; max-width:1200px; margin:0 auto; background:#fff; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,.1); overflow:hidden; }
+    header { background:var(--primary-color); color:#fff; padding:1rem; display:flex; justify-content:space-between; align-items:center; }
+    h1,h2,h3{ margin-bottom:.5rem; }
+
+    .auth-container { display:flex; justify-content:center; align-items:center; min-height:400px; padding:30px; }
+    .auth-form { background:#fff; padding:30px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,.1); width:100%; max-width:420px; }
+    .auth-form h2 { text-align:center; margin-bottom:20px; color:var(--primary-color); }
+
+    .form-group { margin-bottom:16px; }
+    label { display:block; margin-bottom:6px; font-weight:bold; }
+    input,select,textarea { width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-size:16px; transition:border .2s; }
+    input:focus,select:focus,textarea:focus{ border-color:var(--secondary-color); outline:none; }
+
+    button { background:var(--secondary-color); color:#fff; border:none; padding:12px 15px; border-radius:6px; cursor:pointer; font-size:16px; transition:filter .2s; }
+    button:hover{ filter:brightness(.95); }
+    .btn-danger{ background:var(--danger-color);} .btn-success{ background:var(--success-color);} .btn-small{ padding:6px 10px; font-size:14px; width:auto; }
+
+    .nav-tabs { display:flex; list-style:none; background:var(--light-gray); overflow:auto; }
+    .nav-tabs a { display:block; padding:14px 16px; text-decoration:none; color:var(--primary-color); font-weight:700; }
+    .nav-tabs a.active, .nav-tabs a:hover { background:var(--secondary-color); color:#fff; }
+
+    .tab-content{ display:none; padding:24px; } .tab-content.active{ display:block; }
+
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th,td { padding:12px 14px; text-align:left; border-bottom:1px solid #eee; }
+    th { background:var(--light-gray); }
+    tr:hover { background:#fafafa; }
+    .status-pass{ color:var(--success-color); font-weight:bold; } .status-fail{ color:var(--danger-color); font-weight:bold; }
+
+    .dashboard-cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin:20px; }
+    .card{ background:#fff; border-radius:10px; padding:20px; box-shadow:0 4px 6px rgba(0,0,0,.05); text-align:center; }
+    .card h3{ color:var(--primary-color); margin-bottom:8px; } .card .number{ font-size:2.2rem; font-weight:800; color:var(--secondary-color); }
+
+    .user-info{ display:flex; align-items:center; gap:10px; }
+    .user-avatar{ width:40px; height:40px; border-radius:50%; background:var(--secondary-color); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; }
+
+    .notification{ position:fixed; top:20px; right:20px; padding:14px 18px; border-radius:8px; color:#fff; background:var(--success-color); box-shadow:0 4px 6px rgba(0,0,0,.1); transform:translateX(120%); transition:transform .25s; z-index:1000; }
+    .notification.show{ transform:translateX(0); } .notification.error{ background:var(--danger-color); }
+
+    .measurement-item{ border:1px dashed #ddd; border-radius:10px; padding:12px; margin-bottom:12px; background:#fcfcfc; }
+    .measurement-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .measurement-actions{ display:flex; gap:8px; margin-top:10px; }
+
+    .pagination{ margin-top:12px; display:flex; gap:8px; align-items:center; }
+
+    @media (max-width:768px){ .measurement-grid{ grid-template-columns:repeat(2,1fr); }
+      .dashboard-cards{ grid-template-columns:1fr; }
+      header{ flex-direction:column; gap:12px; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 登录/注册页面 -->
-        <div id="auth-page" class="auth-container">
-            <div class="auth-form">
-                <h2>產品品質檢驗記錄系統</h2>
-                
-                <div class="setup-guide">
-                    <h3>多設備同步設定</h3>
-                    <p>為了在不同設備間同步數據，您需要在每個設備上使用相同的API金鑰和BIN ID。</p>
-                    
-                    <div class="sync-section">
-                        <h4>從其他設備導入配置</h4>
-                        <div class="form-group">
-                            <label for="config-code">配置代碼</label>
-                            <textarea id="config-code" rows="4" placeholder="從其他設備獲取的配置代碼"></textarea>
-                        </div>
-                        <button id="import-config" class="btn-success">導入配置</button>
-                    </div>
-                    
-                    <div class="sync-section">
-                        <h4>導出配置到其他設備</h4>
-                        <p>如果您已經在其他設備上設置過系統，可以點擊下方按鈕生成配置代碼：</p>
-                        <button id="export-config" class="btn-success">生成配置代碼</button>
-                        <div id="config-display" style="display: none; margin-top: 15px;">
-                            <p>請複製以下代碼到您的新設備：</p>
-                            <div class="config-code" id="config-code-display"></div>
-                            <button class="copy-btn" id="copy-config">複製代碼</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="setup-form">
-                    <h3>系統初始化</h3>
-                    <div class="form-group">
-                        <label for="api-key">JSONBin.io API 金鑰</label>
-                        <input type="text" id="api-key" placeholder="輸入您的JSONBin.io API金鑰">
-                    </div>
-                    <div class="form-group">
-                        <label for="bin-id">BIN ID (選填)</label>
-                        <input type="text" id="bin-id" placeholder="留空將自動創建">
-                    </div>
-                    <button id="setup-btn">初始化系統</button>
-                    <p style="text-align: center; margin-top: 15px;">
-                        已經初始化？ <a href="#" id="show-login-after-setup">前往登錄</a>
-                    </p>
-                </div>
-                
-                <div class="alternative-options">
-                    <h4>如果JSONBin.io遇到問題，可以使用以下替代方案：</h4>
-                    <p>我們已經內建了備用數據存儲方案，點擊下方按鈕使用本地存儲模式：</p>
-                    <button id="use-local-storage" class="btn-success" style="margin-top: 10px;">使用本地存儲模式</button>
-                    <small>注意：本地存儲模式的數據不會在不同設備間同步</small>
-                </div>
-                
-                <div id="login-form" style="display: none;">
-                    <h3>用戶登錄</h3>
-                    <div class="form-group">
-                        <label for="login-email">電子郵件</label>
-                        <input type="email" id="login-email" placeholder="輸入您的電子郵件">
-                    </div>
-                    <div class="form-group">
-                        <label for="login-password">密碼</label>
-                        <input type="password" id="login-password" placeholder="輸入您的密碼">
-                    </div>
-                    <button id="login-btn">登錄</button>
-                    <p style="text-align: center; margin-top: 15px;">
-                        還沒有帳戶？ <a href="#" id="show-register">註冊新帳戶</a>
-                    </p>
-                </div>
-                
-                <div id="register-form" style="display: none;">
-                    <h3>用戶註冊</h3>
-                    <div class="form-group">
-                        <label for="register-name">姓名</label>
-                        <input type="text" id="register-name" placeholder="輸入您的姓名">
-                    </div>
-                    <div class="form-group">
-                        <label for="register-email">電子郵件</label>
-                        <input type="email" id="register-email" placeholder="輸入您的電子郵件">
-                    </div>
-                    <div class="form-group">
-                        <label for="register-password">密碼</label>
-                        <input type="password" id="register-password" placeholder="設定密碼（至少6位）">
-                    </div>
-                    <div class="form-group">
-                        <label for="register-confirm-password">確認密碼</label>
-                        <input type="password" id="register-confirm-password" placeholder="再次輸入密碼">
-                    </div>
-                    <button id="register-btn">註冊</button>
-                    <p style="text-align: center; margin-top: 15px;">
-                        已有帳戶？ <a href="#" id="show-login">返回登錄</a>
-                    </p>
-                </div>
-            </div>
+  <div class="container">
+    <!-- 登入 / 註冊 -->
+    <div id="auth-page" class="auth-container">
+      <div class="auth-form">
+        <h2>產品品質檢驗記錄系統</h2>
+
+        <div class="form-group" id="setup-guide">
+          <div style="background:#e8f4f8;border-radius:10px;padding:14px 16px;">
+            <h3>首次使用設定</h3>
+            <ol style="margin:10px 0 0 20px;">
+              <li>到 <a href="https://jsonbin.io/" target="_blank" rel="noopener">JSONBin.io</a> 註冊</li>
+              <li>取得 API Key（暫放前端僅供測試，<b>正式環境需改走後端代理！</b>）</li>
+              <li>輸入 API Key 與 BIN ID（可留空自動建立）</li>
+            </ol>
+          </div>
         </div>
-        
-        <!-- 主应用页面（登录后显示） -->
-        <div id="app-page" style="display: none;">
-            <header>
-                <h1>產品品質檢驗記錄系統</h1>
-                <div class="user-info">
-                    <div class="user-avatar" id="user-avatar">YC</div>
-                    <div>
-                        <div id="user-name">歡迎, 楊檢驗員</div>
-                        <div id="storage-mode" style="font-size: 12px; color: #7f8c8d;">存儲模式: <span id="storage-type">JSONBin.io</span></div>
-                        <button class="logout-btn" id="logout-btn">登出</button>
-                    </div>
-                </div>
-            </header>
-            
-            <div class="dashboard-cards">
-                <div class="card">
-                    <h3>本月檢驗次數</h3>
-                    <div class="number" id="month-count">0</div>
-                </div>
-                <div class="card">
-                    <h3>合格率</h3>
-                    <div class="number" id="pass-rate">0%</div>
-                </div>
-                <div class="card">
-                    <h3>待處理異常</h3>
-                    <div class="number" id="issue-count">0</div>
-                </div>
-            </div>
-            
-            <ul class="nav-tabs">
-                <li><a href="#new-record" class="active">新增檢驗記錄</a></li>
-                <li><a href="#history">歷史記錄查詢</a></li>
-                <li><a href="#specs">產品規格標準</a></li>
-                <li><a href="#profile">用戶資料</a></li>
-                <li><a href="#sync">設備同步</a></li>
-            </ul>
-            
-            <div id="new-record" class="tab-content active">
-                <h2>新增檢驗記錄</h2>
-                
-                <div class="form-group">
-                    <label for="product-number">產品圖號</label>
-                    <input type="text" id="product-number" placeholder="輸入產品圖號">
-                </div>
-                
-                <div class="form-group">
-                    <label for="batch-number">批號</label>
-                    <input type="text" id="batch-number" placeholder="輸入產品批號">
-                </div>
-                
-                <div class="form-group">
-                    <label for="inspection-date">檢驗日期</label>
-                    <input type="date" id="inspection-date">
-                </div>
-                
-                <h3>尺寸測量記錄</h3>
-                
-                <div id="measurements-container">
-                    <div class="dimension-inputs">
-                        <div class="form-group">
-                            <label>尺寸名稱</label>
-                            <input type="text" class="dimension-name" placeholder="例如: 長度">
-                        </div>
-                        <div class="form-group">
-                            <label>標準值</label>
-                            <input type="number" step="0.001" class="dimension-standard" placeholder="標準尺寸">
-                        </div>
-                        <div class="form-group">
-                            <label>上公差</label>
-                            <input type="number" step="0.001" class="dimension-upper-tol" placeholder="+0.000">
-                        </div>
-                        <div class="form-group">
-                            <label>下公差</label>
-                            <input type="number" step="0.001" class="dimension-lower-tol" placeholder="-0.000">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>實際測量值</label>
-                        <input type="number" step="0.001" class="dimension-actual" placeholder="輸入實際測量值">
-                    </div>
-                    <button class="btn-add-dimension">新增尺寸項目</button>
-                    <hr>
-                </div>
-                
-                <div class="form-group">
-                    <label for="notes">備註</label>
-                    <textarea id="notes" rows="3" placeholder="輸入檢驗備註信息"></textarea>
-                </div>
-                
-                <div class="action-buttons">
-                    <button id="btn-save" class="btn-success">儲存記錄</button>
-                    <button id="btn-reset">重新填寫</button>
-                </div>
-            </div>
-            
-            <div id="history" class="tab-content">
-                <h2>歷史記錄查詢</h2>
-                
-                <div class="form-group">
-                    <input type="text" id="search-input" placeholder="搜尋產品圖號或批號">
-                    <button id="btn-search" style="margin-top: 10px;">搜尋</button>
-                </div>
-                
-                <table id="records-table">
-                    <thead>
-                        <tr>
-                            <th>日期</th>
-                            <th>產品圖號</th>
-                            <th>批號</th>
-                            <th>檢驗員</th>
-                            <th>結果</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="records-body">
-                        <!-- 记录将通过JavaScript动态添加 -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <div id="specs" class="tab-content">
-                <h2>產品規格標準</h2>
-                
-                <div class="form-group">
-                    <label for="spec-search">搜尋產品圖號</label>
-                    <input type="text" id="spec-search" placeholder="輸入產品圖號搜尋規格">
-                    <button id="btn-spec-search" style="margin-top: 10px;">搜尋</button>
-                </div>
-                
-                <div id="spec-details">
-                    <p>請輸入產品圖號以查看詳細規格要求，或<a href="#" id="upload-spec">上傳新規格文件</a></p>
-                </div>
-            </div>
-            
-            <div id="profile" class="tab-content">
-                <h2>用戶資料</h2>
-                
-                <div class="form-group">
-                    <label for="profile-name">姓名</label>
-                    <input type="text" id="profile-name">
-                </div>
-                
-                <div class="form-group">
-                    <label for="profile-email">電子郵件</label>
-                    <input type="email" id="profile-email">
-                </div>
-                
-                <div class="form-group">
-                    <label for="profile-department">部門</label>
-                    <input type="text" id="profile-department">
-                </div>
-                
-                <div class="form-group">
-                    <label for="profile-title">職稱</label>
-                    <input type="text" id="profile-title">
-                </div>
-                
-                <button id="btn-update-profile" class="btn-success">更新資料</button>
-                
-                <h3 style="margin-top: 30px;">變更密碼</h3>
-                
-                <div class="form-group">
-                    <label for="current-password">當前密碼</label>
-                    <input type="password" id="current-password" placeholder="輸入當前密碼">
-                </div>
-                
-                <div class="form-group">
-                    <label for="new-password">新密碼</label>
-                    <input type="password" id="new-password" placeholder="輸入新密碼">
-                </div>
-                
-                <div class="form-group">
-                    <label for="confirm-new-password">確認新密碼</label>
-                    <input type="password" id="confirm-new-password" placeholder="再次輸入新密碼">
-                </div>
-                
-                <button id="btn-change-password">變更密碼</button>
-            </div>
-            
-            <div id="sync" class="tab-content">
-                <h2>設備同步設置</h2>
-                
-                <div class="sync-section">
-                    <h3>導出配置</h3>
-                    <p>生成配置代碼，用於在其他設備上同步設置：</p>
-                    <button id="generate-config" class="btn-success">生成配置代碼</button>
-                    
-                    <div id="config-result" style="display: none; margin-top: 20px;">
-                        <p>請複製以下配置代碼到您的新設備：</p>
-                        <div class="config-code" id="config-output"></div>
-                        <button class="copy-btn" id="copy-config-btn">複製代碼</button>
-                    </div>
-                </div>
-                
-                <div class="sync-section">
-                    <h3>導入配置</h3>
-                    <p>從其他設備導入配置代碼：</p>
-                    <div class="form-group">
-                        <label for="import-config-code">配置代碼</label>
-                        <textarea id="import-config-code" rows="4" placeholder="貼上從其他設備獲取的配置代碼"></textarea>
-                    </div>
-                    <button id="import-config-btn" class="btn-success">導入配置</button>
-                </div>
-                
-                <div class="sync-section">
-                    <h3>當前配置信息</h3>
-                    <div class="form-group">
-                        <label>API 金鑰</label>
-                        <div class="config-code" id="current-api-key"></div>
-                    </div>
-                    <div class="form-group">
-                        <label>BIN ID</label>
-                        <div class="config-code" id="current-bin-id"></div>
-                    </div>
-                    <div class="form-group">
-                        <label>存儲模式</label>
-                        <div class="config-code" id="current-storage-mode"></div>
-                    </div>
-                </div>
-            </div>
+
+        <div id="setup-form">
+          <h3>系統初始化</h3>
+          <div class="form-group">
+            <label for="api-key">JSONBin.io API 金鑰（測試用）</label>
+            <input type="password" id="api-key" placeholder="輸入 JSONBin Secret Key（測試）" autocomplete="off" />
+            <small>⚠️ 正式上線請勿把 Master/Secret Key 放前端，請改用您自家的 API 代理！</small>
+          </div>
+          <div class="form-group">
+            <label for="bin-id">BIN ID（選填）</label>
+            <input type="text" id="bin-id" placeholder="留空將自動建立" />
+          </div>
+          <button id="setup-btn">初始化系統</button>
+          <p style="text-align:center;margin-top:12px;">已經初始化？ <a href="#" id="show-login-after-setup">前往登入</a></p>
         </div>
+
+        <div style="background:#fff3cd;border-left:4px solid #ffc107;padding:10px 14px;border-radius:6px;margin:14px 0;">
+          <b>離線備援：</b> 若 JSONBin 有問題，可切換「本地存儲模式」。
+          <div style="margin-top:10px;"><button id="use-local-storage" class="btn-success">使用本地存儲模式</button></div>
+          <small>提醒：本地存儲不會跨裝置同步。</small>
+        </div>
+
+        <div id="login-form" style="display:none;">
+          <h3>用戶登入</h3>
+          <div class="form-group"><label for="login-email">電子郵件</label><input type="email" id="login-email" /></div>
+          <div class="form-group"><label for="login-password">密碼</label><input type="password" id="login-password" /></div>
+          <button id="login-btn">登入</button>
+          <p style="text-align:center;margin-top:12px;">還沒有帳戶？ <a href="#" id="show-register">註冊新帳戶</a></p>
+        </div>
+
+        <div id="register-form" style="display:none;">
+          <h3>用戶註冊</h3>
+          <div class="form-group"><label for="register-name">姓名</label><input type="text" id="register-name" /></div>
+          <div class="form-group"><label for="register-email">電子郵件</label><input type="email" id="register-email" /></div>
+          <div class="form-group"><label for="register-password">密碼</label><input type="password" id="register-password" placeholder="至少 6 碼" /></div>
+          <div class="form-group"><label for="register-confirm-password">確認密碼</label><input type="password" id="register-confirm-password" /></div>
+          <button id="register-btn">註冊</button>
+          <p style="text-align:center;margin-top:12px;">已有帳戶？ <a href="#" id="show-login">返回登入</a></p>
+        </div>
+      </div>
     </div>
 
-    <div id="notification" class="notification"></div>
+    <!-- 主畫面 -->
+    <div id="app-page" style="display:none;">
+      <header>
+        <h1>產品品質檢驗記錄系統</h1>
+        <div class="user-info">
+          <div class="user-avatar" id="user-avatar">U</div>
+          <div>
+            <div id="user-name">歡迎</div>
+            <div id="storage-mode" style="font-size:12px;color:#dce6ec;">存儲模式：<span id="storage-type">JSONBin.io</span></div>
+            <button class="btn-danger btn-small" id="logout-btn">登出</button>
+          </div>
+        </div>
+      </header>
 
-    <script>
-        // 應用配置
-        const config = {
-            binId: localStorage.getItem('binId') || '',
-            apiKey: localStorage.getItem('apiKey') || '',
-            baseURL: 'https://api.jsonbin.io/v3/b',
-            useLocalStorage: localStorage.getItem('useLocalStorage') === 'true' || false
-        };
+      <div class="dashboard-cards">
+        <div class="card"><h3>本月檢驗次數</h3><div class="number" id="month-count">0</div></div>
+        <div class="card"><h3>合格率</h3><div class="number" id="pass-rate">0%</div></div>
+        <div class="card"><h3>待處理異常</h3><div class="number" id="issue-count">0</div></div>
+      </div>
 
-        // 應用狀態管理
-        const state = {
-            currentUser: null,
-            records: [],
-            users: []
-        };
+      <ul class="nav-tabs">
+        <li><a href="#new-record" class="active">新增檢驗記錄</a></li>
+        <li><a href="#history">歷史記錄查詢</a></li>
+        <li><a href="#specs">產品規格標準</a></li>
+        <li><a href="#profile">用戶資料</a></li>
+      </ul>
 
-        // DOM 元素
-        const elements = {
-            authPage: document.getElementById('auth-page'),
-            appPage: document.getElementById('app-page'),
-            setupForm: document.getElementById('setup-form'),
-            loginForm: document.getElementById('login-form'),
-            registerForm: document.getElementById('register-form'),
-            loginBtn: document.getElementById('login-btn'),
-            registerBtn: document.getElementById('register-btn'),
-            setupBtn: document.getElementById('setup-btn'),
-            showRegister: document.getElementById('show-register'),
-            showLogin: document.getElementById('show-login'),
-            showLoginAfterSetup: document.getElementById('show-login-after-setup'),
-            logoutBtn: document.getElementById('logout-btn'),
-            userAvatar: document.getElementById('user-avatar'),
-            userName: document.getElementById('user-name'),
-            monthCount: document.getElementById('month-count'),
-            passRate: document.getElementById('pass-rate'),
-            issueCount: document.getElementById('issue-count'),
-            recordsBody: document.getElementById('records-body'),
-            notification: document.getElementById('notification'),
-            useLocalStorageBtn: document.getElementById('use-local-storage'),
-            storageType: document.getElementById('storage-type'),
-            exportConfigBtn: document.getElementById('export-config'),
-            importConfigBtn: document.getElementById('import-config'),
-            configCode: document.getElementById('config-code'),
-            configDisplay: document.getElementById('config-display'),
-            configCodeDisplay: document.getElementById('config-code-display'),
-            copyConfigBtn: document.getElementById('copy-config'),
-            generateConfigBtn: document.getElementById('generate-config'),
-            importConfigBtn2: document.getElementById('import-config-btn'),
-            importConfigCode: document.getElementById('import-config-code'),
-            configOutput: document.getElementById('config-output'),
-            copyConfigBtn2: document.getElementById('copy-config-btn'),
-            currentApiKey: document.getElementById('current-api-key'),
-            currentBinId: document.getElementById('current-bin-id'),
-            currentStorageMode: document.getElementById('current-storage-mode')
-        };
+      <div id="new-record" class="tab-content active">
+        <h2>新增檢驗記錄</h2>
+        <div class="form-group"><label for="product-number">產品圖號</label><input type="text" id="product-number" placeholder="輸入產品圖號" /></div>
+        <div class="form-group"><label for="batch-number">批號</label><input type="text" id="batch-number" placeholder="輸入產品批號" /></div>
+        <div class="form-group"><label for="inspection-date">檢驗日期</label><input type="date" id="inspection-date" /></div>
 
-        // 工具函數
-        const utils = {
-            showNotification: (message, isError = false) => {
-                elements.notification.textContent = message;
-                elements.notification.classList.add('show');
-                if (isError) {
-                    elements.notification.classList.add('error');
-                } else {
-                    elements.notification.classList.remove('error');
-                }
-                
-                setTimeout(() => {
-                    elements.notification.classList.remove('show');
-                }, 3000);
-            },
-            
-            formatDate: (dateString) => {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('zh-TW');
-            },
-            
-            calculatePassRate: (records) => {
-                if (records.length === 0) return 0;
-                const passCount = records.filter(r => r.status === 'pass').length;
-                return Math.round((passCount / records.length) * 100);
-            },
-            
-            getCurrentMonthRecords: (records) => {
-                const now = new Date();
-                const currentMonth = now.getMonth();
-                const currentYear = now.getFullYear();
-                
-                return records.filter(record => {
-                    const recordDate = new Date(record.inspectionDate);
-                    return recordDate.getMonth() === currentMonth && 
-                           recordDate.getFullYear() === currentYear;
-                });
-            },
-            
-            getInitials: (name) => {
-                return name ? name.charAt(0) : 'U';
-            },
-            
-            // 清理API密钥中的特殊字符
-            cleanApiKey: (key) => {
-                return key ? key.replace(/[^\x20-\x7E]/g, "").trim() : '';
-            },
-            
-            // 生成配置代碼
-            generateConfigCode: () => {
-                const configData = {
-                    apiKey: config.apiKey,
-                    binId: config.binId,
-                    useLocalStorage: config.useLocalStorage,
-                    timestamp: new Date().getTime()
-                };
-                
-                return btoa(JSON.stringify(configData));
-            },
-            
-            // 解析配置代碼
-            parseConfigCode: (code) => {
-                try {
-                    return JSON.parse(atob(code));
-                } catch (error) {
-                    throw new Error('無效的配置代碼');
-                }
-            },
-            
-            // 從伺服器獲取數據
-            fetchData: async () => {
-                if (config.useLocalStorage) {
-                    return utils.fetchFromLocalStorage();
-                }
-                
-                if (!config.binId) {
-                    throw new Error('尚未設置BIN ID');
-                }
-                
-                const cleanedApiKey = utils.cleanApiKey(config.apiKey);
-                
-                try {
-                    const response = await fetch(`${config.baseURL}/${config.binId}`, {
-                        headers: {
-                            'X-Master-Key': cleanedApiKey,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('獲取數據失敗: ' + response.status);
-                    }
-                    
-                    const data = await response.json();
-                    return data.record;
-                } catch (error) {
-                    console.error('獲取數據錯誤:', error);
-                    // 如果遠程獲取失敗，嘗試從本地存儲獲取
-                    try {
-                        return utils.fetchFromLocalStorage();
-                    } catch (localError) {
-                        throw error;
-                    }
-                }
-            },
-            
-            // 從本地存儲獲取數據
-            fetchFromLocalStorage: () => {
-                const data = localStorage.getItem('inspectionSystemData');
-                if (data) {
-                    return JSON.parse(data);
-                }
-                return { users: [], records: [] };
-            },
-            
-            // 更新伺服器數據
-            updateData: async (newData) => {
-                if (config.useLocalStorage) {
-                    return utils.updateLocalStorage(newData);
-                }
-                
-                if (!config.binId) {
-                    throw new Error('尚未設置BIN ID');
-                }
-                
-                const cleanedApiKey = utils.cleanApiKey(config.apiKey);
-                
-                try {
-                    const response = await fetch(`${config.baseURL}/${config.binId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Master-Key': cleanedApiKey
-                        },
-                        body: JSON.stringify(newData)
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('更新數據失敗: ' + response.status);
-                    }
-                    
-                    // 同時更新本地存儲作為備份
-                    utils.updateLocalStorage(newData);
-                    
-                    return await response.json();
-                } catch (error) {
-                    console.error('更新數據錯誤:', error);
-                    // 如果遠程更新失敗，嘗試更新本地存儲
-                    try {
-                        return utils.updateLocalStorage(newData);
-                    } catch (localError) {
-                        throw error;
-                    }
-                }
-            },
-            
-            // 更新本地存儲數據
-            updateLocalStorage: (newData) => {
-                localStorage.setItem('inspectionSystemData', JSON.stringify(newData));
-                return { metadata: { id: 'local-storage' } };
-            },
-            
-            // 創建新的BIN
-            createBin: async (initialData = { users: [], records: [] }) => {
-                if (config.useLocalStorage) {
-                    utils.updateLocalStorage(initialData);
-                    return 'local-storage';
-                }
-                
-                const cleanedApiKey = utils.cleanApiKey(config.apiKey);
-                
-                try {
-                    const response = await fetch(config.baseURL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Master-Key': cleanedApiKey,
-                            'X-Bin-Name': 'Product Inspection System Data'
-                        },
-                        body: JSON.stringify(initialData)
-                    });
-                    
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error('創建數據存儲失敗: ' + response.status + ' - ' + errorText);
-                    }
-                    
-                    const data = await response.json();
-                    return data.metadata.id;
-                } catch (error) {
-                    console.error('創建BIN錯誤:', error);
-                    // 如果創建遠端BIN失敗，使用本地存儲
-                    config.useLocalStorage = true;
-                    localStorage.setItem('useLocalStorage', 'true');
-                    utils.updateLocalStorage(initialData);
-                    return 'local-storage';
-                }
-            }
-        };
+        <h3 style="margin-top:4px;">尺寸測量記錄</h3>
+        <div id="measurements-container"></div>
+        <div class="measurement-actions">
+          <button id="btn-add-measurement" class="btn-success btn-small">新增尺寸項目</button>
+          <button id="btn-clear-measurements" class="btn-small">清空所有尺寸</button>
+        </div>
 
-        // 初始化應用
-        async function initApp() {
-            // 檢查是否有已登錄的用戶
-            const savedUser = localStorage.getItem('currentUser');
-            const savedApiKey = localStorage.getItem('apiKey');
-            const savedBinId = localStorage.getItem('binId');
-            
-            // 更新存儲模式顯示
-            elements.storageType.textContent = config.useLocalStorage ? '本地存儲' : 'JSONBin.io';
-            
-            // 更新當前配置信息
-            updateConfigInfo();
-            
-            if (config.useLocalStorage) {
-                // 使用本地存儲模式
-                const data = utils.fetchFromLocalStorage();
-                state.users = data.users || [];
-                state.records = data.records || [];
-                
-                if (savedUser) {
-                    state.currentUser = JSON.parse(savedUser);
-                    showAppPage();
-                    loadUserData();
-                    updateDashboard(state.records);
-                    renderRecordsTable(state.records);
-                } else {
-                    elements.setupForm.style.display = 'none';
-                    elements.loginForm.style.display = 'block';
-                }
-            } else if (savedApiKey && savedBinId) {
-                config.apiKey = savedApiKey;
-                config.binId = savedBinId;
-                
-                // 嘗試從伺服器加載數據
-                try {
-                    const data = await utils.fetchData();
-                    state.users = data.users || [];
-                    state.records = data.records || [];
-                    
-                    if (savedUser) {
-                        state.currentUser = JSON.parse(savedUser);
-                        showAppPage();
-                        loadUserData();
-                        updateDashboard(state.records);
-                        renderRecordsTable(state.records);
-                    } else {
-                        elements.setupForm.style.display = 'none';
-                        elements.loginForm.style.display = 'block';
-                    }
-                } catch (error) {
-                    utils.showNotification('加載數據失敗，請檢查API金鑰和BIN ID: ' + error.message, true);
-                    showSetupForm();
-                }
-            } else {
-                showSetupForm();
-            }
-            
-            bindEvents();
+        <div class="form-group" style="margin-top:10px;">
+          <label for="notes">備註</label>
+          <textarea id="notes" rows="3" placeholder="輸入檢驗備註資訊"></textarea>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="btn-save" class="btn-success">儲存記錄</button>
+          <button id="btn-reset">重新填寫</button>
+        </div>
+      </div>
+
+      <div id="history" class="tab-content">
+        <h2>歷史記錄查詢</h2>
+        <div class="form-group" style="display:flex; gap:8px;">
+          <input type="text" id="search-input" placeholder="搜尋產品圖號或批號" />
+          <button id="btn-search">搜尋</button>
+          <button id="btn-export" class="btn-small">匯出 CSV</button>
+        </div>
+        <table id="records-table">
+          <thead><tr><th>日期</th><th>產品圖號</th><th>批號</th><th>檢驗員</th><th>結果</th><th>操作</th></tr></thead>
+          <tbody id="records-body"></tbody>
+        </table>
+        <div class="pagination">
+          <button id="prev-page" class="btn-small">上一頁</button>
+          <span id="page-info">第 1 / 1 頁</span>
+          <button id="next-page" class="btn-small">下一頁</button>
+          <select id="page-size" style="width:auto;">
+            <option value="10">每頁 10 筆</option>
+            <option value="25">每頁 25 筆</option>
+            <option value="50">每頁 50 筆</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="specs" class="tab-content">
+        <h2>產品規格標準</h2>
+        <div class="form-group" style="display:flex; gap:8px;">
+          <input type="text" id="spec-search" placeholder="輸入產品圖號搜尋規格" />
+          <button id="btn-spec-search">搜尋</button>
+        </div>
+        <div id="spec-details"><p>請輸入產品圖號以查看詳細規格要求（此範例預留接口）。</p></div>
+      </div>
+
+      <div id="profile" class="tab-content">
+        <h2>用戶資料</h2>
+        <div class="form-group"><label for="profile-name">姓名</label><input type="text" id="profile-name" /></div>
+        <div class="form-group"><label for="profile-email">電子郵件</label><input type="email" id="profile-email" /></div>
+        <div class="form-group"><label for="profile-department">部門</label><input type="text" id="profile-department" /></div>
+        <div class="form-group"><label for="profile-title">職稱</label><input type="text" id="profile-title" /></div>
+        <button id="btn-update-profile" class="btn-success">更新資料</button>
+
+        <h3 style="margin-top:22px;">變更密碼（示範：前端雜湊存放）</h3>
+        <div class="form-group"><label for="current-password">當前密碼</label><input type="password" id="current-password" /></div>
+        <div class="form-group"><label for="new-password">新密碼</label><input type="password" id="new-password" placeholder="至少 6 碼" /></div>
+        <div class="form-group"><label for="confirm-new-password">確認新密碼</label><input type="password" id="confirm-new-password" /></div>
+        <button id="btn-change-password">變更密碼</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="notification" class="notification"></div>
+
+  <script>
+    // ========= 應用設定 =========
+    const config = {
+      binId: localStorage.getItem('binId') || '',
+      apiKey: sessionStorage.getItem('apiKey') || localStorage.getItem('apiKey') || '',
+      baseURL: 'https://api.jsonbin.io/v3/b',
+      useLocalStorage: localStorage.getItem('useLocalStorage') === 'true' || false,
+    };
+
+    // ========= 應用狀態 =========
+    const state = {
+      currentUser: null,
+      users: [],
+      records: [],
+      // 分頁
+      page: 1,
+      pageSize: 10,
+      search: '',
+    };
+
+    // ========= DOM =========
+    const el = {
+      authPage: document.getElementById('auth-page'),
+      appPage: document.getElementById('app-page'),
+      setupForm: document.getElementById('setup-form'),
+      loginForm: document.getElementById('login-form'),
+      registerForm: document.getElementById('register-form'),
+      showRegister: document.getElementById('show-register'),
+      showLogin: document.getElementById('show-login'),
+      showLoginAfterSetup: document.getElementById('show-login-after-setup'),
+      setupBtn: document.getElementById('setup-btn'),
+      loginBtn: document.getElementById('login-btn'),
+      registerBtn: document.getElementById('register-btn'),
+      logoutBtn: document.getElementById('logout-btn'),
+      useLocalBtn: document.getElementById('use-local-storage'),
+      storageType: document.getElementById('storage-type'),
+      userAvatar: document.getElementById('user-avatar'),
+      userName: document.getElementById('user-name'),
+      monthCount: document.getElementById('month-count'),
+      passRate: document.getElementById('pass-rate'),
+      issueCount: document.getElementById('issue-count'),
+      recordsBody: document.getElementById('records-body'),
+      notification: document.getElementById('notification'),
+      // 新增記錄
+      productNumber: document.getElementById('product-number'),
+      batchNumber: document.getElementById('batch-number'),
+      inspectionDate: document.getElementById('inspection-date'),
+      notes: document.getElementById('notes'),
+      measurementsContainer: document.getElementById('measurements-container'),
+      addMeasurement: document.getElementById('btn-add-measurement'),
+      clearMeasurements: document.getElementById('btn-clear-measurements'),
+      saveBtn: document.getElementById('btn-save'),
+      resetBtn: document.getElementById('btn-reset'),
+      // 歷史
+      searchInput: document.getElementById('search-input'),
+      searchBtn: document.getElementById('btn-search'),
+      exportBtn: document.getElementById('btn-export'),
+      pageInfo: document.getElementById('page-info'),
+      prevPage: document.getElementById('prev-page'),
+      nextPage: document.getElementById('next-page'),
+      pageSize: document.getElementById('page-size'),
+    };
+
+    // ========= 工具 =========
+    const utils = {
+      // 安全字串（避免 XSS）
+      esc: (s) => (s==null?'' : String(s).replace(/[&<>"]|'/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]))),
+      showMsg: (msg, isErr=false) => {
+        el.notification.textContent = msg; el.notification.classList.add('show');
+        el.notification.classList.toggle('error', !!isErr);
+        setTimeout(()=> el.notification.classList.remove('show'), 2500);
+      },
+      cleanKey: (key) => key ? key.replace(/[\u0000-\u001f\u007f]/g,'').trim() : '',
+      todayISO: () => new Date().toISOString().slice(0,10),
+      fmtDate: (d) => { const dt = new Date(d); return isNaN(dt) ? '-' : dt.toLocaleDateString('zh-TW'); },
+      initials: (name) => name? name.trim().charAt(0).toUpperCase() : 'U',
+      passRate: (list) => list.length? Math.round(list.filter(r=>r.status==='pass').length*100/list.length) : 0,
+      monthRecords: (list) => {
+        const now = new Date(); const m = now.getMonth(); const y = now.getFullYear();
+        return list.filter(r=>{ const d=new Date(r.inspectionDate); return d.getMonth()===m && d.getFullYear()===y; });
+      },
+      // WebCrypto 雜湊（示範用）
+      hash: async (text) => {
+        const buf = new TextEncoder().encode(text);
+        const digest = await crypto.subtle.digest('SHA-256', buf);
+        return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      },
+      // LocalStorage 快照
+      fetchLocal: () => JSON.parse(localStorage.getItem('inspectionSystemData')||'{"users":[],"records":[]}'),
+      saveLocal: (data) => { localStorage.setItem('inspectionSystemData', JSON.stringify(data)); return {metadata:{id:'local-storage'}}; },
+      // JSONBin 讀取
+      fetchRemote: async () => {
+        if (!config.binId) throw new Error('尚未設定 BIN ID');
+        const key = utils.cleanKey(config.apiKey);
+        const res = await fetch(`${config.baseURL}/${config.binId}`, { headers: { 'X-Master-Key': key, 'Content-Type': 'application/json' } });
+        if (!res.ok) throw new Error('遠端讀取失敗: '+res.status);
+        const data = await res.json();
+        return data.record || { users:[], records:[] };
+      },
+      // JSONBin 更新
+      updateRemote: async (newData) => {
+        if (!config.binId) throw new Error('尚未設定 BIN ID');
+        const key = utils.cleanKey(config.apiKey);
+        const res = await fetch(`${config.baseURL}/${config.binId}`, {
+          method:'PUT', headers:{ 'Content-Type':'application/json','X-Master-Key': key }, body: JSON.stringify(newData)
+        });
+        if (!res.ok) throw new Error('遠端更新失敗: '+res.status);
+        utils.saveLocal(newData); // 同步本地備份
+        return res.json();
+      },
+      // 建立 JSONBin
+      createBin: async (initial={users:[],records:[]}) => {
+        const key = utils.cleanKey(config.apiKey);
+        try{
+          const res = await fetch(config.baseURL, { method:'POST', headers:{ 'Content-Type':'application/json','X-Master-Key': key, 'X-Bin-Name':'Product Inspection System Data' }, body: JSON.stringify(initial) });
+          if (!res.ok) throw new Error('建立失敗: '+res.status);
+          const data = await res.json(); return data.metadata.id;
+        }catch(err){
+          config.useLocalStorage = true; localStorage.setItem('useLocalStorage','true'); utils.saveLocal(initial); return 'local-storage';
         }
+      }
+    };
 
-        // 更新配置信息顯示
-        function updateConfigInfo() {
-            elements.currentApiKey.textContent = config.apiKey ? config.apiKey.substring(0, 10) + '...' : '未設置';
-            elements.currentBinId.textContent = config.binId || '未設置';
-            elements.currentStorageMode.textContent = config.useLocalStorage ? '本地存儲' : 'JSONBin.io';
-        }
+    // ========= 初始化 =========
+    async function init(){
+      // 預設日期
+      el.inspectionDate.value = utils.todayISO();
+      // 顯示存儲模式
+      el.storageType.textContent = config.useLocalStorage ? '本地存儲' : (config.viaFunction ? 'Netlify 代理' : 'JSONBin.io');
 
-        // 顯示設置表單
-        function showSetupForm() {
-            elements.setupForm.style.display = 'block';
-            elements.loginForm.style.display = 'none';
-            elements.registerForm.style.display = 'none';
-        }
+      if (config.viaFunction) {
+        const guide = document.getElementById('setup-guide');
+        if (guide) guide.style.display = 'none';
+        el.setupForm.style.display = 'none';
+        el.loginForm.style.display = 'block';
+      }
 
-        // 顯示應用主頁面
-        function showAppPage() {
-            elements.authPage.style.display = 'none';
-            elements.appPage.style.display = 'block';
-            updateConfigInfo();
-        }
+      // 嘗試載入資料
+      const savedUser = localStorage.getItem('currentUser');
+      try{
+        const data = config.useLocalStorage ? utils.fetchLocal() : await utils.fetchRemote().catch(()=> utils.fetchLocal());
+        state.users = data.users||[]; state.records = data.records||[];
+        if (savedUser){ state.currentUser = JSON.parse(savedUser); showApp(); loadUser(); refreshDash(); renderTable(); }
+        else { el.setupForm.style.display='none'; el.loginForm.style.display='block'; }
+      }catch(err){ utils.showMsg('載入資料失敗：'+err.message,true); showSetup(); }
 
-        // 加載用戶數據
-        function loadUserData() {
-            if (state.currentUser) {
-                elements.userName.textContent = `歡迎, ${state.currentUser.name}`;
-                elements.userAvatar.textContent = utils.getInitials(state.currentUser.name);
-                
-                // 填充用戶資料表單
-                document.getElementById('profile-name').value = state.currentUser.name;
-                document.getElementById('profile-email').value = state.currentUser.email;
-                document.getElementById('profile-department').value = state.currentUser.department || '';
-                document.getElementById('profile-title').value = state.currentUser.title || '';
-            }
-        }
+      bind();
+      // 預先放一筆量測區塊
+      addMeasurementItem();
+    }
 
-        // 更新儀表板數據
-        function updateDashboard(records) {
-            // 本月檢驗次數
-            const monthRecords = utils.getCurrentMonthRecords(records);
-            elements.monthCount.textContent = monthRecords.length;
-            
-            // 合格率
-            const passRate = utils.calculatePassRate(records);
-            elements.passRate.textContent = `${passRate}%`;
-            
-            // 待處理異常（假設狀態為fail的記錄需要處理）
-            const issueRecords = records.filter(r => r.status === 'fail');
-            elements.issueCount.textContent = issueRecords.length;
-        }
+    function showSetup(){ el.setupForm.style.display='block'; el.loginForm.style.display='none'; el.registerForm.style.display='none'; }
+    function showApp(){ document.getElementById('auth-page').style.display='none'; document.getElementById('app-page').style.display='block'; }
 
-        // 渲染記錄表格
-        function renderRecordsTable(records) {
-            elements.recordsBody.innerHTML = '';
-            
-            if (records.length === 0) {
-                elements.recordsBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center;">暫無檢驗記錄</td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            // 按日期降序排序
-            const sortedRecords = records.sort((a, b) => 
-                new Date(b.inspectionDate) - new Date(a.inspectionDate)
-            );
-            
-            sortedRecords.forEach(record => {
-                const row = document.createElement('tr');
-                
-                row.innerHTML = `
-                    <td>${utils.formatDate(record.inspectionDate)}</td>
-                    <td>${record.productNumber}</td>
-                    <td>${record.batchNumber}</td>
-                    <td>${record.userName || state.currentUser.name}</td>
-                    <td class="${record.status === 'pass' ? 'status-pass' : 'status-fail'}">
-                        ${record.status === 'pass' ? '合格' : '不合格'}
-                    </td>
-                    <td>
-                        <button class="btn-small btn-view" data-id="${record.id}">查看</button>
-                        <button class="btn-small btn-danger btn-delete" data-id="${record.id}">刪除</button>
-                    </td>
-                `;
-                
-                elements.recordsBody.appendChild(row);
-            });
-            
-            // 綁定查看和刪除按鈕事件
-            document.querySelectorAll('.btn-view').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const recordId = btn.getAttribute('data-id');
-                    viewRecord(recordId);
-                });
-            });
-            
-            document.querySelectorAll('.btn-delete').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const recordId = btn.getAttribute('data-id');
-                    deleteRecord(recordId);
-                });
-            });
-        }
+    function loadUser(){ if (!state.currentUser) return; el.userName.textContent = `歡迎, ${state.currentUser.name}`; el.userAvatar.textContent = utils.initials(state.currentUser.name);
+      document.getElementById('profile-name').value = state.currentUser.name;
+      document.getElementById('profile-email').value = state.currentUser.email;
+      document.getElementById('profile-department').value = state.currentUser.department||'';
+      document.getElementById('profile-title').value = state.currentUser.title||'';
+    }
 
-        // 查看記錄詳情
-        function viewRecord(recordId) {
-            const record = state.records.find(r => r.id === recordId);
-            if (record) {
-                let message = `產品圖號: ${record.productNumber}\n批號: ${record.batchNumber}\n檢驗日期: ${utils.formatDate(record.inspectionDate)}\n結果: ${record.status === 'pass' ? '合格' : '不合格'}\n\n`;
-                
-                if (record.measurements && record.measurements.length > 0) {
-                    message += "尺寸測量結果:\n";
-                    record.measurements.forEach(m => {
-                        message += `${m.name}: ${m.actual} (標準: ${m.standard}, 公差: ${m.upperTol > 0 ? '+' + m.upperTol : m.upperTol}/${m.lowerTol > 0 ? '+' + m.lowerTol : m.lowerTol})\n`;
-                    });
-                }
-                
-                if (record.notes) {
-                    message += `\n備註: ${record.notes}`;
-                }
-                
-                alert(message);
-            }
-        }
+    function refreshDash(){ const monthList = utils.monthRecords(state.records); el.monthCount.textContent = monthList.length; el.passRate.textContent = utils.passRate(state.records)+"%"; el.issueCount.textContent = state.records.filter(r=>r.status==='fail').length; }
 
-        // 刪除記錄
-        async function deleteRecord(recordId) {
-            if (confirm('確定要刪除這條記錄嗎？此操作無法撤銷。')) {
-                try {
-                    // 從本地狀態中刪除
-                    state.records = state.records.filter(r => r.id !== recordId);
-                    
-                    // 更新伺服器
-                    await utils.updateData({
-                        users: state.users,
-                        records: state.records
-                    });
-                    
-                    utils.showNotification('記錄已刪除');
-                    updateDashboard(state.records);
-                    renderRecordsTable(state.records);
-                } catch (error) {
-                    utils.showNotification('刪除記錄失敗: ' + error.message, true);
-                }
-            }
-        }
+    // ========= 量測項目 UI =========
+    function createMeasurementEl(){
+      const wrap = document.createElement('div'); wrap.className='measurement-item';
+      wrap.innerHTML = `
+        <div class="measurement-grid">
+          <div class="form-group"><label>尺寸名稱</label><input type="text" class="dimension-name" placeholder="例如：長度" /></div>
+          <div class="form-group"><label>標準值</label><input type="number" step="0.001" class="dimension-standard" placeholder="標準尺寸" /></div>
+          <div class="form-group"><label>上公差</label><input type="number" step="0.001" class="dimension-upper-tol" placeholder="+0.000" /></div>
+          <div class="form-group"><label>下公差</label><input type="number" step="0.001" class="dimension-lower-tol" placeholder="-0.000" /></div>
+        </div>
+        <div class="form-group" style="margin-top:8px;"><label>實際測量值</label><input type="number" step="0.001" class="dimension-actual" placeholder="輸入實際測量值" /></div>
+        <div class="measurement-actions">
+          <button type="button" class="btn-small btn-danger btn-remove">刪除此項</button>
+        </div>`;
+      wrap.querySelector('.btn-remove').addEventListener('click',()=>{ wrap.remove(); });
+      return wrap;
+    }
+    function addMeasurementItem(){ el.measurementsContainer.appendChild(createMeasurementEl()); }
 
-        // 綁定事件
-        function bindEvents() {
-            // 認證相關事件
-            elements.showRegister.addEventListener('click', (e) => {
-                e.preventDefault();
-                elements.loginForm.style.display = 'none';
-                elements.registerForm.style.display = 'block';
-            });
-            
-            elements.showLogin.addEventListener('click', (e) => {
-                e.preventDefault();
-                elements.registerForm.style.display = 'none';
-                elements.loginForm.style.display = 'block';
-            });
-            
-            elements.showLoginAfterSetup.addEventListener('click', (e) => {
-                e.preventDefault();
-                elements.setupForm.style.display = 'none';
-                elements.loginForm.style.display = 'block';
-            });
-            
-            elements.setupBtn.addEventListener('click', handleSetup);
-            elements.loginBtn.addEventListener('click', handleLogin);
-            elements.registerBtn.addEventListener('click', handleRegister);
-            elements.logoutBtn.addEventListener('click', handleLogout);
-            elements.useLocalStorageBtn.addEventListener('click', handleUseLocalStorage);
-            
-            // 配置導出導入事件
-            elements.exportConfigBtn.addEventListener('click', handleExportConfig);
-            elements.importConfigBtn.addEventListener('click', handleImportConfig);
-            elements.copyConfigBtn.addEventListener('click', handleCopyConfig);
-            elements.generateConfigBtn.addEventListener('click', handleGenerateConfig);
-            elements.importConfigBtn2.addEventListener('click', handleImportConfig2);
-            elements.copyConfigBtn2.addEventListener('click', handleCopyConfig2);
-            
-            // 檢驗記錄相關事件
-            document.getElementById('btn-save').addEventListener('click', handleSaveRecord);
-            document.getElementById('btn-reset').addEventListener('click', handleResetForm);
-            document.getElementById('btn-search').addEventListener('click', handleSearchRecords);
-            
-            // 用戶資料相關事件
-            document.getElementById('btn-update-profile').addEventListener('click', handleUpdateProfile);
-            document.getElementById('btn-change-password').addEventListener('click', handleChangePassword);
-            
-            // 標籤頁切換
-            document.querySelectorAll('.nav-tabs a').forEach(tab => {
-                tab.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const target = e.target.getAttribute('href').substring(1);
-                    
-                    // 更新活動標籤
-                    document.querySelectorAll('.nav-tabs a').forEach(t => t.classList.remove('active'));
-                    e.target.classList.add('active');
-                    
-                    // 顯示對應內容
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    document.getElementById(target).classList.add('active');
-                });
-            });
-            
-            // 添加尺寸項目
-            document.querySelector('.btn-add-dimension').addEventListener('click', () => {
-                const container = document.getElementById('measurements-container');
-                const newMeasurement = container.firstElementChild.cloneNode(true);
-                
-                // 清空輸入框
-                newMeasurement.querySelectorAll('input').forEach(input => {
-                    input.value = '';
-                });
-                
-                container.appendChild(newMeasurement);
-            });
-        }
+    // ========= 事件 =========
+    function bind(){
+      // 導覽
+      document.querySelectorAll('.nav-tabs a').forEach(a=>{
+        a.addEventListener('click', (e)=>{ e.preventDefault(); const id=a.getAttribute('href').slice(1);
+          document.querySelectorAll('.nav-tabs a').forEach(x=>x.classList.remove('active')); a.classList.add('active');
+          document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active')); document.getElementById(id).classList.add('active');
+        });
+      });
 
-        // 處理使用本地存儲
-        function handleUseLocalStorage() {
-            config.useLocalStorage = true;
-            localStorage.setItem('useLocalStorage', 'true');
-            elements.storageType.textContent = '本地存儲';
-            
-            // 初始化本地數據
-            const data = utils.fetchFromLocalStorage();
-            state.users = data.users || [];
-            state.records = data.records || [];
-            
-            utils.showNotification('已切換到本地存儲模式');
-            elements.setupForm.style.display = 'none';
-            elements.loginForm.style.display = 'block';
-        }
+      // 認證流程
+      el.showRegister.addEventListener('click',e=>{e.preventDefault(); el.loginForm.style.display='none'; el.registerForm.style.display='block';});
+      el.showLogin.addEventListener('click',e=>{e.preventDefault(); el.registerForm.style.display='none'; el.loginForm.style.display='block';});
+      el.showLoginAfterSetup.addEventListener('click',e=>{e.preventDefault(); el.setupForm.style.display='none'; el.loginForm.style.display='block';});
 
-        // 處理導出配置
-        function handleExportConfig() {
-            if (!config.apiKey && !config.useLocalStorage) {
-                utils.showNotification('請先初始化系統', true);
-                return;
-            }
-            
-            const configCode = utils.generateConfigCode();
-            elements.configCodeDisplay.textContent = configCode;
-            elements.configDisplay.style.display = 'block';
-        }
+      document.getElementById('setup-btn').addEventListener('click', handleSetup);
+      document.getElementById('login-btn').addEventListener('click', handleLogin);
+      document.getElementById('register-btn').addEventListener('click', handleRegister);
+      document.getElementById('logout-btn').addEventListener('click', ()=>{ state.currentUser=null; localStorage.removeItem('currentUser'); document.getElementById('auth-page').style.display='flex'; document.getElementById('app-page').style.display='none'; el.setupForm.style.display='none'; el.loginForm.style.display='block'; utils.showMsg('已登出'); });
+      el.useLocalBtn.addEventListener('click', ()=>{ config.useLocalStorage=true; localStorage.setItem('useLocalStorage','true'); el.storageType.textContent='本地存儲'; const data=utils.fetchLocal(); state.users=data.users||[]; state.records=data.records||[]; utils.showMsg('已切換到本地存儲模式'); el.setupForm.style.display='none'; el.loginForm.style.display='block';});
 
-        // 處理導入配置
-        function handleImportConfig() {
-            const configCode = elements.configCode.value.trim();
-            
-            if (!configCode) {
-                utils.showNotification('請輸入配置代碼', true);
-                return;
-            }
-            
-            try {
-                const configData = utils.parseConfigCode(configCode);
-                
-                // 保存配置
-                config.apiKey = configData.apiKey;
-                config.binId = configData.binId;
-                config.useLocalStorage = configData.useLocalStorage;
-                
-                localStorage.setItem('apiKey', configData.apiKey);
-                localStorage.setItem('binId', configData.binId);
-                localStorage.setItem('useLocalStorage', configData.useLocalStorage.toString());
-                
-                utils.showNotification('配置導入成功');
-                elements.setupForm.style.display = 'none';
-                elements.loginForm.style.display = 'block';
-            } catch (error) {
-                utils.showNotification('導入配置失敗: ' + error.message, true);
-            }
-        }
+      // 量測項目
+      el.addMeasurement.addEventListener('click', addMeasurementItem);
+      el.clearMeasurements.addEventListener('click', ()=>{ el.measurementsContainer.innerHTML=''; addMeasurementItem(); });
 
-        // 處理複製配置
-        function handleCopyConfig() {
-            const configCode = elements.configCodeDisplay.textContent;
-            navigator.clipboard.writeText(configCode)
-                .then(() => {
-                    utils.showNotification('配置代碼已複製到剪貼板');
-                })
-                .catch(err => {
-                    utils.showNotification('複製失敗: ' + err, true);
-                });
-        }
+      // 記錄 CRUD
+      el.saveBtn.addEventListener('click', handleSaveRecord);
+      el.resetBtn.addEventListener('click', ()=>{ if(confirm('確定要清除已輸入資料？')){ document.querySelectorAll('#new-record input,#new-record textarea').forEach(i=>i.value=''); el.measurementsContainer.innerHTML=''; addMeasurementItem(); } });
 
-        // 處理生成配置
-        function handleGenerateConfig() {
-            if (!config.apiKey && !config.useLocalStorage) {
-                utils.showNotification('請先初始化系統', true);
-                return;
-            }
-            
-            const configCode = utils.generateConfigCode();
-            elements.configOutput.textContent = configCode;
-            elements.configResult.style.display = 'block';
-        }
+      // 查詢/分頁/匯出
+      el.searchBtn.addEventListener('click', ()=>{ state.search = (el.searchInput.value||'').trim().toLowerCase(); state.page = 1; renderTable(); });
+      el.prevPage.addEventListener('click', ()=>{ if(state.page>1){ state.page--; renderTable(); } });
+      el.nextPage.addEventListener('click', ()=>{ const totalPages = getTotalPages(); if(state.page<totalPages){ state.page++; renderTable(); } });
+      el.pageSize.addEventListener('change', ()=>{ state.pageSize = parseInt(el.pageSize.value,10)||10; state.page=1; renderTable(); });
+      el.exportBtn.addEventListener('click', exportCSV);
 
-        // 處理導入配置2
-        function handleImportConfig2() {
-            const configCode = elements.importConfigCode.value.trim();
-            
-            if (!configCode) {
-                utils.showNotification('請輸入配置代碼', true);
-                return;
-            }
-            
-            try {
-                const configData = utils.parseConfigCode(configCode);
-                
-                // 保存配置
-                config.apiKey = configData.apiKey;
-                config.binId = configData.binId;
-                config.useLocalStorage = configData.useLocalStorage;
-                
-                localStorage.setItem('apiKey', configData.apiKey);
-                localStorage.setItem('binId', configData.binId);
-                localStorage.setItem('useLocalStorage', configData.useLocalStorage.toString());
-                
-                utils.showNotification('配置導入成功');
-                updateConfigInfo();
-            } catch (error) {
-                utils.showNotification('導入配置失敗: ' + error.message, true);
-            }
-        }
+      // 用戶
+      document.getElementById('btn-update-profile').addEventListener('click', handleUpdateProfile);
+      document.getElementById('btn-change-password').addEventListener('click', handleChangePassword);
+    }
 
-        // 處理複製配置2
-        function handleCopyConfig2() {
-            const configCode = elements.configOutput.textContent;
-            navigator.clipboard.writeText(configCode)
-                .then(() => {
-                    utils.showNotification('配置代碼已複製到剪貼板');
-                })
-                .catch(err => {
-                    utils.showNotification('複製失敗: ' + err, true);
-                });
-        }
+    // ========= 認證處理 =========
+    async function handleSetup(){
+      let apiKey = document.getElementById('api-key').value; let binId = document.getElementById('bin-id').value.trim();
+      if(!apiKey){ utils.showMsg('請輸入 API 金鑰', true); return; }
+      try{
+        apiKey = utils.cleanKey(apiKey); config.apiKey = apiKey; sessionStorage.setItem('apiKey', apiKey); // 減少長期暴露
+        if(!binId){ binId = await utils.createBin(); utils.showMsg('已建立新的資料存放 BIN'); }
+        config.binId = binId; localStorage.setItem('binId', binId); localStorage.setItem('useLocalStorage','false'); config.useLocalStorage=false; el.storageType.textContent='JSONBin.io';
+        const data = await utils.fetchRemote(); state.users=data.users||[]; state.records=data.records||[]; utils.showMsg('系統初始化成功'); el.setupForm.style.display='none'; el.loginForm.style.display='block';
+      }catch(err){ utils.showMsg('初始化失敗：'+err.message, true); }
+    }
 
-        // 處理系統設置
-        async function handleSetup() {
-            let apiKey = document.getElementById('api-key').value;
-            let binId = document.getElementById('bin-id').value;
-            
-            if (!apiKey) {
-                utils.showNotification('請輸入API金鑰', true);
-                return;
-            }
-            
-            try {
-                // 清理API密钥
-                apiKey = utils.cleanApiKey(apiKey);
-                config.apiKey = apiKey;
-                
-                // 如果沒有提供BIN ID，則創建一個新的
-                if (!binId) {
-                    binId = await utils.createBin();
-                    utils.showNotification('已創建新的數據存儲空間');
-                } else {
-                    binId = binId.trim();
-                }
-                
-                config.binId = binId;
-                
-                // 保存配置到本地存儲
-                localStorage.setItem('apiKey', apiKey);
-                localStorage.setItem('binId', binId);
-                localStorage.setItem('useLocalStorage', 'false');
-                config.useLocalStorage = false;
-                elements.storageType.textContent = 'JSONBin.io';
-                
-                // 嘗試加載數據
-                const data = await utils.fetchData();
-                state.users = data.users || [];
-                state.records = data.records || [];
-                
-                utils.showNotification('系統初始化成功');
-                elements.setupForm.style.display = 'none';
-                elements.loginForm.style.display = 'block';
-            } catch (error) {
-                utils.showNotification('系統初始化失敗: ' + error.message, true);
-            }
-        }
+    async function handleLogin(){
+      const email = document.getElementById('login-email').value.trim(); const pw = document.getElementById('login-password').value;
+      if(!email||!pw){ utils.showMsg('請輸入電子郵件與密碼', true); return; }
+      try{
+        const data = config.useLocalStorage ? utils.fetchLocal() : await utils.fetchRemote(); state.users=data.users||[]; state.records=data.records||[];
+        // 比對雜湊
+        const hash = await utils.hash(pw);
+        const user = state.users.find(u=>u.email===email && (u.passwordHash? u.passwordHash===hash : u.password===pw));
+        if(!user){ utils.showMsg('帳號或密碼不正確', true); return; }
+        state.currentUser = user; localStorage.setItem('currentUser', JSON.stringify(user)); showApp(); loadUser(); refreshDash(); renderTable(); utils.showMsg('登入成功');
+      }catch(err){ utils.showMsg('登入失敗：'+err.message, true); }
+    }
 
-        // 處理登錄
-        async function handleLogin() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            
-            if (!email || !password) {
-                utils.showNotification('請輸入電子郵件和密碼', true);
-                return;
-            }
-            
-            try {
-                // 從伺服器加載最新數據
-                const data = await utils.fetchData();
-                state.users = data.users || [];
-                
-                const user = state.users.find(u => u.email === email && u.password === password);
-                
-                if (user) {
-                    state.currentUser = user;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    state.records = data.records || [];
-                    
-                    showAppPage();
-                    loadUserData();
-                    updateDashboard(state.records);
-                    renderRecordsTable(state.records);
-                    utils.showNotification('登錄成功');
-                } else {
-                    utils.showNotification('電子郵件或密碼不正確', true);
-                }
-            } catch (error) {
-                utils.showNotification('登錄失敗: ' + error.message, true);
-            }
-        }
+    async function handleRegister(){
+      const name = document.getElementById('register-name').value.trim();
+      const email = document.getElementById('register-email').value.trim();
+      const pw = document.getElementById('register-password').value; const pw2 = document.getElementById('register-confirm-password').value;
+      if(!name||!email||!pw||!pw2){ utils.showMsg('請填寫所有欄位', true); return; }
+      if(pw!==pw2){ utils.showMsg('兩次密碼不一致', true); return; }
+      if(pw.length<6){ utils.showMsg('密碼至少 6 碼', true); return; }
+      try{
+        const data = config.useLocalStorage ? utils.fetchLocal() : await utils.fetchRemote(); state.users=data.users||[]; state.records=data.records||[];
+        if(state.users.some(u=>u.email===email)){ utils.showMsg('此電子郵件已註冊', true); return; }
+        const newUser = { id: (crypto.randomUUID? crypto.randomUUID(): String(Date.now())), name, email, passwordHash: await utils.hash(pw), createdAt: new Date().toISOString() };
+        state.users.push(newUser); state.currentUser=newUser; await persist(); localStorage.setItem('currentUser', JSON.stringify(newUser)); showApp(); loadUser(); utils.showMsg('註冊成功');
+      }catch(err){ utils.showMsg('註冊失敗：'+err.message, true); }
+    }
 
-        // 處理註冊
-        async function handleRegister() {
-            const name = document.getElementById('register-name').value;
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            const confirmPassword = document.getElementById('register-confirm-password').value;
-            
-            if (!name || !email || !password || !confirmPassword) {
-                utils.showNotification('請填寫所有欄位', true);
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                utils.showNotification('密碼確認不一致', true);
-                return;
-            }
-            
-            if (password.length < 6) {
-                utils.showNotification('密碼長度至少需要6個字符', true);
-                return;
-            }
-            
-            try {
-                // 從伺服器加載最新數據
-                const data = await utils.fetchData();
-                state.users = data.users || [];
-                
-                const existingUser = state.users.find(u => u.email === email);
-                
-                if (existingUser) {
-                    utils.showNotification('該電子郵件已被註冊', true);
-                    return;
-                }
-                
-                const newUser = {
-                    id: Date.now().toString(),
-                    name,
-                    email,
-                    password,
-                    createdAt: new Date().toISOString()
-                };
-                
-                state.users.push(newUser);
-                state.currentUser = newUser;
-                
-                // 更新伺服器
-                await utils.updateData({
-                    users: state.users,
-                    records: state.records
-                });
-                
-                localStorage.setItem('currentUser', JSON.stringify(newUser));
-                showAppPage();
-                loadUserData();
-                utils.showNotification('註冊成功');
-            } catch (error) {
-                utils.showNotification('註冊失敗: ' + error.message, true);
-            }
-        }
+    // ========= 記錄處理 =========
+    function collectMeasurements(){
+      const items = Array.from(el.measurementsContainer.querySelectorAll('.measurement-item'));
+      const list = [];
+      for(const it of items){
+        const name = it.querySelector('.dimension-name').value.trim();
+        const std = parseFloat(it.querySelector('.dimension-standard').value);
+        const uTol = parseFloat(it.querySelector('.dimension-upper-tol').value || '0');
+        const lTol = parseFloat(it.querySelector('.dimension-lower-tol').value || '0');
+        const actual = parseFloat(it.querySelector('.dimension-actual').value);
+        if(!name || Number.isNaN(std) || Number.isNaN(actual)) continue; // 忽略不完整
+        const upper = std + uTol; // e.g. 10 + 0.02
+        const lower = std + lTol; // e.g. 10 - 0.02（lTol 應輸入負值）
+        const pass = actual >= lower && actual <= upper;
+        list.push({ name, standard: std, upperTol: uTol, lowerTol: lTol, actual, status: pass? 'pass':'fail' });
+      }
+      return list;
+    }
 
-        // 處理登出
-        function handleLogout() {
-            state.currentUser = null;
-            localStorage.removeItem('currentUser');
-            elements.authPage.style.display = 'flex';
-            elements.appPage.style.display = 'none';
-            elements.setupForm.style.display = 'none';
-            elements.loginForm.style.display = 'block';
-            utils.showNotification('已登出');
-        }
+    async function handleSaveRecord(){
+      if(!state.currentUser) return;
+      const productNumber = el.productNumber.value.trim();
+      const batchNumber = el.batchNumber.value.trim();
+      const inspectionDate = el.inspectionDate.value;
+      const notes = el.notes.value.trim();
+      if(!productNumber || !batchNumber || !inspectionDate){ utils.showMsg('請完整填寫必填欄位', true); return; }
+      const measurements = collectMeasurements();
+      if(measurements.length===0){ utils.showMsg('請至少填寫一組完整的尺寸資料', true); return; }
+      const overall = measurements.every(m=>m.status==='pass') ? 'pass':'fail';
+      const rec = { id: (crypto.randomUUID? crypto.randomUUID(): String(Date.now())), userId: state.currentUser.id, userName: state.currentUser.name, productNumber, batchNumber, inspectionDate, measurements, notes, status: overall, createdAt: new Date().toISOString() };
+      try{ state.records.push(rec); await persist(); utils.showMsg('檢驗記錄已保存'); // 清空表單
+        document.querySelectorAll('#new-record input,#new-record textarea').forEach(i=>{ if(i!==el.inspectionDate) i.value=''; }); el.measurementsContainer.innerHTML=''; addMeasurementItem(); refreshDash(); renderTable();
+      }catch(err){ utils.showMsg('保存失敗：'+err.message, true); state.records = state.records.filter(r=>r.id!==rec.id); }
+    }
 
-        // 處理保存記錄
-        async function handleSaveRecord() {
-            if (!state.currentUser) return;
-            
-            const productNumber = document.getElementById('product-number').value;
-            const batchNumber = document.getElementById('batch-number').value;
-            const inspectionDate = document.getElementById('inspection-date').value;
-            const notes = document.getElementById('notes').value;
-            
-            if (!productNumber || !batchNumber || !inspectionDate) {
-                utils.showNotification('請填寫必填欄位', true);
-                return;
-            }
-            
-            // 收集尺寸測量數據
-            const measurements = [];
-            const measurementElements = document.querySelectorAll('#measurements-container > div');
-            
-            measurementElements.forEach(measurementEl => {
-                const name = measurementEl.querySelector('.dimension-name').value;
-                const standard = measurementEl.querySelector('.dimension-standard').value;
-                const upperTol = measurementEl.querySelector('.dimension-upper-tol').value;
-                const lowerTol = measurementEl.querySelector('.dimension-lower-tol').value;
-                const actual = measurementEl.querySelector('.dimension-actual').value;
-                
-                if (name && standard && actual) {
-                    // 簡單判斷是否合格
-                    const numActual = parseFloat(actual);
-                    const numStandard = parseFloat(standard);
-                    const numUpperTol = parseFloat(upperTol || 0);
-                    const numLowerTol = parseFloat(lowerTol || 0);
-                    
-                    const upperLimit = numStandard + numUpperTol;
-                    const lowerLimit = numStandard + numLowerTol;
-                    
-                    const isPass = numActual >= lowerLimit && numActual <= upperLimit;
-                    
-                    measurements.push({
-                        name,
-                        standard: numStandard,
-                        upperTol: numUpperTol,
-                        lowerTol: numLowerTol,
-                        actual: numActual,
-                        status: isPass ? 'pass' : 'fail'
-                    });
-                }
-            });
-            
-            if (measurements.length === 0) {
-                utils.showNotification('請至少填寫一組完整的尺寸數據', true);
-                return;
-            }
-            
-            // 判斷整體是否合格（所有尺寸都合格才算合格）
-            const overallStatus = measurements.every(m => m.status === 'pass') ? 'pass' : 'fail';
-            
-            const recordData = {
-                id: Date.now().toString(),
-                userId: state.currentUser.id,
-                userName: state.currentUser.name,
-                productNumber,
-                batchNumber,
-                inspectionDate,
-                measurements,
-                notes,
-                status: overallStatus,
-                createdAt: new Date().toISOString()
-            };
-            
-            try {
-                // 添加到本地狀態
-                state.records.push(recordData);
-                
-                // 更新伺服器
-                await utils.updateData({
-                    users: state.users,
-                    records: state.records
-                });
-                
-                utils.showNotification('檢驗記錄已保存');
-                handleResetForm();
-                updateDashboard(state.records);
-                renderRecordsTable(state.records);
-            } catch (error) {
-                utils.showNotification('保存記錄失敗: ' + error.message, true);
-                // 如果失敗，從本地狀態中移除
-                state.records = state.records.filter(r => r.id !== recordData.id);
-            }
-        }
+    function safeCell(text){ const td=document.createElement('td'); td.textContent = text; return td; }
 
-        // 處理重置表單
-        function handleResetForm() {
-            if (confirm('確定要清除所有已輸入的資料嗎？')) {
-                document.querySelectorAll('#new-record input, #new-record textarea').forEach(input => {
-                    input.value = '';
-                });
-                
-                // 只保留一組尺寸輸入框
-                const container = document.getElementById('measurements-container');
-                while (container.children.length > 1) {
-                    container.removeChild(container.lastChild);
-                }
-            }
-        }
+    function getFilteredSortedRecords(){
+      const q = state.search; const arr = [...state.records];
+      let list = q? arr.filter(r=> (r.productNumber||'').toLowerCase().includes(q) || (r.batchNumber||'').toLowerCase().includes(q)) : arr;
+      list.sort((a,b)=> new Date(b.inspectionDate) - new Date(a.inspectionDate));
+      return list;
+    }
 
-        // 處理搜索記錄
-        function handleSearchRecords() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            
-            if (!query) {
-                renderRecordsTable(state.records);
-                return;
-            }
-            
-            const filteredRecords = state.records.filter(record => 
-                record.productNumber.toLowerCase().includes(query) || 
-                record.batchNumber.toLowerCase().includes(query)
-            );
-            
-            renderRecordsTable(filteredRecords);
-        }
+    function getTotalPages(){ const total = getFilteredSortedRecords().length; return Math.max(1, Math.ceil(total / state.pageSize)); }
 
-        // 處理更新用戶資料
-        async function handleUpdateProfile() {
-            if (!state.currentUser) return;
-            
-            const name = document.getElementById('profile-name').value;
-            const email = document.getElementById('profile-email').value;
-            const department = document.getElementById('profile-department').value;
-            const title = document.getElementById('profile-title').value;
-            
-            if (!name || !email) {
-                utils.showNotification('請填寫姓名和電子郵件', true);
-                return;
-            }
-            
-            try {
-                // 更新本地狀態
-                const userIndex = state.users.findIndex(u => u.id === state.currentUser.id);
-                if (userIndex !== -1) {
-                    state.users[userIndex] = {
-                        ...state.users[userIndex],
-                        name,
-                        email,
-                        department,
-                        title
-                    };
-                    
-                    state.currentUser = state.users[userIndex];
-                    
-                    // 更新記錄中的用戶名
-                    state.records.forEach(record => {
-                        if (record.userId === state.currentUser.id) {
-                            record.userName = name;
-                        }
-                    });
-                    
-                    // 更新伺服器
-                    await utils.updateData({
-                        users: state.users,
-                        records: state.records
-                    });
-                    
-                    localStorage.setItem('currentUser', JSON.stringify(state.currentUser));
-                    loadUserData();
-                    renderRecordsTable(state.records);
-                    utils.showNotification('個人資料已更新');
-                }
-            } catch (error) {
-                utils.showNotification('更新資料失敗: ' + error.message, true);
-            }
-        }
+    function renderTable(){
+      const list = getFilteredSortedRecords();
+      const totalPages = Math.max(1, Math.ceil(list.length / state.pageSize));
+      if(state.page>totalPages) state.page = totalPages;
+      const start = (state.page-1)*state.pageSize; const pageList = list.slice(start, start+state.pageSize);
 
-        // 處理更改密碼
-        async function handleChangePassword() {
-            if (!state.currentUser) return;
-            
-            const currentPassword = document.getElementById('current-password').value;
-            const newPassword = document.getElementById('new-password').value;
-            const confirmNewPassword = document.getElementById('confirm-new-password').value;
-            
-            if (!currentPassword || !newPassword || !confirmNewPassword) {
-                utils.showNotification('請填寫所有密碼欄位', true);
-                return;
-            }
-            
-            if (newPassword !== confirmNewPassword) {
-                utils.showNotification('新密碼確認不一致', true);
-                return;
-            }
-            
-            if (newPassword.length < 6) {
-                utils.showNotification('新密碼長度至少需要6個字符', true);
-                return;
-            }
-            
-            if (currentPassword !== state.currentUser.password) {
-                utils.showNotification('當前密碼不正確', true);
-                return;
-            }
-            
-            try {
-                // 更新本地狀態
-                const userIndex = state.users.findIndex(u => u.id === state.currentUser.id);
-                if (userIndex !== -1) {
-                    state.users[userIndex].password = newPassword;
-                    state.currentUser = state.users[userIndex];
-                    
-                    // 更新伺服器
-                    await utils.updateData({
-                        users: state.users,
-                        records: state.records
-                    });
-                    
-                    localStorage.setItem('currentUser', JSON.stringify(state.currentUser));
-                    
-                    // 清空密碼字段
-                    document.getElementById('current-password').value = '';
-                    document.getElementById('new-password').value = '';
-                    document.getElementById('confirm-new-password').value = '';
-                    
-                    utils.showNotification('密碼已更新');
-                }
-            } catch (error) {
-                utils.showNotification('變更密碼失敗: ' + error.message, true);
-            }
-        }
+      el.recordsBody.innerHTML = '';
+      if(pageList.length===0){ const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan=6; td.style.textAlign='center'; td.textContent='暫無檢驗記錄'; tr.appendChild(td); el.recordsBody.appendChild(tr); }
+      else{
+        pageList.forEach(rec=>{
+          const tr = document.createElement('tr');
+          tr.appendChild(safeCell(utils.fmtDate(rec.inspectionDate)));
+          tr.appendChild(safeCell(rec.productNumber));
+          tr.appendChild(safeCell(rec.batchNumber));
+          tr.appendChild(safeCell(rec.userName||''));
+          const tdStatus = document.createElement('td'); tdStatus.textContent = rec.status==='pass' ? '合格':'不合格'; tdStatus.className = rec.status==='pass'? 'status-pass':'status-fail'; tr.appendChild(tdStatus);
+          const tdOps = document.createElement('td');
+          const btnV = document.createElement('button'); btnV.className='btn-small'; btnV.textContent='查看'; btnV.addEventListener('click',()=>viewRecord(rec.id));
+          const btnD = document.createElement('button'); btnD.className='btn-small btn-danger'; btnD.style.marginLeft='8px'; btnD.textContent='刪除'; btnD.addEventListener('click',()=>deleteRecord(rec.id));
+          tdOps.appendChild(btnV); tdOps.appendChild(btnD); tr.appendChild(tdOps);
+          el.recordsBody.appendChild(tr);
+        });
+      }
+      el.pageInfo.textContent = `第 ${state.page} / ${totalPages} 頁`;
+    }
 
-        // 初始化日期字段為今天
-        document.getElementById('inspection-date').valueAsDate = new Date();
+    function viewRecord(id){
+      const r = state.records.find(x=>x.id===id); if(!r) return;
+      let msg = `產品圖號: ${r.productNumber}\n批號: ${r.batchNumber}\n檢驗日期: ${utils.fmtDate(r.inspectionDate)}\n結果: ${r.status==='pass'?'合格':'不合格'}\n\n`;
+      if(r.measurements?.length){ msg += '尺寸測量結果:\n'; r.measurements.forEach(m=>{ msg += `${m.name}: ${m.actual} (標準:${m.standard}, 公差:${m.upperTol>=0? '+'+m.upperTol:m.upperTol}/${m.lowerTol>=0? '+'+m.lowerTol:m.lowerTol})\n`; }); }
+      if(r.notes) msg += `\n備註: ${r.notes}`;
+      alert(msg);
+    }
 
-        // 啟動應用
-        initApp();
-    </script>
+    async function deleteRecord(id){ if(!confirm('確定刪除此記錄？此操作無法復原。')) return; state.records = state.records.filter(r=>r.id!==id); try{ await persist(); utils.showMsg('記錄已刪除'); refreshDash(); renderTable(); }catch(err){ utils.showMsg('刪除失敗：'+err.message, true); }}
+
+    function exportCSV(){
+      const list = getFilteredSortedRecords();
+      const rows = [ ['日期','產品圖號','批號','檢驗員','結果','備註'] ];
+      list.forEach(r=> rows.push([ utils.fmtDate(r.inspectionDate), r.productNumber, r.batchNumber, r.userName||'', r.status==='pass'?'合格':'不合格', (r.notes||'').replace(/\n/g,' ') ]));
+      const csv = rows.map(row=> row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob(["\ufeff"+csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='inspection_records.csv'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    // ========= 用戶資料 =========
+    async function handleUpdateProfile(){ if(!state.currentUser) return; const name=document.getElementById('profile-name').value.trim(); const email=document.getElementById('profile-email').value.trim(); const department=document.getElementById('profile-department').value.trim(); const title=document.getElementById('profile-title').value.trim(); if(!name||!email){ utils.showMsg('請填寫姓名與電子郵件', true); return; } const i = state.users.findIndex(u=>u.id===state.currentUser.id); if(i>-1){ state.users[i] = {...state.users[i], name,email,department,title}; state.currentUser = state.users[i]; state.records.forEach(r=>{ if(r.userId===state.currentUser.id) r.userName=name; }); await persist(); localStorage.setItem('currentUser', JSON.stringify(state.currentUser)); loadUser(); renderTable(); utils.showMsg('個人資料已更新'); } }
+
+    async function handleChangePassword(){ if(!state.currentUser) return; const cur=document.getElementById('current-password').value; const nw=document.getElementById('new-password').value; const cfm=document.getElementById('confirm-new-password').value; if(!cur||!nw||!cfm){ utils.showMsg('請填寫所有密碼欄位', true); return; } if(nw!==cfm){ utils.showMsg('新密碼確認不一致', true); return; } if(nw.length<6){ utils.showMsg('新密碼至少 6 碼', true); return; } const i = state.users.findIndex(u=>u.id===state.currentUser.id); if(i>-1){ const ok = state.users[i].passwordHash ? (await utils.hash(cur)===state.users[i].passwordHash) : (state.users[i].password===cur); if(!ok){ utils.showMsg('當前密碼不正確', true); return; } state.users[i].passwordHash = await utils.hash(nw); delete state.users[i].password; state.currentUser = state.users[i]; await persist(); localStorage.setItem('currentUser', JSON.stringify(state.currentUser)); ['current-password','new-password','confirm-new-password'].forEach(id=> document.getElementById(id).value=''); utils.showMsg('密碼已更新'); } }
+
+    // ========= 同步儲存 =========
+    async function persist(){ const payload = { users: state.users, records: state.records }; return config.useLocalStorage ? utils.saveLocal(payload) : utils.updateRemote(payload); }
+
+    // 啟動
+    bootstrapConfigFromFunction().finally(init);
+  </script>
 </body>
 </html>
