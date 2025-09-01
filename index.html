@@ -329,6 +329,32 @@
             margin-bottom: 10px;
         }
         
+        .sync-section {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .config-code {
+            font-family: monospace;
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        
+        .copy-btn {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
         @media (max-width: 768px) {
             .dimension-inputs {
                 grid-template-columns: 1fr 1fr;
@@ -357,22 +383,27 @@
                 <h2>產品品質檢驗記錄系統</h2>
                 
                 <div class="setup-guide">
-                    <h3>首次使用設定說明</h3>
-                    <ol class="setup-steps">
-                        <li>請先到 <a href="https://jsonbin.io/" target="_blank">JSONBin.io</a> 註冊免費帳號</li>
-                        <li>獲取API金鑰（API Key）</li>
-                        <li>在下方輸入API金鑰並點擊"初始化系統"</li>
-                        <li>完成後即可註冊帳號開始使用</li>
-                    </ol>
+                    <h3>多設備同步設定</h3>
+                    <p>為了在不同設備間同步數據，您需要在每個設備上使用相同的API金鑰和BIN ID。</p>
                     
-                    <div class="api-key-help">
-                        <h4>如何獲取API金鑰？</h4>
-                        <ol>
-                            <li>登入JSONBin.io後，點擊右上角您的用戶名</li>
-                            <li>選擇"API Keys"</li>
-                            <li>複製"Secret Key"（不是Access Key）</li>
-                            <li>貼到下方的API金鑰欄位</li>
-                        </ol>
+                    <div class="sync-section">
+                        <h4>從其他設備導入配置</h4>
+                        <div class="form-group">
+                            <label for="config-code">配置代碼</label>
+                            <textarea id="config-code" rows="4" placeholder="從其他設備獲取的配置代碼"></textarea>
+                        </div>
+                        <button id="import-config" class="btn-success">導入配置</button>
+                    </div>
+                    
+                    <div class="sync-section">
+                        <h4>導出配置到其他設備</h4>
+                        <p>如果您已經在其他設備上設置過系統，可以點擊下方按鈕生成配置代碼：</p>
+                        <button id="export-config" class="btn-success">生成配置代碼</button>
+                        <div id="config-display" style="display: none; margin-top: 15px;">
+                            <p>請複製以下代碼到您的新設備：</p>
+                            <div class="config-code" id="config-code-display"></div>
+                            <button class="copy-btn" id="copy-config">複製代碼</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -381,12 +412,10 @@
                     <div class="form-group">
                         <label for="api-key">JSONBin.io API 金鑰</label>
                         <input type="text" id="api-key" placeholder="輸入您的JSONBin.io API金鑰">
-                        <small>請確保複製完整的API金鑰，不要包含多余空格</small>
                     </div>
                     <div class="form-group">
                         <label for="bin-id">BIN ID (選填)</label>
                         <input type="text" id="bin-id" placeholder="留空將自動創建">
-                        <small>如果是現有的BIN，請輸入BIN ID</small>
                     </div>
                     <button id="setup-btn">初始化系統</button>
                     <p style="text-align: center; margin-top: 15px;">
@@ -477,6 +506,7 @@
                 <li><a href="#history">歷史記錄查詢</a></li>
                 <li><a href="#specs">產品規格標準</a></li>
                 <li><a href="#profile">用戶資料</a></li>
+                <li><a href="#sync">設備同步</a></li>
             </ul>
             
             <div id="new-record" class="tab-content active">
@@ -620,6 +650,48 @@
                 
                 <button id="btn-change-password">變更密碼</button>
             </div>
+            
+            <div id="sync" class="tab-content">
+                <h2>設備同步設置</h2>
+                
+                <div class="sync-section">
+                    <h3>導出配置</h3>
+                    <p>生成配置代碼，用於在其他設備上同步設置：</p>
+                    <button id="generate-config" class="btn-success">生成配置代碼</button>
+                    
+                    <div id="config-result" style="display: none; margin-top: 20px;">
+                        <p>請複製以下配置代碼到您的新設備：</p>
+                        <div class="config-code" id="config-output"></div>
+                        <button class="copy-btn" id="copy-config-btn">複製代碼</button>
+                    </div>
+                </div>
+                
+                <div class="sync-section">
+                    <h3>導入配置</h3>
+                    <p>從其他設備導入配置代碼：</p>
+                    <div class="form-group">
+                        <label for="import-config-code">配置代碼</label>
+                        <textarea id="import-config-code" rows="4" placeholder="貼上從其他設備獲取的配置代碼"></textarea>
+                    </div>
+                    <button id="import-config-btn" class="btn-success">導入配置</button>
+                </div>
+                
+                <div class="sync-section">
+                    <h3>當前配置信息</h3>
+                    <div class="form-group">
+                        <label>API 金鑰</label>
+                        <div class="config-code" id="current-api-key"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>BIN ID</label>
+                        <div class="config-code" id="current-bin-id"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>存儲模式</label>
+                        <div class="config-code" id="current-storage-mode"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -663,7 +735,21 @@
             recordsBody: document.getElementById('records-body'),
             notification: document.getElementById('notification'),
             useLocalStorageBtn: document.getElementById('use-local-storage'),
-            storageType: document.getElementById('storage-type')
+            storageType: document.getElementById('storage-type'),
+            exportConfigBtn: document.getElementById('export-config'),
+            importConfigBtn: document.getElementById('import-config'),
+            configCode: document.getElementById('config-code'),
+            configDisplay: document.getElementById('config-display'),
+            configCodeDisplay: document.getElementById('config-code-display'),
+            copyConfigBtn: document.getElementById('copy-config'),
+            generateConfigBtn: document.getElementById('generate-config'),
+            importConfigBtn2: document.getElementById('import-config-btn'),
+            importConfigCode: document.getElementById('import-config-code'),
+            configOutput: document.getElementById('config-output'),
+            copyConfigBtn2: document.getElementById('copy-config-btn'),
+            currentApiKey: document.getElementById('current-api-key'),
+            currentBinId: document.getElementById('current-bin-id'),
+            currentStorageMode: document.getElementById('current-storage-mode')
         };
 
         // 工具函數
@@ -712,6 +798,27 @@
             // 清理API密钥中的特殊字符
             cleanApiKey: (key) => {
                 return key ? key.replace(/[^\x20-\x7E]/g, "").trim() : '';
+            },
+            
+            // 生成配置代碼
+            generateConfigCode: () => {
+                const configData = {
+                    apiKey: config.apiKey,
+                    binId: config.binId,
+                    useLocalStorage: config.useLocalStorage,
+                    timestamp: new Date().getTime()
+                };
+                
+                return btoa(JSON.stringify(configData));
+            },
+            
+            // 解析配置代碼
+            parseConfigCode: (code) => {
+                try {
+                    return JSON.parse(atob(code));
+                } catch (error) {
+                    throw new Error('無效的配置代碼');
+                }
             },
             
             // 從伺服器獲取數據
@@ -855,6 +962,9 @@
             // 更新存儲模式顯示
             elements.storageType.textContent = config.useLocalStorage ? '本地存儲' : 'JSONBin.io';
             
+            // 更新當前配置信息
+            updateConfigInfo();
+            
             if (config.useLocalStorage) {
                 // 使用本地存儲模式
                 const data = utils.fetchFromLocalStorage();
@@ -902,6 +1012,13 @@
             bindEvents();
         }
 
+        // 更新配置信息顯示
+        function updateConfigInfo() {
+            elements.currentApiKey.textContent = config.apiKey ? config.apiKey.substring(0, 10) + '...' : '未設置';
+            elements.currentBinId.textContent = config.binId || '未設置';
+            elements.currentStorageMode.textContent = config.useLocalStorage ? '本地存儲' : 'JSONBin.io';
+        }
+
         // 顯示設置表單
         function showSetupForm() {
             elements.setupForm.style.display = 'block';
@@ -913,6 +1030,7 @@
         function showAppPage() {
             elements.authPage.style.display = 'none';
             elements.appPage.style.display = 'block';
+            updateConfigInfo();
         }
 
         // 加載用戶數據
@@ -1068,6 +1186,14 @@
             elements.logoutBtn.addEventListener('click', handleLogout);
             elements.useLocalStorageBtn.addEventListener('click', handleUseLocalStorage);
             
+            // 配置導出導入事件
+            elements.exportConfigBtn.addEventListener('click', handleExportConfig);
+            elements.importConfigBtn.addEventListener('click', handleImportConfig);
+            elements.copyConfigBtn.addEventListener('click', handleCopyConfig);
+            elements.generateConfigBtn.addEventListener('click', handleGenerateConfig);
+            elements.importConfigBtn2.addEventListener('click', handleImportConfig2);
+            elements.copyConfigBtn2.addEventListener('click', handleCopyConfig2);
+            
             // 檢驗記錄相關事件
             document.getElementById('btn-save').addEventListener('click', handleSaveRecord);
             document.getElementById('btn-reset').addEventListener('click', handleResetForm);
@@ -1123,6 +1249,111 @@
             utils.showNotification('已切換到本地存儲模式');
             elements.setupForm.style.display = 'none';
             elements.loginForm.style.display = 'block';
+        }
+
+        // 處理導出配置
+        function handleExportConfig() {
+            if (!config.apiKey && !config.useLocalStorage) {
+                utils.showNotification('請先初始化系統', true);
+                return;
+            }
+            
+            const configCode = utils.generateConfigCode();
+            elements.configCodeDisplay.textContent = configCode;
+            elements.configDisplay.style.display = 'block';
+        }
+
+        // 處理導入配置
+        function handleImportConfig() {
+            const configCode = elements.configCode.value.trim();
+            
+            if (!configCode) {
+                utils.showNotification('請輸入配置代碼', true);
+                return;
+            }
+            
+            try {
+                const configData = utils.parseConfigCode(configCode);
+                
+                // 保存配置
+                config.apiKey = configData.apiKey;
+                config.binId = configData.binId;
+                config.useLocalStorage = configData.useLocalStorage;
+                
+                localStorage.setItem('apiKey', configData.apiKey);
+                localStorage.setItem('binId', configData.binId);
+                localStorage.setItem('useLocalStorage', configData.useLocalStorage.toString());
+                
+                utils.showNotification('配置導入成功');
+                elements.setupForm.style.display = 'none';
+                elements.loginForm.style.display = 'block';
+            } catch (error) {
+                utils.showNotification('導入配置失敗: ' + error.message, true);
+            }
+        }
+
+        // 處理複製配置
+        function handleCopyConfig() {
+            const configCode = elements.configCodeDisplay.textContent;
+            navigator.clipboard.writeText(configCode)
+                .then(() => {
+                    utils.showNotification('配置代碼已複製到剪貼板');
+                })
+                .catch(err => {
+                    utils.showNotification('複製失敗: ' + err, true);
+                });
+        }
+
+        // 處理生成配置
+        function handleGenerateConfig() {
+            if (!config.apiKey && !config.useLocalStorage) {
+                utils.showNotification('請先初始化系統', true);
+                return;
+            }
+            
+            const configCode = utils.generateConfigCode();
+            elements.configOutput.textContent = configCode;
+            elements.configResult.style.display = 'block';
+        }
+
+        // 處理導入配置2
+        function handleImportConfig2() {
+            const configCode = elements.importConfigCode.value.trim();
+            
+            if (!configCode) {
+                utils.showNotification('請輸入配置代碼', true);
+                return;
+            }
+            
+            try {
+                const configData = utils.parseConfigCode(configCode);
+                
+                // 保存配置
+                config.apiKey = configData.apiKey;
+                config.binId = configData.binId;
+                config.useLocalStorage = configData.useLocalStorage;
+                
+                localStorage.setItem('apiKey', configData.apiKey);
+                localStorage.setItem('binId', configData.binId);
+                localStorage.setItem('useLocalStorage', configData.useLocalStorage.toString());
+                
+                utils.showNotification('配置導入成功');
+                updateConfigInfo();
+            } catch (error) {
+                utils.showNotification('導入配置失敗: ' + error.message, true);
+            }
+        }
+
+        // 處理複製配置2
+        function handleCopyConfig2() {
+            const configCode = elements.configOutput.textContent;
+            navigator.clipboard.writeText(configCode)
+                .then(() => {
+                    utils.showNotification('配置代碼已複製到剪貼板');
+                })
+                .catch(err => {
+                    utils.showNotification('複製失敗: ' + err, true);
+                });
         }
 
         // 處理系統設置
