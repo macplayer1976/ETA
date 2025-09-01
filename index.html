@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>產品品質檢驗記錄系統</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -196,10 +195,6 @@
             background-color: #f9f9f9;
         }
         
-        .measurement-row input {
-            margin-right: 10px;
-        }
-        
         .status-pass {
             color: var(--success-color);
             font-weight: bold;
@@ -299,6 +294,22 @@
             background-color: var(--danger-color);
         }
         
+        .setup-guide {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .setup-steps {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        
+        .setup-steps li {
+            margin-bottom: 10px;
+        }
+        
         @media (max-width: 768px) {
             .dimension-inputs {
                 grid-template-columns: 1fr 1fr;
@@ -325,7 +336,34 @@
         <div id="auth-page" class="auth-container">
             <div class="auth-form">
                 <h2>產品品質檢驗記錄系統</h2>
-                <div id="login-form">
+                
+                <div class="setup-guide">
+                    <h3>首次使用設定說明</h3>
+                    <ol class="setup-steps">
+                        <li>請先到 <a href="https://jsonbin.io/" target="_blank">JSONBin.io</a> 註冊免費帳號</li>
+                        <li>獲取API金鑰（API Key）</li>
+                        <li>在下方輸入API金鑰並點擊"初始化系統"</li>
+                        <li>完成後即可註冊帳號開始使用</li>
+                    </ol>
+                </div>
+                
+                <div id="setup-form">
+                    <h3>系統初始化</h3>
+                    <div class="form-group">
+                        <label for="api-key">JSONBin.io API 金鑰</label>
+                        <input type="text" id="api-key" placeholder="輸入您的JSONBin.io API金鑰">
+                    </div>
+                    <div class="form-group">
+                        <label for="bin-id">BIN ID (選填)</label>
+                        <input type="text" id="bin-id" placeholder="留空將自動創建">
+                    </div>
+                    <button id="setup-btn">初始化系統</button>
+                    <p style="text-align: center; margin-top: 15px;">
+                        已經初始化？ <a href="#" id="show-login-after-setup">前往登錄</a>
+                    </p>
+                </div>
+                
+                <div id="login-form" style="display: none;">
                     <h3>用戶登錄</h3>
                     <div class="form-group">
                         <label for="login-email">電子郵件</label>
@@ -549,172 +587,33 @@
     <div id="notification" class="notification"></div>
 
     <script>
-        // 模拟后端API
-        const api = {
-            // 用户相关操作
-            users: {
-                register: (userData) => {
-                    return new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            const users = JSON.parse(localStorage.getItem('users') || '[]');
-                            const existingUser = users.find(u => u.email === userData.email);
-                            
-                            if (existingUser) {
-                                reject({ message: '該電子郵件已被註冊' });
-                            } else {
-                                const newUser = {
-                                    id: Date.now().toString(),
-                                    ...userData,
-                                    createdAt: new Date().toISOString()
-                                };
-                                users.push(newUser);
-                                localStorage.setItem('users', JSON.stringify(users));
-                                resolve(newUser);
-                            }
-                        }, 500);
-                    });
-                },
-                
-                login: (email, password) => {
-                    return new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            const users = JSON.parse(localStorage.getItem('users') || '[]');
-                            const user = users.find(u => u.email === email && u.password === password);
-                            
-                            if (user) {
-                                resolve(user);
-                            } else {
-                                reject({ message: '電子郵件或密碼不正確' });
-                            }
-                        }, 500);
-                    });
-                },
-                
-                updateProfile: (userId, profileData) => {
-                    return new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            const users = JSON.parse(localStorage.getItem('users') || '[]');
-                            const userIndex = users.findIndex(u => u.id === userId);
-                            
-                            if (userIndex !== -1) {
-                                users[userIndex] = { ...users[userIndex], ...profileData };
-                                localStorage.setItem('users', JSON.stringify(users));
-                                resolve(users[userIndex]);
-                            } else {
-                                reject({ message: '用戶不存在' });
-                            }
-                        }, 500);
-                    });
-                },
-                
-                changePassword: (userId, currentPassword, newPassword) => {
-                    return new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            const users = JSON.parse(localStorage.getItem('users') || '[]');
-                            const userIndex = users.findIndex(u => u.id === userId);
-                            
-                            if (userIndex !== -1) {
-                                if (users[userIndex].password === currentPassword) {
-                                    users[userIndex].password = newPassword;
-                                    localStorage.setItem('users', JSON.stringify(users));
-                                    resolve({ message: '密碼更新成功' });
-                                } else {
-                                    reject({ message: '當前密碼不正確' });
-                                }
-                            } else {
-                                reject({ message: '用戶不存在' });
-                            }
-                        }, 500);
-                    });
-                }
-            },
-            
-            // 检验记录相关操作
-            records: {
-                create: (recordData) => {
-                    return new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            try {
-                                const records = JSON.parse(localStorage.getItem('records') || '[]');
-                                const newRecord = {
-                                    id: Date.now().toString(),
-                                    ...recordData,
-                                    createdAt: new Date().toISOString()
-                                };
-                                records.push(newRecord);
-                                localStorage.setItem('records', JSON.stringify(records));
-                                resolve(newRecord);
-                            } catch (error) {
-                                reject({ message: '創建記錄失敗' });
-                            }
-                        }, 500);
-                    });
-                },
-                
-                getAll: (userId) => {
-                    return new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            try {
-                                const records = JSON.parse(localStorage.getItem('records') || '[]');
-                                const userRecords = records.filter(r => r.userId === userId);
-                                resolve(userRecords);
-                            } catch (error) {
-                                reject({ message: '獲取記錄失敗' });
-                            }
-                        }, 500);
-                    });
-                },
-                
-                search: (userId, query) => {
-                    return new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            try {
-                                const records = JSON.parse(localStorage.getItem('records') || '[]');
-                                const userRecords = records.filter(r => 
-                                    r.userId === userId && 
-                                    (r.productNumber.includes(query) || r.batchNumber.includes(query))
-                                );
-                                resolve(userRecords);
-                            } catch (error) {
-                                reject({ message: '搜索記錄失敗' });
-                            }
-                        }, 500);
-                    });
-                },
-                
-                delete: (recordId) => {
-                    return new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            try {
-                                const records = JSON.parse(localStorage.getItem('records') || '[]');
-                                const filteredRecords = records.filter(r => r.id !== recordId);
-                                localStorage.setItem('records', JSON.stringify(filteredRecords));
-                                resolve({ message: '記錄刪除成功' });
-                            } catch (error) {
-                                reject({ message: '刪除記錄失敗' });
-                            }
-                        }, 500);
-                    });
-                }
-            }
+        // 應用配置
+        const config = {
+            binId: localStorage.getItem('binId') || '',
+            apiKey: localStorage.getItem('apiKey') || '',
+            baseURL: 'https://api.jsonbin.io/v3/b'
         };
 
-        // 应用状态管理
+        // 應用狀態管理
         const state = {
             currentUser: null,
-            records: []
+            records: [],
+            users: []
         };
 
         // DOM 元素
         const elements = {
             authPage: document.getElementById('auth-page'),
             appPage: document.getElementById('app-page'),
+            setupForm: document.getElementById('setup-form'),
             loginForm: document.getElementById('login-form'),
             registerForm: document.getElementById('register-form'),
             loginBtn: document.getElementById('login-btn'),
             registerBtn: document.getElementById('register-btn'),
+            setupBtn: document.getElementById('setup-btn'),
             showRegister: document.getElementById('show-register'),
             showLogin: document.getElementById('show-login'),
+            showLoginAfterSetup: document.getElementById('show-login-after-setup'),
             logoutBtn: document.getElementById('logout-btn'),
             userAvatar: document.getElementById('user-avatar'),
             userName: document.getElementById('user-name'),
@@ -725,7 +624,7 @@
             notification: document.getElementById('notification')
         };
 
-        // 工具函数
+        // 工具函數
         const utils = {
             showNotification: (message, isError = false) => {
                 elements.notification.textContent = message;
@@ -766,44 +665,144 @@
             
             getInitials: (name) => {
                 return name ? name.charAt(0) : 'U';
+            },
+            
+            // 從伺服器獲取數據
+            fetchData: async () => {
+                if (!config.binId) {
+                    throw new Error('尚未設置BIN ID');
+                }
+                
+                try {
+                    const response = await fetch(`${config.baseURL}/${config.binId}`, {
+                        headers: {
+                            'X-Master-Key': config.apiKey
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('獲取數據失敗');
+                    }
+                    
+                    const data = await response.json();
+                    return data.record;
+                } catch (error) {
+                    console.error('獲取數據錯誤:', error);
+                    throw error;
+                }
+            },
+            
+            // 更新伺服器數據
+            updateData: async (newData) => {
+                if (!config.binId) {
+                    throw new Error('尚未設置BIN ID');
+                }
+                
+                try {
+                    const response = await fetch(`${config.baseURL}/${config.binId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Master-Key': config.apiKey
+                        },
+                        body: JSON.stringify(newData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('更新數據失敗');
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('更新數據錯誤:', error);
+                    throw error;
+                }
+            },
+            
+            // 創建新的BIN
+            createBin: async (initialData = { users: [], records: [] }) => {
+                try {
+                    const response = await fetch(config.baseURL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Master-Key': config.apiKey,
+                            'X-Bin-Name': '產品檢驗記錄系統數據'
+                        },
+                        body: JSON.stringify(initialData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('創建數據存儲失敗');
+                    }
+                    
+                    const data = await response.json();
+                    return data.metadata.id;
+                } catch (error) {
+                    console.error('創建BIN錯誤:', error);
+                    throw error;
+                }
             }
         };
 
-        // 初始化应用
-        function initApp() {
-            // 检查是否有已登录的用户
+        // 初始化應用
+        async function initApp() {
+            // 檢查是否有已登錄的用戶
             const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                state.currentUser = JSON.parse(savedUser);
-                showAppPage();
-                loadUserData();
-                loadRecords();
+            const savedApiKey = localStorage.getItem('apiKey');
+            const savedBinId = localStorage.getItem('binId');
+            
+            if (savedApiKey && savedBinId) {
+                config.apiKey = savedApiKey;
+                config.binId = savedBinId;
+                
+                // 嘗試從伺服器加載數據
+                try {
+                    const data = await utils.fetchData();
+                    state.users = data.users || [];
+                    state.records = data.records || [];
+                    
+                    if (savedUser) {
+                        state.currentUser = JSON.parse(savedUser);
+                        showAppPage();
+                        loadUserData();
+                        updateDashboard(state.records);
+                        renderRecordsTable(state.records);
+                    } else {
+                        elements.setupForm.style.display = 'none';
+                        elements.loginForm.style.display = 'block';
+                    }
+                } catch (error) {
+                    utils.showNotification('加載數據失敗，請檢查API金鑰和BIN ID', true);
+                    showSetupForm();
+                }
             } else {
-                showAuthPage();
+                showSetupForm();
             }
             
             bindEvents();
         }
 
-        // 显示认证页面
-        function showAuthPage() {
-            elements.authPage.style.display = 'flex';
-            elements.appPage.style.display = 'none';
+        // 顯示設置表單
+        function showSetupForm() {
+            elements.setupForm.style.display = 'block';
+            elements.loginForm.style.display = 'none';
+            elements.registerForm.style.display = 'none';
         }
 
-        // 显示应用主页面
+        // 顯示應用主頁面
         function showAppPage() {
             elements.authPage.style.display = 'none';
             elements.appPage.style.display = 'block';
         }
 
-        // 加载用户数据
+        // 加載用戶數據
         function loadUserData() {
             if (state.currentUser) {
                 elements.userName.textContent = `歡迎, ${state.currentUser.name}`;
                 elements.userAvatar.textContent = utils.getInitials(state.currentUser.name);
                 
-                // 填充用户资料表单
+                // 填充用戶資料表單
                 document.getElementById('profile-name').value = state.currentUser.name;
                 document.getElementById('profile-email').value = state.currentUser.email;
                 document.getElementById('profile-department').value = state.currentUser.department || '';
@@ -811,24 +810,9 @@
             }
         }
 
-        // 加载检验记录
-        function loadRecords() {
-            if (!state.currentUser) return;
-            
-            api.records.getAll(state.currentUser.id)
-                .then(records => {
-                    state.records = records;
-                    updateDashboard(records);
-                    renderRecordsTable(records);
-                })
-                .catch(error => {
-                    utils.showNotification(error.message, true);
-                });
-        }
-
-        // 更新仪表板数据
+        // 更新儀表板數據
         function updateDashboard(records) {
-            // 本月检验次数
+            // 本月檢驗次數
             const monthRecords = utils.getCurrentMonthRecords(records);
             elements.monthCount.textContent = monthRecords.length;
             
@@ -836,12 +820,12 @@
             const passRate = utils.calculatePassRate(records);
             elements.passRate.textContent = `${passRate}%`;
             
-            // 待处理异常（假设状态为fail的记录需要处理）
+            // 待處理異常（假設狀態為fail的記錄需要處理）
             const issueRecords = records.filter(r => r.status === 'fail');
             elements.issueCount.textContent = issueRecords.length;
         }
 
-        // 渲染记录表格
+        // 渲染記錄表格
         function renderRecordsTable(records) {
             elements.recordsBody.innerHTML = '';
             
@@ -854,14 +838,19 @@
                 return;
             }
             
-            records.forEach(record => {
+            // 按日期降序排序
+            const sortedRecords = records.sort((a, b) => 
+                new Date(b.inspectionDate) - new Date(a.inspectionDate)
+            );
+            
+            sortedRecords.forEach(record => {
                 const row = document.createElement('tr');
                 
                 row.innerHTML = `
                     <td>${utils.formatDate(record.inspectionDate)}</td>
                     <td>${record.productNumber}</td>
                     <td>${record.batchNumber}</td>
-                    <td>${state.currentUser.name}</td>
+                    <td>${record.userName || state.currentUser.name}</td>
                     <td class="${record.status === 'pass' ? 'status-pass' : 'status-fail'}">
                         ${record.status === 'pass' ? '合格' : '不合格'}
                     </td>
@@ -874,7 +863,7 @@
                 elements.recordsBody.appendChild(row);
             });
             
-            // 绑定查看和删除按钮事件
+            // 綁定查看和刪除按鈕事件
             document.querySelectorAll('.btn-view').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const recordId = btn.getAttribute('data-id');
@@ -890,31 +879,52 @@
             });
         }
 
-        // 查看记录详情
+        // 查看記錄詳情
         function viewRecord(recordId) {
             const record = state.records.find(r => r.id === recordId);
             if (record) {
-                alert(`產品圖號: ${record.productNumber}\n批號: ${record.batchNumber}\n檢驗日期: ${utils.formatDate(record.inspectionDate)}\n結果: ${record.status === 'pass' ? '合格' : '不合格'}`);
-            }
-        }
-
-        // 删除记录
-        function deleteRecord(recordId) {
-            if (confirm('確定要刪除這條記錄嗎？此操作無法撤銷。')) {
-                api.records.delete(recordId)
-                    .then(() => {
-                        utils.showNotification('記錄已刪除');
-                        loadRecords(); // 重新加载记录
-                    })
-                    .catch(error => {
-                        utils.showNotification(error.message, true);
+                let message = `產品圖號: ${record.productNumber}\n批號: ${record.batchNumber}\n檢驗日期: ${utils.formatDate(record.inspectionDate)}\n結果: ${record.status === 'pass' ? '合格' : '不合格'}\n\n`;
+                
+                if (record.measurements && record.measurements.length > 0) {
+                    message += "尺寸測量結果:\n";
+                    record.measurements.forEach(m => {
+                        message += `${m.name}: ${m.actual} (標準: ${m.standard}, 公差: ${m.upperTol > 0 ? '+' + m.upperTol : m.upperTol}/${m.lowerTol > 0 ? '+' + m.lowerTol : m.lowerTol})\n`;
                     });
+                }
+                
+                if (record.notes) {
+                    message += `\n備註: ${record.notes}`;
+                }
+                
+                alert(message);
             }
         }
 
-        // 绑定事件
+        // 刪除記錄
+        async function deleteRecord(recordId) {
+            if (confirm('確定要刪除這條記錄嗎？此操作無法撤銷。')) {
+                try {
+                    // 從本地狀態中刪除
+                    state.records = state.records.filter(r => r.id !== recordId);
+                    
+                    // 更新伺服器
+                    await utils.updateData({
+                        users: state.users,
+                        records: state.records
+                    });
+                    
+                    utils.showNotification('記錄已刪除');
+                    updateDashboard(state.records);
+                    renderRecordsTable(state.records);
+                } catch (error) {
+                    utils.showNotification('刪除記錄失敗: ' + error.message, true);
+                }
+            }
+        }
+
+        // 綁定事件
         function bindEvents() {
-            // 认证相关事件
+            // 認證相關事件
             elements.showRegister.addEventListener('click', (e) => {
                 e.preventDefault();
                 elements.loginForm.style.display = 'none';
@@ -927,30 +937,37 @@
                 elements.loginForm.style.display = 'block';
             });
             
+            elements.showLoginAfterSetup.addEventListener('click', (e) => {
+                e.preventDefault();
+                elements.setupForm.style.display = 'none';
+                elements.loginForm.style.display = 'block';
+            });
+            
+            elements.setupBtn.addEventListener('click', handleSetup);
             elements.loginBtn.addEventListener('click', handleLogin);
             elements.registerBtn.addEventListener('click', handleRegister);
             elements.logoutBtn.addEventListener('click', handleLogout);
             
-            // 检验记录相关事件
+            // 檢驗記錄相關事件
             document.getElementById('btn-save').addEventListener('click', handleSaveRecord);
             document.getElementById('btn-reset').addEventListener('click', handleResetForm);
             document.getElementById('btn-search').addEventListener('click', handleSearchRecords);
             
-            // 用户资料相关事件
+            // 用戶資料相關事件
             document.getElementById('btn-update-profile').addEventListener('click', handleUpdateProfile);
             document.getElementById('btn-change-password').addEventListener('click', handleChangePassword);
             
-            // 标签页切换
+            // 標籤頁切換
             document.querySelectorAll('.nav-tabs a').forEach(tab => {
                 tab.addEventListener('click', (e) => {
                     e.preventDefault();
                     const target = e.target.getAttribute('href').substring(1);
                     
-                    // 更新活动标签
+                    // 更新活動標籤
                     document.querySelectorAll('.nav-tabs a').forEach(t => t.classList.remove('active'));
                     e.target.classList.add('active');
                     
-                    // 显示对应内容
+                    // 顯示對應內容
                     document.querySelectorAll('.tab-content').forEach(content => {
                         content.classList.remove('active');
                     });
@@ -958,12 +975,12 @@
                 });
             });
             
-            // 添加尺寸项目
+            // 添加尺寸項目
             document.querySelector('.btn-add-dimension').addEventListener('click', () => {
                 const container = document.getElementById('measurements-container');
                 const newMeasurement = container.firstElementChild.cloneNode(true);
                 
-                // 清空输入框
+                // 清空輸入框
                 newMeasurement.querySelectorAll('input').forEach(input => {
                     input.value = '';
                 });
@@ -972,8 +989,46 @@
             });
         }
 
-        // 处理登录
-        function handleLogin() {
+        // 處理系統設置
+        async function handleSetup() {
+            const apiKey = document.getElementById('api-key').value;
+            let binId = document.getElementById('bin-id').value;
+            
+            if (!apiKey) {
+                utils.showNotification('請輸入API金鑰', true);
+                return;
+            }
+            
+            try {
+                config.apiKey = apiKey;
+                
+                // 如果沒有提供BIN ID，則創建一個新的
+                if (!binId) {
+                    binId = await utils.createBin();
+                    utils.showNotification('已創建新的數據存儲空間');
+                }
+                
+                config.binId = binId;
+                
+                // 保存配置到本地存儲
+                localStorage.setItem('apiKey', apiKey);
+                localStorage.setItem('binId', binId);
+                
+                // 嘗試加載數據
+                const data = await utils.fetchData();
+                state.users = data.users || [];
+                state.records = data.records || [];
+                
+                utils.showNotification('系統初始化成功');
+                elements.setupForm.style.display = 'none';
+                elements.loginForm.style.display = 'block';
+            } catch (error) {
+                utils.showNotification('系統初始化失敗: ' + error.message, true);
+            }
+        }
+
+        // 處理登錄
+        async function handleLogin() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             
@@ -982,22 +1037,33 @@
                 return;
             }
             
-            api.users.login(email, password)
-                .then(user => {
+            try {
+                // 從伺服器加載最新數據
+                const data = await utils.fetchData();
+                state.users = data.users || [];
+                
+                const user = state.users.find(u => u.email === email && u.password === password);
+                
+                if (user) {
                     state.currentUser = user;
                     localStorage.setItem('currentUser', JSON.stringify(user));
+                    state.records = data.records || [];
+                    
                     showAppPage();
                     loadUserData();
-                    loadRecords();
+                    updateDashboard(state.records);
+                    renderRecordsTable(state.records);
                     utils.showNotification('登錄成功');
-                })
-                .catch(error => {
-                    utils.showNotification(error.message, true);
-                });
+                } else {
+                    utils.showNotification('電子郵件或密碼不正確', true);
+                }
+            } catch (error) {
+                utils.showNotification('登錄失敗: ' + error.message, true);
+            }
         }
 
-        // 处理注册
-        function handleRegister() {
+        // 處理註冊
+        async function handleRegister() {
             const name = document.getElementById('register-name').value;
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
@@ -1018,29 +1084,57 @@
                 return;
             }
             
-            api.users.register({ name, email, password })
-                .then(user => {
-                    state.currentUser = user;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    showAppPage();
-                    loadUserData();
-                    utils.showNotification('註冊成功');
-                })
-                .catch(error => {
-                    utils.showNotification(error.message, true);
+            try {
+                // 從伺服器加載最新數據
+                const data = await utils.fetchData();
+                state.users = data.users || [];
+                
+                const existingUser = state.users.find(u => u.email === email);
+                
+                if (existingUser) {
+                    utils.showNotification('該電子郵件已被註冊', true);
+                    return;
+                }
+                
+                const newUser = {
+                    id: Date.now().toString(),
+                    name,
+                    email,
+                    password,
+                    createdAt: new Date().toISOString()
+                };
+                
+                state.users.push(newUser);
+                state.currentUser = newUser;
+                
+                // 更新伺服器
+                await utils.updateData({
+                    users: state.users,
+                    records: state.records
                 });
+                
+                localStorage.setItem('currentUser', JSON.stringify(newUser));
+                showAppPage();
+                loadUserData();
+                utils.showNotification('註冊成功');
+            } catch (error) {
+                utils.showNotification('註冊失敗: ' + error.message, true);
+            }
         }
 
-        // 处理登出
+        // 處理登出
         function handleLogout() {
             state.currentUser = null;
             localStorage.removeItem('currentUser');
-            showAuthPage();
+            elements.authPage.style.display = 'flex';
+            elements.appPage.style.display = 'none';
+            elements.setupForm.style.display = 'none';
+            elements.loginForm.style.display = 'block';
             utils.showNotification('已登出');
         }
 
-        // 处理保存记录
-        function handleSaveRecord() {
+        // 處理保存記錄
+        async function handleSaveRecord() {
             if (!state.currentUser) return;
             
             const productNumber = document.getElementById('product-number').value;
@@ -1053,7 +1147,7 @@
                 return;
             }
             
-            // 收集尺寸测量数据
+            // 收集尺寸測量數據
             const measurements = [];
             const measurementElements = document.querySelectorAll('#measurements-container > div');
             
@@ -1065,7 +1159,7 @@
                 const actual = measurementEl.querySelector('.dimension-actual').value;
                 
                 if (name && standard && actual) {
-                    // 简单判断是否合格
+                    // 簡單判斷是否合格
                     const numActual = parseFloat(actual);
                     const numStandard = parseFloat(standard);
                     const numUpperTol = parseFloat(upperTol || 0);
@@ -1092,38 +1186,51 @@
                 return;
             }
             
-            // 判断整体是否合格（所有尺寸都合格才算合格）
+            // 判斷整體是否合格（所有尺寸都合格才算合格）
             const overallStatus = measurements.every(m => m.status === 'pass') ? 'pass' : 'fail';
             
             const recordData = {
+                id: Date.now().toString(),
                 userId: state.currentUser.id,
+                userName: state.currentUser.name,
                 productNumber,
                 batchNumber,
                 inspectionDate,
                 measurements,
                 notes,
-                status: overallStatus
+                status: overallStatus,
+                createdAt: new Date().toISOString()
             };
             
-            api.records.create(recordData)
-                .then(() => {
-                    utils.showNotification('檢驗記錄已保存');
-                    handleResetForm();
-                    loadRecords(); // 重新加载记录
-                })
-                .catch(error => {
-                    utils.showNotification(error.message, true);
+            try {
+                // 添加到本地狀態
+                state.records.push(recordData);
+                
+                // 更新伺服器
+                await utils.updateData({
+                    users: state.users,
+                    records: state.records
                 });
+                
+                utils.showNotification('檢驗記錄已保存');
+                handleResetForm();
+                updateDashboard(state.records);
+                renderRecordsTable(state.records);
+            } catch (error) {
+                utils.showNotification('保存記錄失敗: ' + error.message, true);
+                // 如果失敗，從本地狀態中移除
+                state.records = state.records.filter(r => r.id !== recordData.id);
+            }
         }
 
-        // 处理重置表单
+        // 處理重置表單
         function handleResetForm() {
             if (confirm('確定要清除所有已輸入的資料嗎？')) {
                 document.querySelectorAll('#new-record input, #new-record textarea').forEach(input => {
                     input.value = '';
                 });
                 
-                // 只保留一组尺寸输入框
+                // 只保留一組尺寸輸入框
                 const container = document.getElementById('measurements-container');
                 while (container.children.length > 1) {
                     container.removeChild(container.lastChild);
@@ -1131,28 +1238,25 @@
             }
         }
 
-        // 处理搜索记录
+        // 處理搜索記錄
         function handleSearchRecords() {
-            if (!state.currentUser) return;
-            
-            const query = document.getElementById('search-input').value;
+            const query = document.getElementById('search-input').value.toLowerCase();
             
             if (!query) {
-                loadRecords(); // 如果没有查询条件，加载所有记录
+                renderRecordsTable(state.records);
                 return;
             }
             
-            api.records.search(state.currentUser.id, query)
-                .then(records => {
-                    renderRecordsTable(records);
-                })
-                .catch(error => {
-                    utils.showNotification(error.message, true);
-                });
+            const filteredRecords = state.records.filter(record => 
+                record.productNumber.toLowerCase().includes(query) || 
+                record.batchNumber.toLowerCase().includes(query)
+            );
+            
+            renderRecordsTable(filteredRecords);
         }
 
-        // 处理更新用户资料
-        function handleUpdateProfile() {
+        // 處理更新用戶資料
+        async function handleUpdateProfile() {
             if (!state.currentUser) return;
             
             const name = document.getElementById('profile-name').value;
@@ -1165,20 +1269,45 @@
                 return;
             }
             
-            api.users.updateProfile(state.currentUser.id, { name, email, department, title })
-                .then(updatedUser => {
-                    state.currentUser = updatedUser;
-                    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+            try {
+                // 更新本地狀態
+                const userIndex = state.users.findIndex(u => u.id === state.currentUser.id);
+                if (userIndex !== -1) {
+                    state.users[userIndex] = {
+                        ...state.users[userIndex],
+                        name,
+                        email,
+                        department,
+                        title
+                    };
+                    
+                    state.currentUser = state.users[userIndex];
+                    
+                    // 更新記錄中的用戶名
+                    state.records.forEach(record => {
+                        if (record.userId === state.currentUser.id) {
+                            record.userName = name;
+                        }
+                    });
+                    
+                    // 更新伺服器
+                    await utils.updateData({
+                        users: state.users,
+                        records: state.records
+                    });
+                    
+                    localStorage.setItem('currentUser', JSON.stringify(state.currentUser));
                     loadUserData();
+                    renderRecordsTable(state.records);
                     utils.showNotification('個人資料已更新');
-                })
-                .catch(error => {
-                    utils.showNotification(error.message, true);
-                });
+                }
+            } catch (error) {
+                utils.showNotification('更新資料失敗: ' + error.message, true);
+            }
         }
 
-        // 处理更改密码
-        function handleChangePassword() {
+        // 處理更改密碼
+        async function handleChangePassword() {
             if (!state.currentUser) return;
             
             const currentPassword = document.getElementById('current-password').value;
@@ -1200,24 +1329,42 @@
                 return;
             }
             
-            api.users.changePassword(state.currentUser.id, currentPassword, newPassword)
-                .then(() => {
-                    // 清空密码字段
+            if (currentPassword !== state.currentUser.password) {
+                utils.showNotification('當前密碼不正確', true);
+                return;
+            }
+            
+            try {
+                // 更新本地狀態
+                const userIndex = state.users.findIndex(u => u.id === state.currentUser.id);
+                if (userIndex !== -1) {
+                    state.users[userIndex].password = newPassword;
+                    state.currentUser = state.users[userIndex];
+                    
+                    // 更新伺服器
+                    await utils.updateData({
+                        users: state.users,
+                        records: state.records
+                    });
+                    
+                    localStorage.setItem('currentUser', JSON.stringify(state.currentUser));
+                    
+                    // 清空密碼字段
                     document.getElementById('current-password').value = '';
                     document.getElementById('new-password').value = '';
                     document.getElementById('confirm-new-password').value = '';
                     
                     utils.showNotification('密碼已更新');
-                })
-                .catch(error => {
-                    utils.showNotification(error.message, true);
-                });
+                }
+            } catch (error) {
+                utils.showNotification('變更密碼失敗: ' + error.message, true);
+            }
         }
 
-        // 初始化日期字段为今天
+        // 初始化日期字段為今天
         document.getElementById('inspection-date').valueAsDate = new Date();
 
-        // 启动应用
+        // 啟動應用
         initApp();
     </script>
 </body>
