@@ -55,85 +55,52 @@
     let records = [];
 
     async function load() {
-  msg.textContent = '載入中...';
-  const code = await ensurePasscode();
-  try {
-    const res = await fetch('/api/inspections', { headers: { 'x-passcode': code } });
-    const text = await res.text();
-    if (!res.ok) throw new Error(`HTTP ${res.status}：${text || '（無訊息）'}`);
-
-    // 先把回應文字轉成物件
-    let data = {};
-    try { data = JSON.parse(text); } catch (e) { data = text; }
-
-    // ★重點：標準化成「陣列」
-    records = normalizeRecords(data);
-
-    // 保險：若還不是陣列，強制變空陣列
-    if (!Array.isArray(records)) records = [];
-
-    // 再排序
-    records.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
-
-    msg.textContent = `共 ${records.length} 筆`;
-    render();
-  } catch (e) {
-    msg.textContent = '❌ 載入失敗：' + e.message;
-  }
-}
-
-function normalizeRecords(data) {
-  // 情況 1：已經是陣列 → 直接用
-  if (Array.isArray(data)) return data;
-
-  // 情況 2：JSONBIN v3 常見包裝：{ record: [...] }
-  if (data && Array.isArray(data.record)) return data.record;
-
-  // 情況 3：有些人會包在 { records: [...] }
-  if (data && Array.isArray(data.records)) return data.records;
-
-  // 情況 4：保險（拿到單筆物件就包成陣列）
-  if (data && typeof data === 'object') return [data];
-
-  // 其他都當空陣列
-  return [];
-}
-
+      msg.textContent = '載入中...';
+      const code = await ensurePasscode();
+      try {
+        const res = await fetch('/api/inspections', { headers: { 'x-passcode': code } });
+        if (!res.ok) throw new Error('後端回應非 200');
+        records = await res.json();
+        // 依時間新到舊
+        records.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+        msg.textContent = `共 ${records.length} 筆`;
+        render();
+      } catch (e) {
+        msg.textContent = '❌ 載入失敗：' + e.message;
+      }
+    }
 
     function render() {
-  const source = Array.isArray(records) ? records : []; // ★保險
-  const kw = (filterText.value || '').toLowerCase();
+      const kw = (filterText.value || '').toLowerCase();
+      const filtered = records.filter(r => {
+        const text = [
+          r.inspector, r.supplier, r.partNo, r.drawingNo, r.revision, r.notes
+        ].filter(Boolean).join(' ').toLowerCase();
+        return text.includes(kw);
+      });
 
-  const filtered = source.filter(r => {
-    const text = [
-      r.inspector, r.supplier, r.partNo, r.drawingNo, r.revision, r.notes
-    ].filter(Boolean).join(' ').toLowerCase();
-    return text.includes(kw);
-  });
-
-  tbody.innerHTML = '';
-  for (const r of filtered) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>
-        <div><strong>ID：</strong>${escapeHtml(r.id || '')}</div>
-        <div><strong>時間：</strong>${escapeHtml(formatTime(r.timestamp))}</div>
-        <div><strong>人員：</strong>${escapeHtml(r.inspector || '')}</div>
-        <div><strong>供應商：</strong>${escapeHtml(r.supplier || '')}</div>
-      </td>
-      <td>
-        <div><strong>料號：</strong>${escapeHtml(r.partNo || '')}</div>
-        <div><strong>圖號：</strong>${escapeHtml(r.drawingNo || '')}</div>
-        <div><strong>版次：</strong>${escapeHtml(r.revision || '')}</div>
-        <div><strong>備註：</strong>${escapeHtml(r.notes || '')}</div>
-      </td>
-      <td>${buildMeasurements(r.measurements || [])}</td>
-      <td><strong>${r.overallResult === 'PASS' ? '✅ PASS' : '❌ FAIL'}</strong></td>
-    `;
-    tbody.appendChild(tr);
-  }
-}
-
+      tbody.innerHTML = '';
+      for (const r of filtered) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <div><strong>ID：</strong>${escapeHtml(r.id)}</div>
+            <div><strong>時間：</strong>${escapeHtml(formatTime(r.timestamp))}</div>
+            <div><strong>人員：</strong>${escapeHtml(r.inspector || '')}</div>
+            <div><strong>供應商：</strong>${escapeHtml(r.supplier || '')}</div>
+          </td>
+          <td>
+            <div><strong>料號：</strong>${escapeHtml(r.partNo || '')}</div>
+            <div><strong>圖號：</strong>${escapeHtml(r.drawingNo || '')}</div>
+            <div><strong>版次：</strong>${escapeHtml(r.revision || '')}</div>
+            <div><strong>備註：</strong>${escapeHtml(r.notes || '')}</div>
+          </td>
+          <td>${buildMeasurements(r.measurements || [])}</td>
+          <td><strong>${r.overallResult === 'PASS' ? '✅ PASS' : '❌ FAIL'}</strong></td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
 
     function buildMeasurements(list) {
       if (!list.length) return '(無)';
