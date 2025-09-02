@@ -1,5 +1,5 @@
 // netlify/functions/inspections.js
-// 讀–合併–寫 + 重試 + 去重複；含健康檢查與詳細錯誤回傳（CommonJS）
+// 讀–合併–寫 + 重試 + 去重複；加上健康檢查(health)與診斷(diag)
 exports.handler = async (event) => {
   const ENV = process.env || {};
   const API_KEY  = ENV.JSONBIN_API_KEY;
@@ -25,6 +25,26 @@ exports.handler = async (event) => {
     return json(401, { error: 'Unauthorized: bad passcode' });
   }
 
+  // 診斷：僅回狀態與摘要，方便在前端檢查
+  if (event.httpMethod === 'GET' && (qs.diag === '1' || qs.diag === 'true')) {
+    const g = await jsonbinGet(BIN_ID, API_KEY);
+    if (!g.ok) return json(g.status || 500, { error: 'JSONBIN GET failed', detail: g.text });
+    const list = toList(g.json);
+    const last = list.length ? list[list.length - 1] : null;
+    return json(200, {
+      ok: true,
+      count: list.length,
+      last: last ? {
+        id: last.id,
+        timestamp: last.timestamp,
+        supplier: last.supplier,
+        partNo: last.partNo,
+        inspector: last.inspector,
+        hasMeasurements: Array.isArray(last.measurements)
+      } : null
+    });
+  }
+
   // 讀取全部
   if (event.httpMethod === 'GET') {
     const g = await jsonbinGet(BIN_ID, API_KEY);
@@ -45,7 +65,7 @@ exports.handler = async (event) => {
 
   return json(405, { error: 'Method Not Allowed' });
 
-  // ------------- 工具 -------------
+  // ---- 工具 ----
   function headers() {
     return {
       'Access-Control-Allow-Origin': '*',
