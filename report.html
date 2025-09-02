@@ -28,6 +28,7 @@
       <button class="btn" id="btnClear">清除關鍵字</button>
       <button class="btn" id="btnReset">重設通關碼</button>
       <button class="btn" id="btnDiag">診斷資料</button>
+      <button class="btn" id="btnRepair">一鍵修復</button>
       <button class="btn" id="btnPrint">列印 / 存成 PDF</button>
       <a class="btn" href="index.html">回現場輸入</a>
     </div>
@@ -49,7 +50,6 @@
   </div>
 
   <script>
-    // ====== 設定與元素 ======
     const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
     const tbody = document.getElementById('tbody');
     const filterText = document.getElementById('filterText');
@@ -64,73 +64,60 @@
       alert('通關碼已清除，請重新整理頁面並輸入通關碼。');
     });
     document.getElementById('btnDiag').addEventListener('click', diag);
-
+    document.getElementById('btnRepair').addEventListener('click', repair);
     filterText.addEventListener('input', render);
 
-    let records = [];
-
-    // 若網址加 #resetpass，自動清通關碼
     if (location.hash === '#resetpass') {
       localStorage.removeItem('qci_passcode');
       history.replaceState(null, '', location.pathname + location.search);
     }
 
-    // 把回傳資料標準化成陣列
-    function normalizeRecords(data) {
-      if (Array.isArray(data)) return data;
-      if (data && Array.isArray(data.record)) return data.record;
-      if (data && Array.isArray(data.records)) return data.records;
-      if (data && typeof data === 'object') return [data];
+    let records = [];
+
+    // 遞迴把任何 {record: ...} / [{record:...}] / 混雜 metadata 的結構攤平成「純陣列」
+    function listFromJson(x) {
+      if (!x) return [];
+      if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
+      if (looksLikeRecord(x)) return [x];
+      if (x && typeof x === 'object') {
+        if (x.record !== undefined) return listFromJson(x.record);
+        if (x.records !== undefined) return listFromJson(x.records);
+      }
       return [];
     }
-
-    // 只接受像樣的紀錄，避免空白列
+    function looksLikeRecord(o) {
+      return o && typeof o === 'object'
+        && typeof o.id === 'string'
+        && typeof o.timestamp === 'string'
+        && Array.isArray(o.measurements);
+    }
     function isValidRecord(r) {
-      if (!r || typeof r !== 'object') return false;
-      const hasId = typeof r.id === 'string' && r.id.trim().length > 0;
-      const hasTime = typeof r.timestamp === 'string' && r.timestamp.trim().length > 0;
-      const hasAnyInfo = !!(r.supplier || r.partNo || r.drawingNo || r.inspector);
-      const hasMeasurements = Array.isArray(r.measurements);
-      return hasId && hasTime && hasAnyInfo && hasMeasurements;
+      return looksLikeRecord(r) && !!(r.supplier || r.partNo || r.drawingNo || r.inspector);
     }
 
-    // 載入資料
     async function load() {
       msg.textContent = '載入中...';
-      raw.style.display = 'none';
-      raw.textContent = '';
+      raw.style.display = 'none'; raw.textContent = '';
       const code = await ensurePasscode();
       try {
         const res = await fetch('/api/inspections', { headers: { 'x-passcode': code } });
         const text = await res.text();
 
-        if (DEBUG) {
-          raw.style.display = 'block';
-          raw.textContent = '原始回應（前 1000 字）:\\n' + (text || '').slice(0, 1000);
-        }
-
+        if (DEBUG) { raw.style.display = 'block'; raw.textContent = '原始回應（前 1000 字）：\n' + (text || '').slice(0, 1000); }
         if (!res.ok) throw new Error(`HTTP ${res.status}：${text || '（無訊息）'}`);
 
         let data = {};
-        try { data = JSON.parse(text); } catch (e) { data = text; }
+        try { data = JSON.parse(text); } catch { data = text; }
 
-        let list = normalizeRecords(data);
-        if (!Array.isArray(list)) list = [];
-
-        const before = list.length;
-        list = list.filter(isValidRecord);
-        const dropped = before - list.length;
-
-        // 依時間新到舊
+        let list = listFromJson(data).filter(isValidRecord);
+        // 新到舊
         list.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
 
         records = list;
         render();
 
         if (records.length === 0) {
-          msg.textContent = '目前沒有可顯示的資料。請回現場輸入頁新增一筆，或按「診斷資料」檢查雲端狀態。' + (dropped>0?`（已忽略 ${dropped} 筆格式不完整的舊資料）`:'');
-        } else if (dropped > 0) {
-          msg.textContent = `共 ${records.length} 筆（已忽略 ${dropped} 筆格式不完整的舊資料）。可用關鍵字快速過濾。`;
+          msg.textContent = '目前沒有可顯示的資料。可按「一鍵修復」或回現場輸入頁新增一筆再試。';
         } else {
           msg.textContent = `共 ${records.length} 筆。可用關鍵字快速過濾。`;
         }
@@ -139,12 +126,9 @@
       }
     }
 
-    // 畫面渲染
     function render() {
-      const source = Array.isArray(records) ? records : [];
       const kw = (filterText.value || '').toLowerCase();
-
-      const filtered = source.filter(r => {
+      const filtered = records.filter(r => {
         const text = [ r.inspector, r.supplier, r.partNo, r.drawingNo, r.revision, r.notes ]
           .filter(Boolean).join(' ').toLowerCase();
         return text.includes(kw);
@@ -198,38 +182,36 @@
         </table>`;
     }
 
-    // 小工具
     function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
     function escapeHtml(s){
-      return (s||'').replace(/[&<>"']/g, function(c){
-        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]);
-      });
+      return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
     }
     function formatTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
 
     async function ensurePasscode() {
       let code = localStorage.getItem('qci_passcode') || '';
-      if (!code) {
-        code = prompt('請輸入通關碼（與現場輸入相同）') || '';
-        localStorage.setItem('qci_passcode', code);
-      }
+      if (!code) { code = prompt('請輸入通關碼（與現場輸入相同）') || ''; localStorage.setItem('qci_passcode', code); }
       return code;
     }
 
     async function diag() {
       const code = await ensurePasscode();
-      try {
-        const r = await fetch('/api/inspections?diag=1', { headers: { 'x-passcode': code }});
-        const t = await r.text();
-        raw.style.display = 'block';
-        raw.textContent = '診斷結果：\\n' + t;
-      } catch (e) {
-        raw.style.display = 'block';
-        raw.textContent = '診斷失敗：' + e.message;
-      }
+      const r = await fetch('/api/inspections?diag=1', { headers: { 'x-passcode': code }});
+      const t = await r.text();
+      raw.style.display = 'block'; raw.textContent = '診斷結果：\n' + t;
     }
 
-    // 初始載入
+    async function repair() {
+      const ok = confirm('這會嘗試把雲端資料攤平成乾淨的清單並寫回。要繼續嗎？');
+      if (!ok) return;
+      const code = await ensurePasscode();
+      const r = await fetch('/api/inspections?repair=1', { headers: { 'x-passcode': code }});
+      const t = await r.text();
+      raw.style.display = 'block'; raw.textContent = '修復結果：\n' + t;
+      // 修好後重新載入
+      await load();
+    }
+
     load();
   </script>
 </body>
