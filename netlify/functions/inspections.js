@@ -1,5 +1,5 @@
 // netlify/functions/inspections.js
-// 讀–合併–寫 + 重試 + 去重複；加上健康檢查(health)與診斷(diag)
+// 穩定版：讀–合併–寫 + 重試 + 去重複 + 巢狀資料自動攤平
 exports.handler = async (event) => {
   const ENV = process.env || {};
   const API_KEY  = ENV.JSONBIN_API_KEY;
@@ -9,8 +9,9 @@ exports.handler = async (event) => {
   // CORS
   if (event.httpMethod === 'OPTIONS') return text(200, 'OK');
 
-  // 健康檢查（不需通關碼）
   const qs = event.queryStringParameters || {};
+
+  // 健康檢查（不需通關碼）
   if (event.httpMethod === 'GET' && (qs.health === '1' || qs.health === 'true')) {
     return json(200, { ok: true, runtime: process.version, hasFetch: typeof fetch === 'function' });
   }
@@ -25,31 +26,39 @@ exports.handler = async (event) => {
     return json(401, { error: 'Unauthorized: bad passcode' });
   }
 
-  // 診斷：僅回狀態與摘要，方便在前端檢查
+  // 診斷：摘要
   if (event.httpMethod === 'GET' && (qs.diag === '1' || qs.diag === 'true')) {
     const g = await jsonbinGet(BIN_ID, API_KEY);
     if (!g.ok) return json(g.status || 500, { error: 'JSONBIN GET failed', detail: g.text });
-    const list = toList(g.json);
+    const list = listFromJson(g.json);
     const last = list.length ? list[list.length - 1] : null;
     return json(200, {
       ok: true,
       count: list.length,
       last: last ? {
-        id: last.id,
-        timestamp: last.timestamp,
-        supplier: last.supplier,
-        partNo: last.partNo,
-        inspector: last.inspector,
+        id: last.id, timestamp: last.timestamp, supplier: last.supplier,
+        partNo: last.partNo, inspector: last.inspector,
         hasMeasurements: Array.isArray(last.measurements)
       } : null
     });
+  }
+
+  // 修復：把巢狀資料攤平成乾淨陣列並寫回（GET /api/inspections?repair=1）
+  if (event.httpMethod === 'GET' && (qs.repair === '1' || qs.repair === 'true')) {
+    const g = await jsonbinGet(BIN_ID, API_KEY);
+    if (!g.ok) return json(g.status || 500, { error: 'JSONBIN GET failed', detail: g.text });
+    let list = listFromJson(g.json);
+    list = dedupById(list);
+    const p = await jsonbinPut(BIN_ID, API_KEY, list);
+    if (!p.ok) return json(p.status || 500, { error: 'JSONBIN PUT failed', detail: p.text });
+    return json(200, { ok: true, repaired: list.length });
   }
 
   // 讀取全部
   if (event.httpMethod === 'GET') {
     const g = await jsonbinGet(BIN_ID, API_KEY);
     if (!g.ok) return json(g.status || 500, { error: 'JSONBIN GET failed', detail: g.text });
-    return json(200, toList(g.json));
+    return json(200, listFromJson(g.json));
   }
 
   // 新增一筆
@@ -77,14 +86,7 @@ exports.handler = async (event) => {
   function text(code, s)    { return { statusCode: code, headers: headers(), body: s }; }
 };
 
-function toList(data) {
-  if (Array.isArray(data)) return data;
-  if (data && Array.isArray(data.record)) return data.record;
-  if (data && Array.isArray(data.records)) return data.records;
-  if (data && typeof data === 'object') return [data];
-  return [];
-}
-
+/* -------------- JSONBIN 基本 I/O -------------- */
 async function jsonbinGet(binId, apiKey) {
   try {
     const r = await fetch('https://api.jsonbin.io/v3/b/' + binId + '/latest', {
@@ -115,12 +117,38 @@ async function jsonbinPut(binId, apiKey, list) {
   }
 }
 
+/* -------------- 攤平巢狀資料 -------------- */
+function looksLikeRecord(o) {
+  return o && typeof o === 'object'
+    && typeof o.id === 'string'
+    && typeof o.timestamp === 'string'
+    && Array.isArray(o.measurements);
+}
+
+// 遞迴把任何 {record: ...} / [{record:...}] / 混雜 metadata 的結構攤平成「純陣列」
+function listFromJson(x) {
+  if (!x) return [];
+  if (Array.isArray(x)) {
+    // 把每個元素遞迴攤平後合併
+    return x.flatMap(listFromJson).filter(Boolean);
+  }
+  if (looksLikeRecord(x)) return [x];
+
+  // 常見結構：{ record: [...] } 或 { record: { record: [...] }, metadata: {...} }
+  if (x && typeof x === 'object') {
+    if (x.record !== undefined) return listFromJson(x.record);
+    if (x.records !== undefined) return listFromJson(x.records);
+  }
+  return [];
+}
+
+/* -------------- 去重複 & 儲存重試 -------------- */
 function dedupById(list) {
   const seen = new Set();
   const out = [];
   for (const item of list) {
     const id = item && item.id ? String(item.id) : '';
-    if (!id) { out.push(item); continue; }
+    if (!id) continue;                // 沒 id 的直接丟掉，避免髒資料
     if (!seen.has(id)) { seen.add(id); out.push(item); }
   }
   return out;
@@ -132,7 +160,7 @@ async function saveWithRetry(binId, apiKey, newRecord, maxTry) {
     const g = await jsonbinGet(binId, apiKey);
     if (!g.ok) { lastStatus = g.status; lastText = g.text; await sleep(120 * (i + 1)); continue; }
 
-    const latest = toList(g.json);
+    const latest = listFromJson(g.json);   // ★ 用新的攤平法取得「乾淨陣列」
     const merged = dedupById([...latest, newRecord]);
 
     const p = await jsonbinPut(binId, apiKey, merged);
