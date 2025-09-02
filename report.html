@@ -16,6 +16,7 @@
     .muted { color: #666; font-size: 13px; }
     a.btn { text-decoration: none; display: inline-block; }
     @media print { .noprint { display: none; } body { padding: 0; } }
+    pre { background:#f7f7f7; padding:12px; border-radius:8px; overflow:auto; }
   </style>
 </head>
 <body>
@@ -26,6 +27,7 @@
       <button class="btn" id="btnReload">重新載入</button>
       <button class="btn" id="btnClear">清除關鍵字</button>
       <button class="btn" id="btnReset">重設通關碼</button>
+      <button class="btn" id="btnDiag">診斷資料</button>
       <button class="btn" id="btnPrint">列印 / 存成 PDF</button>
       <a class="btn" href="index.html">回現場輸入</a>
     </div>
@@ -43,6 +45,7 @@
       <tbody id="tbody"></tbody>
     </table>
     <p id="msg" class="muted"></p>
+    <pre id="raw" class="noprint" style="display:none"></pre>
   </div>
 
   <script>
@@ -51,6 +54,7 @@
     const tbody = document.getElementById('tbody');
     const filterText = document.getElementById('filterText');
     const msg = document.getElementById('msg');
+    const raw = document.getElementById('raw');
 
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
     document.getElementById('btnReload').addEventListener('click', load);
@@ -59,6 +63,7 @@
       localStorage.removeItem('qci_passcode');
       alert('通關碼已清除，請重新整理頁面並輸入通關碼。');
     });
+    document.getElementById('btnDiag').addEventListener('click', diag);
 
     filterText.addEventListener('input', render);
 
@@ -70,7 +75,7 @@
       history.replaceState(null, '', location.pathname + location.search);
     }
 
-    // ====== 先定義：把任何格式標準化成陣列（避免 sort 錯誤） ======
+    // 把回傳資料標準化成陣列
     function normalizeRecords(data) {
       if (Array.isArray(data)) return data;
       if (data && Array.isArray(data.record)) return data.record;
@@ -79,7 +84,7 @@
       return [];
     }
 
-    // ★ 只接納「像樣」的紀錄，避免出現空白列
+    // 只接受像樣的紀錄，避免空白列
     function isValidRecord(r) {
       if (!r || typeof r !== 'object') return false;
       const hasId = typeof r.id === 'string' && r.id.trim().length > 0;
@@ -89,16 +94,19 @@
       return hasId && hasTime && hasAnyInfo && hasMeasurements;
     }
 
-    // ====== 載入資料 ======
+    // 載入資料
     async function load() {
       msg.textContent = '載入中...';
+      raw.style.display = 'none';
+      raw.textContent = '';
       const code = await ensurePasscode();
       try {
         const res = await fetch('/api/inspections', { headers: { 'x-passcode': code } });
         const text = await res.text();
 
         if (DEBUG) {
-          msg.textContent = `DEBUG 原始回應（前 300 字）：${(text || '').slice(0, 300)}`;
+          raw.style.display = 'block';
+          raw.textContent = '原始回應（前 1000 字）:\\n' + (text || '').slice(0, 1000);
         }
 
         if (!res.ok) throw new Error(`HTTP ${res.status}：${text || '（無訊息）'}`);
@@ -112,23 +120,26 @@
         const before = list.length;
         list = list.filter(isValidRecord);
         const dropped = before - list.length;
-        if (dropped > 0) {
-          msg.textContent = `已忽略 ${dropped} 筆格式不完整/測試用資料（不影響列印）。`;
-        } else {
-          msg.textContent = '';
-        }
 
         // 依時間新到舊
         list.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
 
         records = list;
         render();
+
+        if (records.length === 0) {
+          msg.textContent = '目前沒有可顯示的資料。請回現場輸入頁新增一筆，或按「診斷資料」檢查雲端狀態。' + (dropped>0?`（已忽略 ${dropped} 筆格式不完整的舊資料）`:'');
+        } else if (dropped > 0) {
+          msg.textContent = `共 ${records.length} 筆（已忽略 ${dropped} 筆格式不完整的舊資料）。可用關鍵字快速過濾。`;
+        } else {
+          msg.textContent = `共 ${records.length} 筆。可用關鍵字快速過濾。`;
+        }
       } catch (e) {
         msg.textContent = '❌ 載入失敗：' + e.message;
       }
     }
 
-    // ====== 畫面渲染 ======
+    // 畫面渲染
     function render() {
       const source = Array.isArray(records) ? records : [];
       const kw = (filterText.value || '').toLowerCase();
@@ -160,8 +171,6 @@
         `;
         tbody.appendChild(tr);
       }
-
-      msg.textContent = `共 ${records.length} 筆，符合篩選：${filtered.length} 筆`;
     }
 
     function buildMeasurements(list) {
@@ -189,7 +198,7 @@
         </table>`;
     }
 
-    // ====== 小工具 ======
+    // 小工具
     function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
     function escapeHtml(s){
       return (s||'').replace(/[&<>"']/g, function(c){
@@ -205,6 +214,19 @@
         localStorage.setItem('qci_passcode', code);
       }
       return code;
+    }
+
+    async function diag() {
+      const code = await ensurePasscode();
+      try {
+        const r = await fetch('/api/inspections?diag=1', { headers: { 'x-passcode': code }});
+        const t = await r.text();
+        raw.style.display = 'block';
+        raw.textContent = '診斷結果：\\n' + t;
+      } catch (e) {
+        raw.style.display = 'block';
+        raw.textContent = '診斷失敗：' + e.message;
+      }
     }
 
     // 初始載入
