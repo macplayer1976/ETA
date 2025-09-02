@@ -22,6 +22,7 @@
     .btn-secondary { background: #111827; color: white; }
     .btn-ghost { background: #f3f4f6; color:#111827; }
     .muted { color: #6b7280; font-size: 13px; }
+    .error { color: #b91c1c; }
     .hidden { display: none; }
     .toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
     a.btn { text-decoration: none; display:inline-block; }
@@ -41,7 +42,7 @@
         </div>
         <div>
           <label>通關碼（主管設定）</label>
-          <input id="passcode" placeholder="例如：A1234" />
+          <input id="passcode" type="password" placeholder="例如：A1234" />
         </div>
       </div>
       <div class="toolbar">
@@ -49,6 +50,7 @@
         <button class="btn btn-ghost" id="btnResetPass">清除通關碼</button>
         <a class="btn btn-ghost" href="/api/inspections?health=1" target="_blank">健康檢查</a>
       </div>
+      <p id="loginMsg" class="muted"></p>
     </div>
 
     <!-- 表單區 -->
@@ -108,17 +110,15 @@
   </div>
 
   <script>
-    const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
-
     const loginView = document.getElementById('loginView');
     const formView  = document.getElementById('formView');
     const inspector = document.getElementById('inspector');
     const passcode  = document.getElementById('passcode');
+    const loginMsg  = document.getElementById('loginMsg');
 
     const tbody = document.getElementById('tbody');
     const msg   = document.getElementById('msg');
 
-    // 綁定事件
     document.getElementById('btnLogin').addEventListener('click', onLogin);
     document.getElementById('btnResetPass').addEventListener('click', () => {
       localStorage.removeItem('qci_passcode'); alert('通關碼已清除。');
@@ -128,28 +128,64 @@
     document.getElementById('btnClearRows').addEventListener('click', () => { tbody.innerHTML=''; ensureRows(3); });
     document.getElementById('btnSave').addEventListener('click', save);
 
-    // 自動帶入先前的登入資訊
-    window.addEventListener('DOMContentLoaded', () => {
+    // 進入頁面：若有上次的姓名/通關碼 → 也要先驗證通關碼
+    window.addEventListener('DOMContentLoaded', async () => {
       const name = localStorage.getItem('qci_inspector') || '';
       const code = localStorage.getItem('qci_passcode') || '';
       if (name) inspector.value = name;
       if (code) passcode.value = code;
+
       if (name && code) {
-        loginView.classList.add('hidden');
-        formView.classList.remove('hidden');
-        ensureRows(3);
+        loginMsg.textContent = '自動驗證中...';
+        const ok = await validatePasscode(code);
+        if (ok) {
+          showForm();
+          ensureRows(3);
+          loginMsg.textContent = '';
+        } else {
+          localStorage.removeItem('qci_passcode');
+          loginMsg.innerHTML = '<span class="error">❌ 通關碼錯誤或已變更，請重新輸入。</span>';
+        }
       }
     });
 
-    function onLogin() {
+    async function onLogin() {
       const name = inspector.value.trim();
       const code = passcode.value.trim();
-      if (!name || !code) { alert('請輸入姓名與通關碼'); return; }
+      if (!name || !code) { loginMsg.innerHTML = '<span class="error">請輸入姓名與通關碼</span>'; return; }
+
+      loginMsg.textContent = '驗證中...';
+      const ok = await validatePasscode(code);
+      if (!ok) {
+        loginMsg.innerHTML = '<span class="error">❌ 通關碼錯誤，請重新輸入。</span>';
+        return; // 留在登入頁
+      }
+
+      // 只有通關碼正確才記錄與換頁
       localStorage.setItem('qci_inspector', name);
       localStorage.setItem('qci_passcode', code);
+      showForm();
+      if (tbody.children.length === 0) ensureRows(3);
+      loginMsg.textContent = '';
+    }
+
+    function showForm() {
       loginView.classList.add('hidden');
       formView.classList.remove('hidden');
-      if (tbody.children.length === 0) ensureRows(3);
+    }
+    function showLogin(msgText) {
+      if (msgText) loginMsg.innerHTML = '<span class="error">' + msgText + '</span>';
+      formView.classList.add('hidden');
+      loginView.classList.remove('hidden');
+    }
+
+    async function validatePasscode(code) {
+      try {
+        const res = await fetch('/api/inspections', { headers: { 'x-passcode': code } });
+        return res.ok; // 200 表示通關碼正確；401 就是錯誤
+      } catch {
+        return false;
+      }
     }
 
     function ensureRows(n) { for (let i=0; i<n; i++) addRow(); }
@@ -188,7 +224,7 @@
 
     async function save() {
       const record = buildRecord();
-      if (!record) return; // 檢查沒過會 return
+      if (!record) return;
 
       msg.textContent = '儲存中...';
       const btn = document.getElementById('btnSave');
@@ -196,8 +232,6 @@
 
       const code = localStorage.getItem('qci_passcode');
       try {
-        if (DEBUG) console.log('即將儲存的 record =', record);
-
         const res = await fetch('/api/inspections', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-passcode': code },
@@ -205,10 +239,14 @@
         });
         let text = '';
         try { text = await res.text(); } catch {}
-        if (!res.ok) throw new Error(`HTTP ${res.status}；訊息：${text || '（無訊息）'}`);
+        if (!res.ok) {
+          if (res.status === 401) {
+            showLogin('❌ 通關碼錯誤或已失效，請重新登入。');
+          }
+          throw new Error(`HTTP ${res.status}；訊息：${text || '（無訊息）'}`);
+        }
 
         msg.textContent = '✅ 已儲存到雲端（可到報告頁查看/列印）';
-        // 清空測量表（保留供應商/料號等欄位以利連續作業）
         tbody.innerHTML = '';
         ensureRows(3);
       } catch (e) {
@@ -222,7 +260,7 @@
     function buildRecord() {
       const inspectorName = localStorage.getItem('qci_inspector') || '';
       const code = localStorage.getItem('qci_passcode') || '';
-      if (!inspectorName || !code) { alert('請先登入'); return null; }
+      if (!inspectorName || !code) { showLogin('請先登入'); return null; }
 
       const supplier = document.getElementById('supplier').value.trim();
       const partNo = document.getElementById('partNo').value.trim();
@@ -238,11 +276,8 @@
 
       for (const tr of rows) {
         const [name, nominal, tolMinus, tolPlus, measured] = [...tr.querySelectorAll('input')].map(i => i.value.trim());
-        // 整列空白就略過
         if (!name && !nominal && !tolMinus && !tolPlus && !measured) continue;
-
-        // 只要有填就 5 欄必填
-        if (!name || !nominal || !tolMinus || !tolPlus || !measured) { alert('尺寸表有未填欄位'); return null; }
+        if (!name || !nominal || !tolMinus || !tolPlus || !measured) { alert('有未填欄位'); return null; }
 
         const n = parseFloat(nominal), lo = parseFloat(tolMinus), hi = parseFloat(tolPlus), m = parseFloat(measured);
         const dev = +(m - n).toFixed(3);
