@@ -13,6 +13,8 @@
     .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     input { padding: 8px; border: 1px solid #ccc; border-radius: 8px; }
     .btn { padding: 10px 14px; border: none; border-radius: 10px; background: #2563eb; color: #fff; cursor: pointer; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-outline { background: #f3f4f6; color:#111827; }
     .muted { color: #666; font-size: 13px; }
     a.btn { text-decoration: none; display: inline-block; }
     @media print { .noprint { display: none; } body { padding: 0; } }
@@ -25,10 +27,10 @@
     <div class="noprint row">
       <input id="filterText" placeholder="關鍵字（供應商/料號/圖號/檢驗人員）" style="flex:1" />
       <button class="btn" id="btnReload">重新載入</button>
-      <button class="btn" id="btnClear">清除關鍵字</button>
-      <button class="btn" id="btnReset">重設通關碼</button>
-      <button class="btn" id="btnDiag">診斷資料</button>
-      <button class="btn" id="btnRepair">一鍵修復</button>
+      <button class="btn btn-outline" id="btnClear">清除關鍵字</button>
+      <button class="btn btn-outline" id="btnReset">重設通關碼</button>
+      <button class="btn btn-outline" id="btnDiag">診斷資料</button>
+      <button class="btn btn-outline" id="btnRepair">一鍵修復</button>
       <button class="btn" id="btnPrint">列印 / 存成 PDF</button>
       <a class="btn" href="index.html">回現場輸入</a>
     </div>
@@ -40,7 +42,7 @@
           <th style="width:18%">基本資訊</th>
           <th style="width:22%">料件資訊</th>
           <th style="width:44%">量測明細</th>
-          <th style="width:16%">結果</th>
+          <th style="width:16%">結果 / 操作</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -67,6 +69,14 @@
     document.getElementById('btnRepair').addEventListener('click', repair);
     filterText.addEventListener('input', render);
 
+    // 事件委派：刪除按鈕
+    tbody.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-delete');
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      onDelete(id);
+    });
+
     if (location.hash === '#resetpass') {
       localStorage.removeItem('qci_passcode');
       history.replaceState(null, '', location.pathname + location.search);
@@ -74,7 +84,7 @@
 
     let records = [];
 
-    // 遞迴把任何 {record: ...} / [{record:...}] / 混雜 metadata 的結構攤平成「純陣列」
+    // 遞迴攤平巢狀資料
     function listFromJson(x) {
       if (!x) return [];
       if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
@@ -91,36 +101,23 @@
         && typeof o.timestamp === 'string'
         && Array.isArray(o.measurements);
     }
-    function isValidRecord(r) {
-      return looksLikeRecord(r) && !!(r.supplier || r.partNo || r.drawingNo || r.inspector);
-    }
+    function isValidRecord(r) { return looksLikeRecord(r) && !!(r.supplier || r.partNo || r.drawingNo || r.inspector); }
 
     async function load() {
-      msg.textContent = '載入中...';
-      raw.style.display = 'none'; raw.textContent = '';
+      msg.textContent = '載入中...'; raw.style.display = 'none'; raw.textContent = '';
       const code = await ensurePasscode();
       try {
         const res = await fetch('/api/inspections', { headers: { 'x-passcode': code } });
         const text = await res.text();
-
-        if (DEBUG) { raw.style.display = 'block'; raw.textContent = '原始回應（前 1000 字）：\n' + (text || '').slice(0, 1000); }
+        if (DEBUG) { raw.style.display = 'block'; raw.textContent = '原始回應（前 1000 字）：
+' + (text || '').slice(0, 1000); }
         if (!res.ok) throw new Error(`HTTP ${res.status}：${text || '（無訊息）'}`);
-
-        let data = {};
-        try { data = JSON.parse(text); } catch { data = text; }
-
+        let data = {}; try { data = JSON.parse(text); } catch { data = text; }
         let list = listFromJson(data).filter(isValidRecord);
-        // 新到舊
         list.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
-
         records = list;
         render();
-
-        if (records.length === 0) {
-          msg.textContent = '目前沒有可顯示的資料。可按「一鍵修復」或回現場輸入頁新增一筆再試。';
-        } else {
-          msg.textContent = `共 ${records.length} 筆。可用關鍵字快速過濾。`;
-        }
+        msg.textContent = records.length ? `共 ${records.length} 筆。可用關鍵字快速過濾。` : '目前沒有可顯示的資料。可按「一鍵修復」或回現場輸入頁新增一筆再試。';
       } catch (e) {
         msg.textContent = '❌ 載入失敗：' + e.message;
       }
@@ -151,9 +148,41 @@
             <div><strong>備註：</strong>${escapeHtml(r.notes || '')}</div>
           </td>
           <td>${buildMeasurements(r.measurements || [])}</td>
-          <td><strong>${r.overallResult === 'PASS' ? '✅ PASS' : '❌ FAIL'}</strong></td>
+          <td>
+            <div style="margin-bottom:6px"><strong>${r.overallResult === 'PASS' ? '✅ PASS' : '❌ FAIL'}</strong></div>
+            <div class="noprint">
+              <button class="btn btn-danger btn-delete" data-id="${escapeAttr(r.id)}">刪除此筆</button>
+            </div>
+          </td>
         `;
         tbody.appendChild(tr);
+      }
+    }
+
+    async function onDelete(id) {
+      if (!id) return;
+      const ok = confirm(`確定要刪除這筆資料嗎？
+ID：${id}
+（刪除後無法復原）`);
+      if (!ok) return;
+      const code = await ensurePasscode();
+      msg.textContent = '刪除中...';
+      try {
+        const res = await fetch('/api/inspections?id=' + encodeURIComponent(id), {
+          method: 'DELETE',
+          headers: { 'x-passcode': code }
+        });
+        const text = await res.text();
+        if (!res.ok) {
+          if (res.status === 401) localStorage.removeItem('qci_passcode');
+          throw new Error(`HTTP ${res.status}：${text || '（無訊息）'}`);
+        }
+        // 從前端快取移除並重畫
+        records = records.filter(r => r.id !== id);
+        render();
+        msg.textContent = '✅ 已刪除 1 筆。';
+      } catch (e) {
+        msg.textContent = '❌ 刪除失敗：' + e.message;
       }
     }
 
@@ -183,9 +212,8 @@
     }
 
     function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
-    function escapeHtml(s){
-      return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-    }
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+    function escapeAttr(s){ return String(s||'').replace(/"/g, '&quot;'); }
     function formatTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
 
     async function ensurePasscode() {
@@ -198,7 +226,8 @@
       const code = await ensurePasscode();
       const r = await fetch('/api/inspections?diag=1', { headers: { 'x-passcode': code }});
       const t = await r.text();
-      raw.style.display = 'block'; raw.textContent = '診斷結果：\n' + t;
+      raw.style.display = 'block'; raw.textContent = '診斷結果：
+' + t;
     }
 
     async function repair() {
@@ -207,8 +236,8 @@
       const code = await ensurePasscode();
       const r = await fetch('/api/inspections?repair=1', { headers: { 'x-passcode': code }});
       const t = await r.text();
-      raw.style.display = 'block'; raw.textContent = '修復結果：\n' + t;
-      // 修好後重新載入
+      raw.style.display = 'block'; raw.textContent = '修復結果：
+' + t;
       await load();
     }
 
