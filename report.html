@@ -22,6 +22,7 @@
     <h2>品檢報告（安拓）</h2>
     <div class="noprint row">
       <input id="filterText" placeholder="關鍵字（供應商/料號/圖號/檢驗人員）" style="flex:1" />
+      <button class="btn" id="btnClear">清除關鍵字</button>
       <button class="btn" id="btnReload">重新載入</button>
       <button class="btn" id="btnPrint">列印 / 存成 PDF</button>
       <a class="btn" href="index.html">回現場輸入</a>
@@ -49,6 +50,12 @@
 
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
     document.getElementById('btnReload').addEventListener('click', load);
+
+    document.getElementById('btnClear').addEventListener('click', () => {
+  filterText.value = '';
+  render();
+});
+
 
     filterText.addEventListener('input', render);
 
@@ -132,6 +139,8 @@ function normalizeRecords(data) {
     `;
     tbody.appendChild(tr);
   }
+  msg.textContent = `共 ${records.length} 筆，符合篩選：${tbody.querySelectorAll('tr').length} 筆`;
+
 }
 
 
