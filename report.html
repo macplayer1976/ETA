@@ -1,36 +1,4 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>品檢報告（安拓）</title>
-<style>
-body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 16px; }
-.card { max-width: 1100px; margin: 0 auto; }
-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
-th, td { border: 1px solid #ddd; padding: 8px; vertical-align: top; }
-th { background: #f7f7f7; }
-.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-input { padding: 8px; border: 1px solid #ccc; border-radius: 8px; }
-.btn { padding: 10px 14px; border: none; border-radius: 10px; background: #2563eb; color: #fff; cursor: pointer; }
-.muted { color: #666; font-size: 13px; }
-@media print { .noprint { display: none; } body { padding: 0; } }
-</style>
-</head>
-<body>
-<div class="card">
-<h2>品檢報告（安拓）</h2>
-<div class="noprint row">
-<input id="filterText" placeholder="關鍵字（供應商/料號/圖號/檢驗人員）" style="flex:1" />
-<button class="btn" id="btnReload">重新載入</button>
-<button class="btn" id="btnClear">清除關鍵字</button>
-<button class="btn" id="btnPrint">列印 / 存成 PDF</button>
-<a class="btn" href="index.html">回現場輸入</a>
-</div>
-<p class="muted noprint">首次使用會詢問通關碼；之後自動記住。</p>
-
-
-<table id="tbl">
 <thead>
 <tr>
 <th style="width:18%">基本資訊</th>
@@ -64,4 +32,65 @@ let records = [];
 
 // 把任何格式標準化成陣列
 function normalizeRecords(data) {
+if (Array.isArray(data)) return data;
+if (data && Array.isArray(data.record)) return data.record;
+if (data && Array.isArray(data.records)) return data.records;
+if (data && typeof data === 'object') return [data];
+return [];
+}
+
+
+async function load() {
+msg.textContent = '載入中...';
+const code = await ensurePasscode();
+try {
+const res = await fetch('/api/inspections', { headers: { 'x-passcode': code } });
+const text = await res.text();
+if (!res.ok) throw new Error(`HTTP ${res.status}：${text || '（無訊息）'}`);
+
+
+let data = {};
+try { data = JSON.parse(text); } catch (e) { data = text; }
+
+
+records = normalizeRecords(data);
+if (!Array.isArray(records)) records = [];
+
+
+// 依時間新到舊
+records.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+
+
+msg.textContent = `共 ${records.length} 筆`;
+render();
+} catch (e) {
+msg.textContent = '❌ 載入失敗：' + e.message;
+}
+}
+
+
+function render() {
+const source = Array.isArray(records) ? records : [];
+const kw = (filterText.value || '').toLowerCase();
+
+
+const filtered = source.filter(r => {
+const text = [ r.inspector, r.supplier, r.partNo, r.drawingNo, r.revision, r.notes ]
+.filter(Boolean).join(' ').toLowerCase();
+return text.includes(kw);
+});
+
+
+tbody.innerHTML = '';
+for (const r of filtered) {
+const tr = document.createElement('tr');
+tr.innerHTML = `
+<td>
+<div><strong>ID：</strong>${escapeHtml(r.id || '')}</div>
+<div><strong>時間：</strong>${escapeHtml(formatTime(r.timestamp))}</div>
+<div><strong>人員：</strong>${escapeHtml(r.inspector || '')}</div>
+<div><strong>供應商：</strong>${escapeHtml(r.supplier || '')}</div>
+</td>
+<td>
+<div><strong>料號：</strong>${escapeHtml(r.partNo || '')}</div>
 </html>
