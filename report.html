@@ -14,7 +14,6 @@
     input { padding: 8px; border: 1px solid #ccc; border-radius: 8px; }
     .btn { padding: 10px 14px; border: none; border-radius: 10px; background: #2563eb; color: #fff; cursor: pointer; }
     .muted { color: #666; font-size: 13px; }
-    a.btn { text-decoration: none; display: inline-block; }
     @media print { .noprint { display: none; } body { padding: 0; } }
   </style>
 </head>
@@ -23,13 +22,12 @@
     <h2>品檢報告（安拓）</h2>
     <div class="noprint row">
       <input id="filterText" placeholder="關鍵字（供應商/料號/圖號/檢驗人員）" style="flex:1" />
-      <button class="btn" id="btnReload">重新載入</button>
       <button class="btn" id="btnClear">清除關鍵字</button>
-      <button class="btn" id="btnReset">重設通關碼</button>
+      <button class="btn" id="btnReload">重新載入</button>
       <button class="btn" id="btnPrint">列印 / 存成 PDF</button>
       <a class="btn" href="index.html">回現場輸入</a>
     </div>
-    <p class="muted noprint">提示：網址加上 <code>?debug=1</code> 可顯示伺服器原始回應；網址加 <code>#resetpass</code> 可清除通關碼。</p>
+    <p class="muted noprint">首次使用會詢問通關碼；之後自動記住。</p>
 
     <table id="tbl">
       <thead>
@@ -46,128 +44,110 @@
   </div>
 
   <script>
-    // ====== 設定與元素 ======
-    const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
     const tbody = document.getElementById('tbody');
     const filterText = document.getElementById('filterText');
     const msg = document.getElementById('msg');
 
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
     document.getElementById('btnReload').addEventListener('click', load);
-    document.getElementById('btnClear').addEventListener('click', () => { filterText.value = ''; render(); });
-    document.getElementById('btnReset').addEventListener('click', () => {
-      localStorage.removeItem('qci_passcode');
-      alert('通關碼已清除，請重新整理頁面並輸入通關碼。');
-    });
+
+    document.getElementById('btnClear').addEventListener('click', () => {
+  filterText.value = '';
+  render();
+});
+
 
     filterText.addEventListener('input', render);
 
     let records = [];
 
-    // 若網址加 #resetpass，自動清通關碼
-    if (location.hash === '#resetpass') {
-      localStorage.removeItem('qci_passcode');
-      history.replaceState(null, '', location.pathname + location.search);
-    }
-
-    // ====== 先定義：把任何格式標準化成陣列（避免 sort 錯誤） ======
-    function normalizeRecords(data) {
-      if (Array.isArray(data)) return data;
-      if (data && Array.isArray(data.record)) return data.record;
-      if (data && Array.isArray(data.records)) return data.records;
-      if (data && typeof data === 'object') return [data];
-      return [];
-    }
-
-    // ★ 只接納「像樣」的紀錄，避免出現空白列
-    function isValidRecord(r) {
-      if (!r || typeof r !== 'object') return false;
-      const hasId = typeof r.id === 'string' && r.id.trim().length > 0;
-      const hasTime = typeof r.timestamp === 'string' && r.timestamp.trim().length > 0;
-      const hasAnyInfo = !!(r.supplier || r.partNo || r.drawingNo || r.inspector);
-      const hasMeasurements = Array.isArray(r.measurements);
-      return hasId && hasTime && hasAnyInfo && hasMeasurements;
-    }
-
-    // ====== 載入資料 ======
     async function load() {
-      msg.textContent = '載入中...';
-      const code = await ensurePasscode();
-      try {
-        const res = await fetch('/api/inspections', { headers: { 'x-passcode': code } });
-        const text = await res.text();
+  msg.textContent = '載入中...';
+  const code = await ensurePasscode();
+  try {
+    const res = await fetch('/api/inspections', { headers: { 'x-passcode': code } });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`HTTP ${res.status}：${text || '（無訊息）'}`);
 
-        if (DEBUG) {
-          msg.textContent = `DEBUG 原始回應（前 300 字）：${(text || '').slice(0, 300)}`;
-        }
+    // 先把回應文字轉成物件
+    let data = {};
+    try { data = JSON.parse(text); } catch (e) { data = text; }
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}：${text || '（無訊息）'}`);
+    // ★重點：標準化成「陣列」
+    records = normalizeRecords(data);
 
-        let data = {};
-        try { data = JSON.parse(text); } catch (e) { data = text; }
+    // 保險：若還不是陣列，強制變空陣列
+    if (!Array.isArray(records)) records = [];
 
-        let list = normalizeRecords(data);
-        if (!Array.isArray(list)) list = [];
+    // 再排序
+    records.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
 
-        const before = list.length;
-        list = list.filter(isValidRecord);
-        const dropped = before - list.length;
-        if (dropped > 0) {
-          msg.textContent = `已忽略 ${dropped} 筆格式不完整/測試用資料（不影響列印）。`;
-        } else {
-          msg.textContent = '';
-        }
+    msg.textContent = `共 ${records.length} 筆`;
+    render();
+  } catch (e) {
+    msg.textContent = '❌ 載入失敗：' + e.message;
+  }
+}
 
-        // 依時間新到舊
-        list.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+function normalizeRecords(data) {
+  // 情況 1：已經是陣列 → 直接用
+  if (Array.isArray(data)) return data;
 
-        records = list;
-        render();
-      } catch (e) {
-        msg.textContent = '❌ 載入失敗：' + e.message;
-      }
-    }
+  // 情況 2：JSONBIN v3 常見包裝：{ record: [...] }
+  if (data && Array.isArray(data.record)) return data.record;
 
-    // ====== 畫面渲染 ======
+  // 情況 3：有些人會包在 { records: [...] }
+  if (data && Array.isArray(data.records)) return data.records;
+
+  // 情況 4：保險（拿到單筆物件就包成陣列）
+  if (data && typeof data === 'object') return [data];
+
+  // 其他都當空陣列
+  return [];
+}
+
+
     function render() {
-      const source = Array.isArray(records) ? records : [];
-      const kw = (filterText.value || '').toLowerCase();
+  const source = Array.isArray(records) ? records : []; // ★保險
+  const kw = (filterText.value || '').toLowerCase();
 
-      const filtered = source.filter(r => {
-        const text = [ r.inspector, r.supplier, r.partNo, r.drawingNo, r.revision, r.notes ]
-          .filter(Boolean).join(' ').toLowerCase();
-        return text.includes(kw);
-      });
+  const filtered = source.filter(r => {
+    const text = [
+      r.inspector, r.supplier, r.partNo, r.drawingNo, r.revision, r.notes
+    ].filter(Boolean).join(' ').toLowerCase();
+    return text.includes(kw);
+  });
 
-      tbody.innerHTML = '';
-      for (const r of filtered) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>
-            <div><strong>ID：</strong>${escapeHtml(r.id || '')}</div>
-            <div><strong>時間：</strong>${escapeHtml(formatTime(r.timestamp))}</div>
-            <div><strong>人員：</strong>${escapeHtml(r.inspector || '')}</div>
-            <div><strong>供應商：</strong>${escapeHtml(r.supplier || '')}</div>
-          </td>
-          <td>
-            <div><strong>料號：</strong>${escapeHtml(r.partNo || '')}</div>
-            <div><strong>圖號：</strong>${escapeHtml(r.drawingNo || '')}</div>
-            <div><strong>版次：</strong>${escapeHtml(r.revision || '')}</div>
-            <div><strong>備註：</strong>${escapeHtml(r.notes || '')}</div>
-          </td>
-          <td>${buildMeasurements(r.measurements || [])}</td>
-          <td><strong>${r.overallResult === 'PASS' ? '✅ PASS' : '❌ FAIL'}</strong></td>
-        `;
-        tbody.appendChild(tr);
-      }
+  tbody.innerHTML = '';
+  for (const r of filtered) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div><strong>ID：</strong>${escapeHtml(r.id || '')}</div>
+        <div><strong>時間：</strong>${escapeHtml(formatTime(r.timestamp))}</div>
+        <div><strong>人員：</strong>${escapeHtml(r.inspector || '')}</div>
+        <div><strong>供應商：</strong>${escapeHtml(r.supplier || '')}</div>
+      </td>
+      <td>
+        <div><strong>料號：</strong>${escapeHtml(r.partNo || '')}</div>
+        <div><strong>圖號：</strong>${escapeHtml(r.drawingNo || '')}</div>
+        <div><strong>版次：</strong>${escapeHtml(r.revision || '')}</div>
+        <div><strong>備註：</strong>${escapeHtml(r.notes || '')}</div>
+      </td>
+      <td>${buildMeasurements(r.measurements || [])}</td>
+      <td><strong>${r.overallResult === 'PASS' ? '✅ PASS' : '❌ FAIL'}</strong></td>
+    `;
+    tbody.appendChild(tr);
+  }
+  msg.textContent = `共 ${records.length} 筆，符合篩選：${tbody.querySelectorAll('tr').length} 筆`;
 
-      msg.textContent = `共 ${records.length} 筆，符合篩選：${filtered.length} 筆`;
-    }
+}
+
 
     function buildMeasurements(list) {
       if (!list.length) return '(無)';
-      const rows = list.map(m => `
-        <tr>
+      const rows = list.map(m =>
+        `<tr>
           <td>${escapeHtml(m.name)}</td>
           <td>${num(m.nominal)}</td>
           <td>${num(m.tolMinus)}</td>
@@ -175,8 +155,8 @@
           <td>${num(m.measured)}</td>
           <td>${num(m.deviation)}</td>
           <td>${m.pass ? 'PASS' : 'FAIL'}</td>
-        </tr>
-      `).join('');
+        </tr>`
+      ).join('');
       return `
         <table>
           <thead>
@@ -189,13 +169,8 @@
         </table>`;
     }
 
-    // ====== 小工具 ======
     function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
-    function escapeHtml(s){
-      return (s||'').replace(/[&<>"']/g, function(c){
-        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]);
-      });
-    }
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
     function formatTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
 
     async function ensurePasscode() {
