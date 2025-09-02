@@ -9,10 +9,8 @@
     .card { max-width: 920px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px; background:#fff; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
     h2 { margin-top:0; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
     label { font-size: 14px; color: #333; display: block; margin-bottom: 4px; }
-    input, textarea, select { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 10px; box-sizing: border-box; }
-    textarea { resize: vertical; }
+    input, textarea { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 10px; box-sizing: border-box; }
     table { width: 100%; border-collapse: collapse; margin-top: 12px; }
     th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
     th { background: #f7f7f7; }
@@ -120,18 +118,17 @@
     const tbody = document.getElementById('tbody');
     const msg   = document.getElementById('msg');
 
-    // 事件綁定
+    // 綁定事件
     document.getElementById('btnLogin').addEventListener('click', onLogin);
     document.getElementById('btnResetPass').addEventListener('click', () => {
-      localStorage.removeItem('qci_passcode');
-      alert('通關碼已清除。');
+      localStorage.removeItem('qci_passcode'); alert('通關碼已清除。');
     });
     document.getElementById('btnAdd').addEventListener('click', addRow);
     document.getElementById('btnRemove').addEventListener('click', removeLastRow);
     document.getElementById('btnClearRows').addEventListener('click', () => { tbody.innerHTML=''; ensureRows(3); });
     document.getElementById('btnSave').addEventListener('click', save);
 
-    // 自動登入：若先前已輸入過
+    // 自動帶入先前的登入資訊
     window.addEventListener('DOMContentLoaded', () => {
       const name = localStorage.getItem('qci_inspector') || '';
       const code = localStorage.getItem('qci_passcode') || '';
@@ -191,7 +188,7 @@
 
     async function save() {
       const record = buildRecord();
-      if (!record) return;
+      if (!record) return; // 檢查沒過會 return
 
       msg.textContent = '儲存中...';
       const btn = document.getElementById('btnSave');
@@ -199,6 +196,8 @@
 
       const code = localStorage.getItem('qci_passcode');
       try {
+        if (DEBUG) console.log('即將儲存的 record =', record);
+
         const res = await fetch('/api/inspections', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-passcode': code },
@@ -214,7 +213,7 @@
         ensureRows(3);
       } catch (e) {
         msg.textContent = '❌ 儲存失敗：' + e.message;
-        if (DEBUG) console.error(e);
+        console.error(e);
       } finally {
         btn.disabled = false;
       }
@@ -239,8 +238,11 @@
 
       for (const tr of rows) {
         const [name, nominal, tolMinus, tolPlus, measured] = [...tr.querySelectorAll('input')].map(i => i.value.trim());
-        if (!name && !nominal && !tolMinus && !tolPlus && !measured) continue; // 空白列略過
-        if (!name || !nominal || !tolMinus || !tolPlus || !measured) { alert('有未填欄位'); return null; }
+        // 整列空白就略過
+        if (!name && !nominal && !tolMinus && !tolPlus && !measured) continue;
+
+        // 只要有填就 5 欄必填
+        if (!name || !nominal || !tolMinus || !tolPlus || !measured) { alert('尺寸表有未填欄位'); return null; }
 
         const n = parseFloat(nominal), lo = parseFloat(tolMinus), hi = parseFloat(tolPlus), m = parseFloat(measured);
         const dev = +(m - n).toFixed(3);
