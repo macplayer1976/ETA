@@ -67,8 +67,16 @@
     // 若網址加 #resetpass，自動清通關碼
     if (location.hash === '#resetpass') {
       localStorage.removeItem('qci_passcode');
-      // 移除 hash 以免影響之後操作
       history.replaceState(null, '', location.pathname + location.search);
+    }
+
+    // ====== 先定義：把任何格式標準化成陣列（避免 sort 錯誤） ======
+    function normalizeRecords(data) {
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.record)) return data.record;
+      if (data && Array.isArray(data.records)) return data.records;
+      if (data && typeof data === 'object') return [data];
+      return [];
     }
 
     // ====== 載入資料 ======
@@ -163,7 +171,10 @@
 
     // ====== 小工具 ======
     function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
-    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#039;'}[c])); }
+    function escapeHtml(s){
+      const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' };
+      return (s||'').replace(/[&<>"']/g, c => map[c] || c);
+    }
     function formatTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
 
     async function ensurePasscode() {
