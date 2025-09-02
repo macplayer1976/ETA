@@ -79,6 +79,16 @@
       return [];
     }
 
+    // ★ 只接納「像樣」的紀錄，避免出現空白列
+    function isValidRecord(r) {
+      if (!r || typeof r !== 'object') return false;
+      const hasId = typeof r.id === 'string' && r.id.trim().length > 0;
+      const hasTime = typeof r.timestamp === 'string' && r.timestamp.trim().length > 0;
+      const hasAnyInfo = !!(r.supplier || r.partNo || r.drawingNo || r.inspector);
+      const hasMeasurements = Array.isArray(r.measurements);
+      return hasId && hasTime && hasAnyInfo && hasMeasurements;
+    }
+
     // ====== 載入資料 ======
     async function load() {
       msg.textContent = '載入中...';
@@ -96,12 +106,22 @@
         let data = {};
         try { data = JSON.parse(text); } catch (e) { data = text; }
 
-        records = normalizeRecords(data);
-        if (!Array.isArray(records)) records = [];
+        let list = normalizeRecords(data);
+        if (!Array.isArray(list)) list = [];
+
+        const before = list.length;
+        list = list.filter(isValidRecord);
+        const dropped = before - list.length;
+        if (dropped > 0) {
+          msg.textContent = `已忽略 ${dropped} 筆格式不完整/測試用資料（不影響列印）。`;
+        } else {
+          msg.textContent = '';
+        }
 
         // 依時間新到舊
-        records.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+        list.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
 
+        records = list;
         render();
       } catch (e) {
         msg.textContent = '❌ 載入失敗：' + e.message;
@@ -172,8 +192,9 @@
     // ====== 小工具 ======
     function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
     function escapeHtml(s){
-      const map = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' };
-      return (s||'').replace(/[&<>"']/g, c => map[c] || c);
+      return (s||'').replace(/[&<>"']/g, function(c){
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]);
+      });
     }
     function formatTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
 
