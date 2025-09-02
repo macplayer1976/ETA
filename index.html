@@ -178,14 +178,21 @@
 
       try {
         const res = await fetch('/api/inspections', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-passcode': code
-          },
-          body: JSON.stringify({ record })
-        });
-        if (!res.ok) throw new Error('後端回應非 200');
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           'x-passcode': code
+         },
+         body: JSON.stringify({ record })
+       });
+
+      let text = '';
+      try { text = await res.text(); } catch {}
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}；訊息：${text || '（無訊息）'}`);
+       }
+
         msg.textContent = '✅ 已儲存到雲端（可到報告頁查看/列印）';
         // 清空測量表（保留供應商/料號等欄位以利連續作業）
         tbody.innerHTML = '';
