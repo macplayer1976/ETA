@@ -5,14 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>現場品檢（安拓）</title>
   <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 16px; }
-    .card { max-width: 900px; margin: 0 auto; border: 1px solid #ddd; border-radius: 12px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 16px; background:#fafafa; }
+    .card { max-width: 920px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px; background:#fff; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+    h2 { margin-top:0; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
     label { font-size: 14px; color: #333; display: block; margin-bottom: 4px; }
-    input, select, textarea { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; }
+    input, textarea, select { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 10px; box-sizing: border-box; }
+    textarea { resize: vertical; }
     table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
     th { background: #f7f7f7; }
     .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
     .pass { background: #e7f7ec; color: #116329; }
@@ -20,8 +22,11 @@
     .btn { padding: 12px 16px; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; }
     .btn-primary { background: #2563eb; color: white; }
     .btn-secondary { background: #111827; color: white; }
-    .muted { color: #666; font-size: 13px; }
+    .btn-ghost { background: #f3f4f6; color:#111827; }
+    .muted { color: #6b7280; font-size: 13px; }
     .hidden { display: none; }
+    .toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    a.btn { text-decoration: none; display:inline-block; }
   </style>
 </head>
 <body>
@@ -41,8 +46,10 @@
           <input id="passcode" placeholder="例如：A1234" />
         </div>
       </div>
-      <div style="margin-top:12px">
+      <div class="toolbar">
         <button class="btn btn-primary" id="btnLogin">登入</button>
+        <button class="btn btn-ghost" id="btnResetPass">清除通關碼</button>
+        <a class="btn btn-ghost" href="/api/inspections?health=1" target="_blank">健康檢查</a>
       </div>
     </div>
 
@@ -87,13 +94,15 @@
         </thead>
         <tbody id="tbody"></tbody>
       </table>
-      <div style="margin-top:8px">
-        <button class="btn btn-secondary" id="btnAdd">＋新增尺寸</button>
+      <div class="toolbar">
+        <button class="btn btn-ghost" id="btnAdd">＋新增尺寸</button>
+        <button class="btn btn-ghost" id="btnRemove">－刪除最後一列</button>
+        <button class="btn btn-ghost" id="btnClearRows">清空尺寸表</button>
       </div>
 
-      <div style="margin-top:20px">
+      <div class="toolbar">
         <button class="btn btn-primary" id="btnSave">儲存到雲端</button>
-        <a class="btn" href="report.html" style="margin-left:8px">查看/列印報告</a>
+        <a class="btn btn-secondary" href="report.html">查看/列印報告</a>
       </div>
 
       <p id="msg" class="muted" style="margin-top:8px"></p>
@@ -101,6 +110,8 @@
   </div>
 
   <script>
+    const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
+
     const loginView = document.getElementById('loginView');
     const formView  = document.getElementById('formView');
     const inspector = document.getElementById('inspector');
@@ -109,8 +120,31 @@
     const tbody = document.getElementById('tbody');
     const msg   = document.getElementById('msg');
 
-    // 邏輯：登入後才可填表；本機記住 inspector 與 passcode
-    document.getElementById('btnLogin').addEventListener('click', () => {
+    // 事件綁定
+    document.getElementById('btnLogin').addEventListener('click', onLogin);
+    document.getElementById('btnResetPass').addEventListener('click', () => {
+      localStorage.removeItem('qci_passcode');
+      alert('通關碼已清除。');
+    });
+    document.getElementById('btnAdd').addEventListener('click', addRow);
+    document.getElementById('btnRemove').addEventListener('click', removeLastRow);
+    document.getElementById('btnClearRows').addEventListener('click', () => { tbody.innerHTML=''; ensureRows(3); });
+    document.getElementById('btnSave').addEventListener('click', save);
+
+    // 自動登入：若先前已輸入過
+    window.addEventListener('DOMContentLoaded', () => {
+      const name = localStorage.getItem('qci_inspector') || '';
+      const code = localStorage.getItem('qci_passcode') || '';
+      if (name) inspector.value = name;
+      if (code) passcode.value = code;
+      if (name && code) {
+        loginView.classList.add('hidden');
+        formView.classList.remove('hidden');
+        ensureRows(3);
+      }
+    });
+
+    function onLogin() {
       const name = inspector.value.trim();
       const code = passcode.value.trim();
       if (!name || !code) { alert('請輸入姓名與通關碼'); return; }
@@ -118,41 +152,27 @@
       localStorage.setItem('qci_passcode', code);
       loginView.classList.add('hidden');
       formView.classList.remove('hidden');
-      ensureRows(3); // 預設三列尺寸
-    });
-
-    // 若已登入過，自動帶入
-    window.addEventListener('DOMContentLoaded', () => {
-      const name = localStorage.getItem('qci_inspector') || '';
-      const code = localStorage.getItem('qci_passcode') || '';
-      if (name && code) {
-        inspector.value = name;
-        passcode.value = code;
-        loginView.classList.add('hidden');
-        formView.classList.remove('hidden');
-        ensureRows(3);
-      }
-    });
-
-    document.getElementById('btnAdd').addEventListener('click', () => addRow());
+      if (tbody.children.length === 0) ensureRows(3);
+    }
 
     function ensureRows(n) { for (let i=0; i<n; i++) addRow(); }
 
     function addRow() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><input placeholder="例：頭部厚度"/></td>
-        <td><input type="number" step="0.001" placeholder="例：3.00"/></td>
-        <td><input type="number" step="0.001" placeholder="例：-0.10"/></td>
-        <td><input type="number" step="0.001" placeholder="例：0.10"/></td>
-        <td><input type="number" step="0.001" placeholder="例：3.06"/></td>
+        <td><input placeholder="例：頭部厚度" /></td>
+        <td><input type="number" inputmode="decimal" step="0.001" placeholder="例：3.000" /></td>
+        <td><input type="number" inputmode="decimal" step="0.001" placeholder="例：-0.100" /></td>
+        <td><input type="number" inputmode="decimal" step="0.001" placeholder="例：0.100" /></td>
+        <td><input type="number" inputmode="decimal" step="0.001" placeholder="例：3.060" /></td>
         <td><span class="tag">—</span></td>
       `;
-      // 綁定即時計算
       const inputs = tr.querySelectorAll('input');
       inputs.forEach(inp => inp.addEventListener('input', () => updateRow(tr)));
       tbody.appendChild(tr);
     }
+
+    function removeLastRow(){ if (tbody.lastElementChild) tbody.removeChild(tbody.lastElementChild); }
 
     function updateRow(tr) {
       const [name, nominal, tolMinus, tolPlus, measured] = [...tr.querySelectorAll('input')].map(i => i.value);
@@ -169,29 +189,24 @@
       }
     }
 
-    document.getElementById('btnSave').addEventListener('click', async () => {
+    async function save() {
       const record = buildRecord();
       if (!record) return;
 
       msg.textContent = '儲存中...';
-      const code = localStorage.getItem('qci_passcode');
+      const btn = document.getElementById('btnSave');
+      btn.disabled = true;
 
+      const code = localStorage.getItem('qci_passcode');
       try {
         const res = await fetch('/api/inspections', {
-         method: 'POST',
-         headers: {
-           'Content-Type': 'application/json',
-           'x-passcode': code
-         },
-         body: JSON.stringify({ record })
-       });
-
-      let text = '';
-      try { text = await res.text(); } catch {}
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}；訊息：${text || '（無訊息）'}`);
-       }
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-passcode': code },
+          body: JSON.stringify({ record })
+        });
+        let text = '';
+        try { text = await res.text(); } catch {}
+        if (!res.ok) throw new Error(`HTTP ${res.status}；訊息：${text || '（無訊息）'}`);
 
         msg.textContent = '✅ 已儲存到雲端（可到報告頁查看/列印）';
         // 清空測量表（保留供應商/料號等欄位以利連續作業）
@@ -199,8 +214,11 @@
         ensureRows(3);
       } catch (e) {
         msg.textContent = '❌ 儲存失敗：' + e.message;
+        if (DEBUG) console.error(e);
+      } finally {
+        btn.disabled = false;
       }
-    });
+    }
 
     function buildRecord() {
       const inspectorName = localStorage.getItem('qci_inspector') || '';
@@ -232,12 +250,15 @@
         measurements.push({ name, nominal: n, tolMinus: lo, tolPlus: hi, measured: m, deviation: dev, pass });
       }
 
+      if (measurements.length === 0) { alert('至少需要一筆尺寸資料'); return null; }
+
       const now = new Date();
       const id = `INS-${now.toISOString().slice(0,19).replace(/[-:T]/g,'')}-${Math.floor(Math.random()*900+100)}`;
+      const isoLocal = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString();
 
       return {
         id,
-        timestamp: new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString(), // ISO + 本地時區
+        timestamp: isoLocal,
         inspector: inspectorName,
         supplier, partNo, drawingNo, revision,
         notes,
