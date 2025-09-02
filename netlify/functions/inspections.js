@@ -1,5 +1,6 @@
 // netlify/functions/inspections.js
-// 穩定版：讀–合併–寫 + 重試 + 去重複（CommonJS 寫法，最相容）
+// 加強版：讀–合併–寫 + 重試 + 去重複 + 詳細錯誤
+// CommonJS 寫法（最相容）
 
 
 exports.handler = async (event, context) => {
@@ -16,23 +17,41 @@ return { statusCode: 200, headers: cors(), body: 'OK' };
 }
 
 
-// ★ 健康檢查（不需通關碼）：
-// 直接打 https://你的站名.netlify.app/api/inspections?health=1
 const qs = event.queryStringParameters || {};
+
+
+// ★ 健康檢查（不需通關碼）
 if (event.httpMethod === 'GET' && (qs.health === '1' || qs.health === 'true')) {
 return resp(200, { ok: true, runtime: process.version, hasFetch: typeof fetch === 'function' });
 }
 
 
-// 通關碼驗證
+// 通關碼驗證（診斷模式除外？→ diag 仍需通關碼）
 const clientPasscode = event.headers['x-passcode'];
 if (!clientPasscode || clientPasscode !== PASSCODE) {
 return resp(401, { error: 'Unauthorized: bad passcode' });
 }
 
 
+// ★ 診斷：只讀、回傳 bin 資訊（不動資料）
+if (event.httpMethod === 'GET' && (qs.diag === '1' || qs.diag === 'true')) {
+const g = await jsonbinGet(JSONBIN_BIN_ID, JSONBIN_API_KEY);
+if (!g.ok) return resp(g.status || 500, { error: 'JSONBIN GET failed', detail: g.text });
+const list = toList(g.json);
+const peek = list.at(-1) || null;
+return resp(200, {
+ok: true,
+count: list.length,
+lastId: peek && peek.id,
+lastTime: peek && peek.timestamp,
+});
+}
+
+
 if (event.httpMethod === 'GET') {
-const list = await getList(JSONBIN_BIN_ID, JSONBIN_API_KEY);
+const g = await jsonbinGet(JSONBIN_BIN_ID, JSONBIN_API_KEY);
+if (!g.ok) return resp(g.status || 500, { error: 'JSONBIN GET failed', detail: g.text });
+const list = toList(g.json);
 return resp(200, list);
 }
 
@@ -43,44 +62,4 @@ try { body = JSON.parse(event.body || '{}'); } catch {}
 if (!body || !body.record) return resp(400, { error: 'Missing record' });
 
 
-// ★ 關鍵：寫入前先合併最新資料，且自動重試
-const ok = await saveWithRetry(JSONBIN_BIN_ID, JSONBIN_API_KEY, body.record, 5);
-if (!ok) return resp(500, { error: 'Failed to save after retries' });
-return resp(200, { ok: true });
-}
-
-
-return resp(405, { error: 'Method Not Allowed' });
-
-
-} catch (err) {
-return resp(500, { error: 'Server exception', detail: String(err && err.stack || err) });
-}
-};
-
-
-/* ----------------- 工具函式 ----------------- */
-
-
-function cors() {
-return {
-'Access-Control-Allow-Origin': '*',
-'Access-Control-Allow-Headers': 'Content-Type, x-passcode',
-'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-};
-}
-function resp(code, obj) {
-return { statusCode: code, headers: cors(), body: JSON.stringify(obj) };
-}
-
-
-async function getList(binId, apiKey) {
-const r = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-headers: { 'X-Master-Key': apiKey },
-});
-const text = await r.text();
-if (!r.ok) {
-// 回傳空陣列讓流程不中斷（同時可視需要加上日誌或告警）
-return [];
-}
-}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
