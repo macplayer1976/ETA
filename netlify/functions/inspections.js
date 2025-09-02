@@ -1,5 +1,5 @@
 // netlify/functions/inspections.js
-// 穩定版：讀–合併–寫 + 重試 + 去重複 + 巢狀資料自動攤平
+// 讀–合併–寫 + 重試 + 去重複 + 巢狀資料自動攤平 + 單筆刪除(DELETE)
 exports.handler = async (event) => {
   const ENV = process.env || {};
   const API_KEY  = ENV.JSONBIN_API_KEY;
@@ -20,10 +20,12 @@ exports.handler = async (event) => {
     return json(500, { error: 'Missing env: JSONBIN_API_KEY / JSONBIN_BIN_ID / PASSCODE' });
   }
 
-  // 通關碼驗證
+  // 通關碼驗證（健康檢查以外都要）
   const clientPasscode = event.headers['x-passcode'];
-  if (!clientPasscode || clientPasscode !== PASSCODE) {
-    return json(401, { error: 'Unauthorized: bad passcode' });
+  if (!(event.httpMethod === 'GET' && (qs.health === '1' || qs.health === 'true'))) {
+    if (!clientPasscode || clientPasscode !== PASSCODE) {
+      return json(401, { error: 'Unauthorized: bad passcode' });
+    }
   }
 
   // 診斷：摘要
@@ -72,6 +74,20 @@ exports.handler = async (event) => {
     return json(200, { ok: true });
   }
 
+  // 刪除一筆（DELETE /api/inspections?id=INS-xxxx）
+  if (event.httpMethod === 'DELETE') {
+    const id = (qs.id || '').trim();
+    if (!id) return json(400, { error: 'Missing id' });
+
+    const result = await deleteWithRetry(BIN_ID, API_KEY, id, 5);
+    if (!result.ok) {
+      const status = result.lastStatus || 500;
+      return json(status, { error: 'Failed to delete', lastStatus: result.lastStatus, lastText: result.lastText });
+    }
+    if (!result.deleted) return json(404, { error: 'Not found', id });
+    return json(200, { ok: true, deleted: 1, id });
+  }
+
   return json(405, { error: 'Method Not Allowed' });
 
   // ---- 工具 ----
@@ -79,7 +95,7 @@ exports.handler = async (event) => {
     return {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'Content-Type, x-passcode',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     };
   }
   function json(code, obj) { return { statusCode: code, headers: headers(), body: JSON.stringify(obj) }; }
@@ -124,17 +140,10 @@ function looksLikeRecord(o) {
     && typeof o.timestamp === 'string'
     && Array.isArray(o.measurements);
 }
-
-// 遞迴把任何 {record: ...} / [{record:...}] / 混雜 metadata 的結構攤平成「純陣列」
 function listFromJson(x) {
   if (!x) return [];
-  if (Array.isArray(x)) {
-    // 把每個元素遞迴攤平後合併
-    return x.flatMap(listFromJson).filter(Boolean);
-  }
+  if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
   if (looksLikeRecord(x)) return [x];
-
-  // 常見結構：{ record: [...] } 或 { record: { record: [...] }, metadata: {...} }
   if (x && typeof x === 'object') {
     if (x.record !== undefined) return listFromJson(x.record);
     if (x.records !== undefined) return listFromJson(x.records);
@@ -142,13 +151,13 @@ function listFromJson(x) {
   return [];
 }
 
-/* -------------- 去重複 & 儲存重試 -------------- */
+/* -------------- 去重複 & 儲存/刪除 重試 -------------- */
 function dedupById(list) {
   const seen = new Set();
   const out = [];
   for (const item of list) {
     const id = item && item.id ? String(item.id) : '';
-    if (!id) continue;                // 沒 id 的直接丟掉，避免髒資料
+    if (!id) continue;
     if (!seen.has(id)) { seen.add(id); out.push(item); }
   }
   return out;
@@ -160,11 +169,31 @@ async function saveWithRetry(binId, apiKey, newRecord, maxTry) {
     const g = await jsonbinGet(binId, apiKey);
     if (!g.ok) { lastStatus = g.status; lastText = g.text; await sleep(120 * (i + 1)); continue; }
 
-    const latest = listFromJson(g.json);   // ★ 用新的攤平法取得「乾淨陣列」
+    const latest = listFromJson(g.json);
     const merged = dedupById([...latest, newRecord]);
 
     const p = await jsonbinPut(binId, apiKey, merged);
     if (p.ok) return { ok: true };
+
+    lastStatus = p.status; lastText = p.text;
+    await sleep(150 * (i + 1));
+  }
+  return { ok: false, lastStatus, lastText };
+}
+
+async function deleteWithRetry(binId, apiKey, id, maxTry) {
+  let lastStatus = 0, lastText = '';
+  for (let i = 0; i < maxTry; i++) {
+    const g = await jsonbinGet(binId, apiKey);
+    if (!g.ok) { lastStatus = g.status; lastText = g.text; await sleep(120 * (i + 1)); continue; }
+
+    const latest = listFromJson(g.json);
+    const exists = latest.some(it => it && String(it.id) === String(id));
+    if (!exists) return { ok: true, deleted: 0 }; // 已不存在，視為成功
+
+    const kept = latest.filter(it => it && String(it.id) !== String(id));
+    const p = await jsonbinPut(binId, apiKey, kept);
+    if (p.ok) return { ok: true, deleted: 1 };
 
     lastStatus = p.status; lastText = p.text;
     await sleep(150 * (i + 1));
