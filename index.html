@@ -1,597 +1,243 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>產品品質檢驗記錄系統（強化版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>現場品檢（安拓）</title>
   <style>
-    :root {
-      --primary-color: #2c3e50;
-      --secondary-color: #3498db;
-      --success-color: #2ecc71;
-      --warning-color: #f39c12;
-      --danger-color: #e74c3c;
-      --light-gray: #f5f5f5;
-      --dark-gray: #7f8c8d;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Microsoft JhengHei','微軟正黑體', Arial, sans-serif; }
-    body { background: linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%); min-height: 100vh; padding: 20px; color:#333; }
-    .container { width:100%; max-width:1200px; margin:0 auto; background:#fff; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,.1); overflow:hidden; }
-    header { background:var(--primary-color); color:#fff; padding:1rem; display:flex; justify-content:space-between; align-items:center; }
-    h1,h2,h3{ margin-bottom:.5rem; }
-
-    .auth-container { display:flex; justify-content:center; align-items:center; min-height:400px; padding:30px; }
-    .auth-form { background:#fff; padding:30px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,.1); width:100%; max-width:420px; }
-    .auth-form h2 { text-align:center; margin-bottom:20px; color:var(--primary-color); }
-
-    .form-group { margin-bottom:16px; }
-    label { display:block; margin-bottom:6px; font-weight:bold; }
-    input,select,textarea { width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-size:16px; transition:border .2s; }
-    input:focus,select:focus,textarea:focus{ border-color:var(--secondary-color); outline:none; }
-
-    button { background:var(--secondary-color); color:#fff; border:none; padding:12px 15px; border-radius:6px; cursor:pointer; font-size:16px; transition:filter .2s; }
-    button:hover{ filter:brightness(.95); }
-    .btn-danger{ background:var(--danger-color);} .btn-success{ background:var(--success-color);} .btn-small{ padding:6px 10px; font-size:14px; width:auto; }
-
-    .nav-tabs { display:flex; list-style:none; background:var(--light-gray); overflow:auto; }
-    .nav-tabs a { display:block; padding:14px 16px; text-decoration:none; color:var(--primary-color); font-weight:700; }
-    .nav-tabs a.active, .nav-tabs a:hover { background:var(--secondary-color); color:#fff; }
-
-    .tab-content{ display:none; padding:24px; } .tab-content.active{ display:block; }
-
-    table { width:100%; border-collapse:collapse; margin-top:10px; }
-    th,td { padding:12px 14px; text-align:left; border-bottom:1px solid #eee; }
-    th { background:var(--light-gray); }
-    tr:hover { background:#fafafa; }
-    .status-pass{ color:var(--success-color); font-weight:bold; } .status-fail{ color:var(--danger-color); font-weight:bold; }
-
-    .dashboard-cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin:20px; }
-    .card{ background:#fff; border-radius:10px; padding:20px; box-shadow:0 4px 6px rgba(0,0,0,.05); text-align:center; }
-    .card h3{ color:var(--primary-color); margin-bottom:8px; } .card .number{ font-size:2.2rem; font-weight:800; color:var(--secondary-color); }
-
-    .user-info{ display:flex; align-items:center; gap:10px; }
-    .user-avatar{ width:40px; height:40px; border-radius:50%; background:var(--secondary-color); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; }
-
-    .notification{ position:fixed; top:20px; right:20px; padding:14px 18px; border-radius:8px; color:#fff; background:var(--success-color); box-shadow:0 4px 6px rgba(0,0,0,.1); transform:translateX(120%); transition:transform .25s; z-index:1000; }
-    .notification.show{ transform:translateX(0); } .notification.error{ background:var(--danger-color); }
-
-    .measurement-item{ border:1px dashed #ddd; border-radius:10px; padding:12px; margin-bottom:12px; background:#fcfcfc; }
-    .measurement-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-    .measurement-actions{ display:flex; gap:8px; margin-top:10px; }
-
-    .pagination{ margin-top:12px; display:flex; gap:8px; align-items:center; }
-
-    @media (max-width:768px){ .measurement-grid{ grid-template-columns:repeat(2,1fr); }
-      .dashboard-cards{ grid-template-columns:1fr; }
-      header{ flex-direction:column; gap:12px; }
-    }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 16px; }
+    .card { max-width: 900px; margin: 0 auto; border: 1px solid #ddd; border-radius: 12px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    label { font-size: 14px; color: #333; display: block; margin-bottom: 4px; }
+    input, select, textarea { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f7f7f7; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+    .pass { background: #e7f7ec; color: #116329; }
+    .fail { background: #fde8e8; color: #c02020; }
+    .btn { padding: 12px 16px; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-secondary { background: #111827; color: white; }
+    .muted { color: #666; font-size: 13px; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- 登入 / 註冊 -->
-    <div id="auth-page" class="auth-container">
-      <div class="auth-form">
-        <h2>產品品質檢驗記錄系統</h2>
+  <div class="card">
+    <h2>現場品檢（安拓）</h2>
 
-        <div class="form-group" id="setup-guide">
-          <div style="background:#e8f4f8;border-radius:10px;padding:14px 16px;">
-            <h3>首次使用設定</h3>
-            <ol style="margin:10px 0 0 20px;">
-              <li>到 <a href="https://jsonbin.io/" target="_blank" rel="noopener">JSONBin.io</a> 註冊</li>
-              <li>取得 API Key（暫放前端僅供測試，<b>正式環境需改走後端代理！</b>）</li>
-              <li>輸入 API Key 與 BIN ID（可留空自動建立）</li>
-            </ol>
-          </div>
+    <!-- 登入區 -->
+    <div id="loginView">
+      <p class="muted">請輸入檢驗人員姓名與團隊通關碼。</p>
+      <div class="row">
+        <div>
+          <label>檢驗人員</label>
+          <input id="inspector" placeholder="例如：王小明" />
         </div>
-
-        <div id="setup-form">
-          <h3>系統初始化</h3>
-          <div class="form-group">
-            <label for="api-key">JSONBin.io API 金鑰（測試用）</label>
-            <input type="password" id="api-key" placeholder="輸入 JSONBin Secret Key（測試）" autocomplete="off" />
-            <small>⚠️ 正式上線請勿把 Master/Secret Key 放前端，請改用您自家的 API 代理！</small>
-          </div>
-          <div class="form-group">
-            <label for="bin-id">BIN ID（選填）</label>
-            <input type="text" id="bin-id" placeholder="留空將自動建立" />
-          </div>
-          <button id="setup-btn">初始化系統</button>
-          <p style="text-align:center;margin-top:12px;">已經初始化？ <a href="#" id="show-login-after-setup">前往登入</a></p>
+        <div>
+          <label>通關碼（主管設定）</label>
+          <input id="passcode" placeholder="例如：A1234" />
         </div>
-
-        <div style="background:#fff3cd;border-left:4px solid #ffc107;padding:10px 14px;border-radius:6px;margin:14px 0;">
-          <b>離線備援：</b> 若 JSONBin 有問題，可切換「本地存儲模式」。
-          <div style="margin-top:10px;"><button id="use-local-storage" class="btn-success">使用本地存儲模式</button></div>
-          <small>提醒：本地存儲不會跨裝置同步。</small>
-        </div>
-
-        <div id="login-form" style="display:none;">
-          <h3>用戶登入</h3>
-          <div class="form-group"><label for="login-email">電子郵件</label><input type="email" id="login-email" /></div>
-          <div class="form-group"><label for="login-password">密碼</label><input type="password" id="login-password" /></div>
-          <button id="login-btn">登入</button>
-          <p style="text-align:center;margin-top:12px;">還沒有帳戶？ <a href="#" id="show-register">註冊新帳戶</a></p>
-        </div>
-
-        <div id="register-form" style="display:none;">
-          <h3>用戶註冊</h3>
-          <div class="form-group"><label for="register-name">姓名</label><input type="text" id="register-name" /></div>
-          <div class="form-group"><label for="register-email">電子郵件</label><input type="email" id="register-email" /></div>
-          <div class="form-group"><label for="register-password">密碼</label><input type="password" id="register-password" placeholder="至少 6 碼" /></div>
-          <div class="form-group"><label for="register-confirm-password">確認密碼</label><input type="password" id="register-confirm-password" /></div>
-          <button id="register-btn">註冊</button>
-          <p style="text-align:center;margin-top:12px;">已有帳戶？ <a href="#" id="show-login">返回登入</a></p>
-        </div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn btn-primary" id="btnLogin">登入</button>
       </div>
     </div>
 
-    <!-- 主畫面 -->
-    <div id="app-page" style="display:none;">
-      <header>
-        <h1>產品品質檢驗記錄系統</h1>
-        <div class="user-info">
-          <div class="user-avatar" id="user-avatar">U</div>
-          <div>
-            <div id="user-name">歡迎</div>
-            <div id="storage-mode" style="font-size:12px;color:#dce6ec;">存儲模式：<span id="storage-type">JSONBin.io</span></div>
-            <button class="btn-danger btn-small" id="logout-btn">登出</button>
-          </div>
+    <!-- 表單區 -->
+    <div id="formView" class="hidden">
+      <div class="row">
+        <div>
+          <label>供應商</label>
+          <input id="supplier" placeholder="例如：XX 表面處理廠" />
         </div>
-      </header>
-
-      <div class="dashboard-cards">
-        <div class="card"><h3>本月檢驗次數</h3><div class="number" id="month-count">0</div></div>
-        <div class="card"><h3>合格率</h3><div class="number" id="pass-rate">0%</div></div>
-        <div class="card"><h3>待處理異常</h3><div class="number" id="issue-count">0</div></div>
-      </div>
-
-      <ul class="nav-tabs">
-        <li><a href="#new-record" class="active">新增檢驗記錄</a></li>
-        <li><a href="#history">歷史記錄查詢</a></li>
-        <li><a href="#specs">產品規格標準</a></li>
-        <li><a href="#profile">用戶資料</a></li>
-      </ul>
-
-      <div id="new-record" class="tab-content active">
-        <h2>新增檢驗記錄</h2>
-        <div class="form-group"><label for="product-number">產品圖號</label><input type="text" id="product-number" placeholder="輸入產品圖號" /></div>
-        <div class="form-group"><label for="batch-number">批號</label><input type="text" id="batch-number" placeholder="輸入產品批號" /></div>
-        <div class="form-group"><label for="inspection-date">檢驗日期</label><input type="date" id="inspection-date" /></div>
-
-        <h3 style="margin-top:4px;">尺寸測量記錄</h3>
-        <div id="measurements-container"></div>
-        <div class="measurement-actions">
-          <button id="btn-add-measurement" class="btn-success btn-small">新增尺寸項目</button>
-          <button id="btn-clear-measurements" class="btn-small">清空所有尺寸</button>
-        </div>
-
-        <div class="form-group" style="margin-top:10px;">
-          <label for="notes">備註</label>
-          <textarea id="notes" rows="3" placeholder="輸入檢驗備註資訊"></textarea>
-        </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button id="btn-save" class="btn-success">儲存記錄</button>
-          <button id="btn-reset">重新填寫</button>
+        <div>
+          <label>料號 (Part No.)</label>
+          <input id="partNo" placeholder="例如：RT138" />
         </div>
       </div>
-
-      <div id="history" class="tab-content">
-        <h2>歷史記錄查詢</h2>
-        <div class="form-group" style="display:flex; gap:8px;">
-          <input type="text" id="search-input" placeholder="搜尋產品圖號或批號" />
-          <button id="btn-search">搜尋</button>
-          <button id="btn-export" class="btn-small">匯出 CSV</button>
+      <div class="row">
+        <div>
+          <label>圖號 (Drawing No.)</label>
+          <input id="drawingNo" placeholder="例如：WKNO137-6" />
         </div>
-        <table id="records-table">
-          <thead><tr><th>日期</th><th>產品圖號</th><th>批號</th><th>檢驗員</th><th>結果</th><th>操作</th></tr></thead>
-          <tbody id="records-body"></tbody>
-        </table>
-        <div class="pagination">
-          <button id="prev-page" class="btn-small">上一頁</button>
-          <span id="page-info">第 1 / 1 頁</span>
-          <button id="next-page" class="btn-small">下一頁</button>
-          <select id="page-size" style="width:auto;">
-            <option value="10">每頁 10 筆</option>
-            <option value="25">每頁 25 筆</option>
-            <option value="50">每頁 50 筆</option>
-          </select>
+        <div>
+          <label>版次 (Revision)</label>
+          <input id="revision" placeholder="例如：Rev.B" />
         </div>
       </div>
-
-      <div id="specs" class="tab-content">
-        <h2>產品規格標準</h2>
-        <div class="form-group" style="display:flex; gap:8px;">
-          <input type="text" id="spec-search" placeholder="輸入產品圖號搜尋規格" />
-          <button id="btn-spec-search">搜尋</button>
-        </div>
-        <div id="spec-details"><p>請輸入產品圖號以查看詳細規格要求（此範例預留接口）。</p></div>
+      <div style="margin-top:12px">
+        <label>備註</label>
+        <textarea id="notes" rows="2" placeholder="例如：現場尺寸穩定"></textarea>
       </div>
 
-      <div id="profile" class="tab-content">
-        <h2>用戶資料</h2>
-        <div class="form-group"><label for="profile-name">姓名</label><input type="text" id="profile-name" /></div>
-        <div class="form-group"><label for="profile-email">電子郵件</label><input type="email" id="profile-email" /></div>
-        <div class="form-group"><label for="profile-department">部門</label><input type="text" id="profile-department" /></div>
-        <div class="form-group"><label for="profile-title">職稱</label><input type="text" id="profile-title" /></div>
-        <button id="btn-update-profile" class="btn-success">更新資料</button>
-
-        <h3 style="margin-top:22px;">變更密碼（示範：前端雜湊存放）</h3>
-        <div class="form-group"><label for="current-password">當前密碼</label><input type="password" id="current-password" /></div>
-        <div class="form-group"><label for="new-password">新密碼</label><input type="password" id="new-password" placeholder="至少 6 碼" /></div>
-        <div class="form-group"><label for="confirm-new-password">確認新密碼</label><input type="password" id="confirm-new-password" /></div>
-        <button id="btn-change-password">變更密碼</button>
+      <h3 style="margin-top:20px">尺寸量測</h3>
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th style="width:20%">尺寸名稱</th>
+            <th style="width:16%">名目值</th>
+            <th style="width:16%">下限公差</th>
+            <th style="width:16%">上限公差</th>
+            <th style="width:16%">實測值</th>
+            <th style="width:16%">結果</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div style="margin-top:8px">
+        <button class="btn btn-secondary" id="btnAdd">＋新增尺寸</button>
       </div>
+
+      <div style="margin-top:20px">
+        <button class="btn btn-primary" id="btnSave">儲存到雲端</button>
+        <a class="btn" href="report.html" style="margin-left:8px">查看/列印報告</a>
+      </div>
+
+      <p id="msg" class="muted" style="margin-top:8px"></p>
     </div>
   </div>
 
-  <div id="notification" class="notification"></div>
-
   <script>
-    // ========= 應用設定 =========
-    const config = {
-      binId: localStorage.getItem('binId') || '',
-      apiKey: sessionStorage.getItem('apiKey') || localStorage.getItem('apiKey') || '',
-      baseURL: 'https://api.jsonbin.io/v3/b',
-      useLocalStorage: localStorage.getItem('useLocalStorage') === 'true' || false,
-    };
+    const loginView = document.getElementById('loginView');
+    const formView  = document.getElementById('formView');
+    const inspector = document.getElementById('inspector');
+    const passcode  = document.getElementById('passcode');
 
-    // ========= 應用狀態 =========
-    const state = {
-      currentUser: null,
-      users: [],
-      records: [],
-      // 分頁
-      page: 1,
-      pageSize: 10,
-      search: '',
-    };
+    const tbody = document.getElementById('tbody');
+    const msg   = document.getElementById('msg');
 
-    // ========= DOM =========
-    const el = {
-      authPage: document.getElementById('auth-page'),
-      appPage: document.getElementById('app-page'),
-      setupForm: document.getElementById('setup-form'),
-      loginForm: document.getElementById('login-form'),
-      registerForm: document.getElementById('register-form'),
-      showRegister: document.getElementById('show-register'),
-      showLogin: document.getElementById('show-login'),
-      showLoginAfterSetup: document.getElementById('show-login-after-setup'),
-      setupBtn: document.getElementById('setup-btn'),
-      loginBtn: document.getElementById('login-btn'),
-      registerBtn: document.getElementById('register-btn'),
-      logoutBtn: document.getElementById('logout-btn'),
-      useLocalBtn: document.getElementById('use-local-storage'),
-      storageType: document.getElementById('storage-type'),
-      userAvatar: document.getElementById('user-avatar'),
-      userName: document.getElementById('user-name'),
-      monthCount: document.getElementById('month-count'),
-      passRate: document.getElementById('pass-rate'),
-      issueCount: document.getElementById('issue-count'),
-      recordsBody: document.getElementById('records-body'),
-      notification: document.getElementById('notification'),
-      // 新增記錄
-      productNumber: document.getElementById('product-number'),
-      batchNumber: document.getElementById('batch-number'),
-      inspectionDate: document.getElementById('inspection-date'),
-      notes: document.getElementById('notes'),
-      measurementsContainer: document.getElementById('measurements-container'),
-      addMeasurement: document.getElementById('btn-add-measurement'),
-      clearMeasurements: document.getElementById('btn-clear-measurements'),
-      saveBtn: document.getElementById('btn-save'),
-      resetBtn: document.getElementById('btn-reset'),
-      // 歷史
-      searchInput: document.getElementById('search-input'),
-      searchBtn: document.getElementById('btn-search'),
-      exportBtn: document.getElementById('btn-export'),
-      pageInfo: document.getElementById('page-info'),
-      prevPage: document.getElementById('prev-page'),
-      nextPage: document.getElementById('next-page'),
-      pageSize: document.getElementById('page-size'),
-    };
+    // 邏輯：登入後才可填表；本機記住 inspector 與 passcode
+    document.getElementById('btnLogin').addEventListener('click', () => {
+      const name = inspector.value.trim();
+      const code = passcode.value.trim();
+      if (!name || !code) { alert('請輸入姓名與通關碼'); return; }
+      localStorage.setItem('qci_inspector', name);
+      localStorage.setItem('qci_passcode', code);
+      loginView.classList.add('hidden');
+      formView.classList.remove('hidden');
+      ensureRows(3); // 預設三列尺寸
+    });
 
-    // ========= 工具 =========
-    const utils = {
-      // 安全字串（避免 XSS）
-      esc: (s) => (s==null?'' : String(s).replace(/[&<>"]|'/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]))),
-      showMsg: (msg, isErr=false) => {
-        el.notification.textContent = msg; el.notification.classList.add('show');
-        el.notification.classList.toggle('error', !!isErr);
-        setTimeout(()=> el.notification.classList.remove('show'), 2500);
-      },
-      cleanKey: (key) => key ? key.replace(/[\u0000-\u001f\u007f]/g,'').trim() : '',
-      todayISO: () => new Date().toISOString().slice(0,10),
-      fmtDate: (d) => { const dt = new Date(d); return isNaN(dt) ? '-' : dt.toLocaleDateString('zh-TW'); },
-      initials: (name) => name? name.trim().charAt(0).toUpperCase() : 'U',
-      passRate: (list) => list.length? Math.round(list.filter(r=>r.status==='pass').length*100/list.length) : 0,
-      monthRecords: (list) => {
-        const now = new Date(); const m = now.getMonth(); const y = now.getFullYear();
-        return list.filter(r=>{ const d=new Date(r.inspectionDate); return d.getMonth()===m && d.getFullYear()===y; });
-      },
-      // WebCrypto 雜湊（示範用）
-      hash: async (text) => {
-        const buf = new TextEncoder().encode(text);
-        const digest = await crypto.subtle.digest('SHA-256', buf);
-        return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
-      },
-      // LocalStorage 快照
-      fetchLocal: () => JSON.parse(localStorage.getItem('inspectionSystemData')||'{"users":[],"records":[]}'),
-      saveLocal: (data) => { localStorage.setItem('inspectionSystemData', JSON.stringify(data)); return {metadata:{id:'local-storage'}}; },
-      // JSONBin 讀取
-      fetchRemote: async () => {
-        if (!config.binId) throw new Error('尚未設定 BIN ID');
-        const key = utils.cleanKey(config.apiKey);
-        const res = await fetch(`${config.baseURL}/${config.binId}`, { headers: { 'X-Master-Key': key, 'Content-Type': 'application/json' } });
-        if (!res.ok) throw new Error('遠端讀取失敗: '+res.status);
-        const data = await res.json();
-        return data.record || { users:[], records:[] };
-      },
-      // JSONBin 更新
-      updateRemote: async (newData) => {
-        if (!config.binId) throw new Error('尚未設定 BIN ID');
-        const key = utils.cleanKey(config.apiKey);
-        const res = await fetch(`${config.baseURL}/${config.binId}`, {
-          method:'PUT', headers:{ 'Content-Type':'application/json','X-Master-Key': key }, body: JSON.stringify(newData)
+    // 若已登入過，自動帶入
+    window.addEventListener('DOMContentLoaded', () => {
+      const name = localStorage.getItem('qci_inspector') || '';
+      const code = localStorage.getItem('qci_passcode') || '';
+      if (name && code) {
+        inspector.value = name;
+        passcode.value = code;
+        loginView.classList.add('hidden');
+        formView.classList.remove('hidden');
+        ensureRows(3);
+      }
+    });
+
+    document.getElementById('btnAdd').addEventListener('click', () => addRow());
+
+    function ensureRows(n) { for (let i=0; i<n; i++) addRow(); }
+
+    function addRow() {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input placeholder="例：頭部厚度"/></td>
+        <td><input type="number" step="0.001" placeholder="例：3.00"/></td>
+        <td><input type="number" step="0.001" placeholder="例：-0.10"/></td>
+        <td><input type="number" step="0.001" placeholder="例：0.10"/></td>
+        <td><input type="number" step="0.001" placeholder="例：3.06"/></td>
+        <td><span class="tag">—</span></td>
+      `;
+      // 綁定即時計算
+      const inputs = tr.querySelectorAll('input');
+      inputs.forEach(inp => inp.addEventListener('input', () => updateRow(tr)));
+      tbody.appendChild(tr);
+    }
+
+    function updateRow(tr) {
+      const [name, nominal, tolMinus, tolPlus, measured] = [...tr.querySelectorAll('input')].map(i => i.value);
+      const tag = tr.querySelector('.tag');
+      if (nominal !== '' && tolMinus !== '' && tolPlus !== '' && measured !== '') {
+        const n = parseFloat(nominal), lo = parseFloat(tolMinus), hi = parseFloat(tolPlus), m = parseFloat(measured);
+        const dev = m - n;
+        const ok  = dev >= lo && dev <= hi;
+        tag.textContent = ok ? 'PASS' : 'FAIL';
+        tag.className = 'tag ' + (ok ? 'pass' : 'fail');
+      } else {
+        tag.textContent = '—';
+        tag.className = 'tag';
+      }
+    }
+
+    document.getElementById('btnSave').addEventListener('click', async () => {
+      const record = buildRecord();
+      if (!record) return;
+
+      msg.textContent = '儲存中...';
+      const code = localStorage.getItem('qci_passcode');
+
+      try {
+        const res = await fetch('/api/inspections', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-passcode': code
+          },
+          body: JSON.stringify({ record })
         });
-        if (!res.ok) throw new Error('遠端更新失敗: '+res.status);
-        utils.saveLocal(newData); // 同步本地備份
-        return res.json();
-      },
-      // 建立 JSONBin
-      createBin: async (initial={users:[],records:[]}) => {
-        const key = utils.cleanKey(config.apiKey);
-        try{
-          const res = await fetch(config.baseURL, { method:'POST', headers:{ 'Content-Type':'application/json','X-Master-Key': key, 'X-Bin-Name':'Product Inspection System Data' }, body: JSON.stringify(initial) });
-          if (!res.ok) throw new Error('建立失敗: '+res.status);
-          const data = await res.json(); return data.metadata.id;
-        }catch(err){
-          config.useLocalStorage = true; localStorage.setItem('useLocalStorage','true'); utils.saveLocal(initial); return 'local-storage';
-        }
+        if (!res.ok) throw new Error('後端回應非 200');
+        msg.textContent = '✅ 已儲存到雲端（可到報告頁查看/列印）';
+        // 清空測量表（保留供應商/料號等欄位以利連續作業）
+        tbody.innerHTML = '';
+        ensureRows(3);
+      } catch (e) {
+        msg.textContent = '❌ 儲存失敗：' + e.message;
       }
-    };
+    });
 
-    // ========= 初始化 =========
-    async function init(){
-      // 預設日期
-      el.inspectionDate.value = utils.todayISO();
-      // 顯示存儲模式
-      el.storageType.textContent = config.useLocalStorage ? '本地存儲' : (config.viaFunction ? 'Netlify 代理' : 'JSONBin.io');
+    function buildRecord() {
+      const inspectorName = localStorage.getItem('qci_inspector') || '';
+      const code = localStorage.getItem('qci_passcode') || '';
+      if (!inspectorName || !code) { alert('請先登入'); return null; }
 
-      if (config.viaFunction) {
-        const guide = document.getElementById('setup-guide');
-        if (guide) guide.style.display = 'none';
-        el.setupForm.style.display = 'none';
-        el.loginForm.style.display = 'block';
+      const supplier = document.getElementById('supplier').value.trim();
+      const partNo = document.getElementById('partNo').value.trim();
+      const drawingNo = document.getElementById('drawingNo').value.trim();
+      const revision = document.getElementById('revision').value.trim();
+      const notes = document.getElementById('notes').value.trim();
+
+      if (!supplier || !partNo) { alert('請輸入供應商與料號'); return null; }
+
+      const rows = [...tbody.querySelectorAll('tr')];
+      const measurements = [];
+      let allPass = true;
+
+      for (const tr of rows) {
+        const [name, nominal, tolMinus, tolPlus, measured] = [...tr.querySelectorAll('input')].map(i => i.value.trim());
+        if (!name && !nominal && !tolMinus && !tolPlus && !measured) continue; // 空白列略過
+        if (!name || !nominal || !tolMinus || !tolPlus || !measured) { alert('有未填欄位'); return null; }
+
+        const n = parseFloat(nominal), lo = parseFloat(tolMinus), hi = parseFloat(tolPlus), m = parseFloat(measured);
+        const dev = +(m - n).toFixed(3);
+        const pass = dev >= lo && dev <= hi;
+        if (!pass) allPass = false;
+
+        measurements.push({ name, nominal: n, tolMinus: lo, tolPlus: hi, measured: m, deviation: dev, pass });
       }
 
-      // 嘗試載入資料
-      const savedUser = localStorage.getItem('currentUser');
-      try{
-        const data = config.useLocalStorage ? utils.fetchLocal() : await utils.fetchRemote().catch(()=> utils.fetchLocal());
-        state.users = data.users||[]; state.records = data.records||[];
-        if (savedUser){ state.currentUser = JSON.parse(savedUser); showApp(); loadUser(); refreshDash(); renderTable(); }
-        else { el.setupForm.style.display='none'; el.loginForm.style.display='block'; }
-      }catch(err){ utils.showMsg('載入資料失敗：'+err.message,true); showSetup(); }
+      const now = new Date();
+      const id = `INS-${now.toISOString().slice(0,19).replace(/[-:T]/g,'')}-${Math.floor(Math.random()*900+100)}`;
 
-      bind();
-      // 預先放一筆量測區塊
-      addMeasurementItem();
+      return {
+        id,
+        timestamp: new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString(), // ISO + 本地時區
+        inspector: inspectorName,
+        supplier, partNo, drawingNo, revision,
+        notes,
+        measurements,
+        overallResult: allPass ? 'PASS' : 'FAIL'
+      };
     }
-
-    function showSetup(){ el.setupForm.style.display='block'; el.loginForm.style.display='none'; el.registerForm.style.display='none'; }
-    function showApp(){ document.getElementById('auth-page').style.display='none'; document.getElementById('app-page').style.display='block'; }
-
-    function loadUser(){ if (!state.currentUser) return; el.userName.textContent = `歡迎, ${state.currentUser.name}`; el.userAvatar.textContent = utils.initials(state.currentUser.name);
-      document.getElementById('profile-name').value = state.currentUser.name;
-      document.getElementById('profile-email').value = state.currentUser.email;
-      document.getElementById('profile-department').value = state.currentUser.department||'';
-      document.getElementById('profile-title').value = state.currentUser.title||'';
-    }
-
-    function refreshDash(){ const monthList = utils.monthRecords(state.records); el.monthCount.textContent = monthList.length; el.passRate.textContent = utils.passRate(state.records)+"%"; el.issueCount.textContent = state.records.filter(r=>r.status==='fail').length; }
-
-    // ========= 量測項目 UI =========
-    function createMeasurementEl(){
-      const wrap = document.createElement('div'); wrap.className='measurement-item';
-      wrap.innerHTML = `
-        <div class="measurement-grid">
-          <div class="form-group"><label>尺寸名稱</label><input type="text" class="dimension-name" placeholder="例如：長度" /></div>
-          <div class="form-group"><label>標準值</label><input type="number" step="0.001" class="dimension-standard" placeholder="標準尺寸" /></div>
-          <div class="form-group"><label>上公差</label><input type="number" step="0.001" class="dimension-upper-tol" placeholder="+0.000" /></div>
-          <div class="form-group"><label>下公差</label><input type="number" step="0.001" class="dimension-lower-tol" placeholder="-0.000" /></div>
-        </div>
-        <div class="form-group" style="margin-top:8px;"><label>實際測量值</label><input type="number" step="0.001" class="dimension-actual" placeholder="輸入實際測量值" /></div>
-        <div class="measurement-actions">
-          <button type="button" class="btn-small btn-danger btn-remove">刪除此項</button>
-        </div>`;
-      wrap.querySelector('.btn-remove').addEventListener('click',()=>{ wrap.remove(); });
-      return wrap;
-    }
-    function addMeasurementItem(){ el.measurementsContainer.appendChild(createMeasurementEl()); }
-
-    // ========= 事件 =========
-    function bind(){
-      // 導覽
-      document.querySelectorAll('.nav-tabs a').forEach(a=>{
-        a.addEventListener('click', (e)=>{ e.preventDefault(); const id=a.getAttribute('href').slice(1);
-          document.querySelectorAll('.nav-tabs a').forEach(x=>x.classList.remove('active')); a.classList.add('active');
-          document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active')); document.getElementById(id).classList.add('active');
-        });
-      });
-
-      // 認證流程
-      el.showRegister.addEventListener('click',e=>{e.preventDefault(); el.loginForm.style.display='none'; el.registerForm.style.display='block';});
-      el.showLogin.addEventListener('click',e=>{e.preventDefault(); el.registerForm.style.display='none'; el.loginForm.style.display='block';});
-      el.showLoginAfterSetup.addEventListener('click',e=>{e.preventDefault(); el.setupForm.style.display='none'; el.loginForm.style.display='block';});
-
-      document.getElementById('setup-btn').addEventListener('click', handleSetup);
-      document.getElementById('login-btn').addEventListener('click', handleLogin);
-      document.getElementById('register-btn').addEventListener('click', handleRegister);
-      document.getElementById('logout-btn').addEventListener('click', ()=>{ state.currentUser=null; localStorage.removeItem('currentUser'); document.getElementById('auth-page').style.display='flex'; document.getElementById('app-page').style.display='none'; el.setupForm.style.display='none'; el.loginForm.style.display='block'; utils.showMsg('已登出'); });
-      el.useLocalBtn.addEventListener('click', ()=>{ config.useLocalStorage=true; localStorage.setItem('useLocalStorage','true'); el.storageType.textContent='本地存儲'; const data=utils.fetchLocal(); state.users=data.users||[]; state.records=data.records||[]; utils.showMsg('已切換到本地存儲模式'); el.setupForm.style.display='none'; el.loginForm.style.display='block';});
-
-      // 量測項目
-      el.addMeasurement.addEventListener('click', addMeasurementItem);
-      el.clearMeasurements.addEventListener('click', ()=>{ el.measurementsContainer.innerHTML=''; addMeasurementItem(); });
-
-      // 記錄 CRUD
-      el.saveBtn.addEventListener('click', handleSaveRecord);
-      el.resetBtn.addEventListener('click', ()=>{ if(confirm('確定要清除已輸入資料？')){ document.querySelectorAll('#new-record input,#new-record textarea').forEach(i=>i.value=''); el.measurementsContainer.innerHTML=''; addMeasurementItem(); } });
-
-      // 查詢/分頁/匯出
-      el.searchBtn.addEventListener('click', ()=>{ state.search = (el.searchInput.value||'').trim().toLowerCase(); state.page = 1; renderTable(); });
-      el.prevPage.addEventListener('click', ()=>{ if(state.page>1){ state.page--; renderTable(); } });
-      el.nextPage.addEventListener('click', ()=>{ const totalPages = getTotalPages(); if(state.page<totalPages){ state.page++; renderTable(); } });
-      el.pageSize.addEventListener('change', ()=>{ state.pageSize = parseInt(el.pageSize.value,10)||10; state.page=1; renderTable(); });
-      el.exportBtn.addEventListener('click', exportCSV);
-
-      // 用戶
-      document.getElementById('btn-update-profile').addEventListener('click', handleUpdateProfile);
-      document.getElementById('btn-change-password').addEventListener('click', handleChangePassword);
-    }
-
-    // ========= 認證處理 =========
-    async function handleSetup(){
-      let apiKey = document.getElementById('api-key').value; let binId = document.getElementById('bin-id').value.trim();
-      if(!apiKey){ utils.showMsg('請輸入 API 金鑰', true); return; }
-      try{
-        apiKey = utils.cleanKey(apiKey); config.apiKey = apiKey; sessionStorage.setItem('apiKey', apiKey); // 減少長期暴露
-        if(!binId){ binId = await utils.createBin(); utils.showMsg('已建立新的資料存放 BIN'); }
-        config.binId = binId; localStorage.setItem('binId', binId); localStorage.setItem('useLocalStorage','false'); config.useLocalStorage=false; el.storageType.textContent='JSONBin.io';
-        const data = await utils.fetchRemote(); state.users=data.users||[]; state.records=data.records||[]; utils.showMsg('系統初始化成功'); el.setupForm.style.display='none'; el.loginForm.style.display='block';
-      }catch(err){ utils.showMsg('初始化失敗：'+err.message, true); }
-    }
-
-    async function handleLogin(){
-      const email = document.getElementById('login-email').value.trim(); const pw = document.getElementById('login-password').value;
-      if(!email||!pw){ utils.showMsg('請輸入電子郵件與密碼', true); return; }
-      try{
-        const data = config.useLocalStorage ? utils.fetchLocal() : await utils.fetchRemote(); state.users=data.users||[]; state.records=data.records||[];
-        // 比對雜湊
-        const hash = await utils.hash(pw);
-        const user = state.users.find(u=>u.email===email && (u.passwordHash? u.passwordHash===hash : u.password===pw));
-        if(!user){ utils.showMsg('帳號或密碼不正確', true); return; }
-        state.currentUser = user; localStorage.setItem('currentUser', JSON.stringify(user)); showApp(); loadUser(); refreshDash(); renderTable(); utils.showMsg('登入成功');
-      }catch(err){ utils.showMsg('登入失敗：'+err.message, true); }
-    }
-
-    async function handleRegister(){
-      const name = document.getElementById('register-name').value.trim();
-      const email = document.getElementById('register-email').value.trim();
-      const pw = document.getElementById('register-password').value; const pw2 = document.getElementById('register-confirm-password').value;
-      if(!name||!email||!pw||!pw2){ utils.showMsg('請填寫所有欄位', true); return; }
-      if(pw!==pw2){ utils.showMsg('兩次密碼不一致', true); return; }
-      if(pw.length<6){ utils.showMsg('密碼至少 6 碼', true); return; }
-      try{
-        const data = config.useLocalStorage ? utils.fetchLocal() : await utils.fetchRemote(); state.users=data.users||[]; state.records=data.records||[];
-        if(state.users.some(u=>u.email===email)){ utils.showMsg('此電子郵件已註冊', true); return; }
-        const newUser = { id: (crypto.randomUUID? crypto.randomUUID(): String(Date.now())), name, email, passwordHash: await utils.hash(pw), createdAt: new Date().toISOString() };
-        state.users.push(newUser); state.currentUser=newUser; await persist(); localStorage.setItem('currentUser', JSON.stringify(newUser)); showApp(); loadUser(); utils.showMsg('註冊成功');
-      }catch(err){ utils.showMsg('註冊失敗：'+err.message, true); }
-    }
-
-    // ========= 記錄處理 =========
-    function collectMeasurements(){
-      const items = Array.from(el.measurementsContainer.querySelectorAll('.measurement-item'));
-      const list = [];
-      for(const it of items){
-        const name = it.querySelector('.dimension-name').value.trim();
-        const std = parseFloat(it.querySelector('.dimension-standard').value);
-        const uTol = parseFloat(it.querySelector('.dimension-upper-tol').value || '0');
-        const lTol = parseFloat(it.querySelector('.dimension-lower-tol').value || '0');
-        const actual = parseFloat(it.querySelector('.dimension-actual').value);
-        if(!name || Number.isNaN(std) || Number.isNaN(actual)) continue; // 忽略不完整
-        const upper = std + uTol; // e.g. 10 + 0.02
-        const lower = std + lTol; // e.g. 10 - 0.02（lTol 應輸入負值）
-        const pass = actual >= lower && actual <= upper;
-        list.push({ name, standard: std, upperTol: uTol, lowerTol: lTol, actual, status: pass? 'pass':'fail' });
-      }
-      return list;
-    }
-
-    async function handleSaveRecord(){
-      if(!state.currentUser) return;
-      const productNumber = el.productNumber.value.trim();
-      const batchNumber = el.batchNumber.value.trim();
-      const inspectionDate = el.inspectionDate.value;
-      const notes = el.notes.value.trim();
-      if(!productNumber || !batchNumber || !inspectionDate){ utils.showMsg('請完整填寫必填欄位', true); return; }
-      const measurements = collectMeasurements();
-      if(measurements.length===0){ utils.showMsg('請至少填寫一組完整的尺寸資料', true); return; }
-      const overall = measurements.every(m=>m.status==='pass') ? 'pass':'fail';
-      const rec = { id: (crypto.randomUUID? crypto.randomUUID(): String(Date.now())), userId: state.currentUser.id, userName: state.currentUser.name, productNumber, batchNumber, inspectionDate, measurements, notes, status: overall, createdAt: new Date().toISOString() };
-      try{ state.records.push(rec); await persist(); utils.showMsg('檢驗記錄已保存'); // 清空表單
-        document.querySelectorAll('#new-record input,#new-record textarea').forEach(i=>{ if(i!==el.inspectionDate) i.value=''; }); el.measurementsContainer.innerHTML=''; addMeasurementItem(); refreshDash(); renderTable();
-      }catch(err){ utils.showMsg('保存失敗：'+err.message, true); state.records = state.records.filter(r=>r.id!==rec.id); }
-    }
-
-    function safeCell(text){ const td=document.createElement('td'); td.textContent = text; return td; }
-
-    function getFilteredSortedRecords(){
-      const q = state.search; const arr = [...state.records];
-      let list = q? arr.filter(r=> (r.productNumber||'').toLowerCase().includes(q) || (r.batchNumber||'').toLowerCase().includes(q)) : arr;
-      list.sort((a,b)=> new Date(b.inspectionDate) - new Date(a.inspectionDate));
-      return list;
-    }
-
-    function getTotalPages(){ const total = getFilteredSortedRecords().length; return Math.max(1, Math.ceil(total / state.pageSize)); }
-
-    function renderTable(){
-      const list = getFilteredSortedRecords();
-      const totalPages = Math.max(1, Math.ceil(list.length / state.pageSize));
-      if(state.page>totalPages) state.page = totalPages;
-      const start = (state.page-1)*state.pageSize; const pageList = list.slice(start, start+state.pageSize);
-
-      el.recordsBody.innerHTML = '';
-      if(pageList.length===0){ const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan=6; td.style.textAlign='center'; td.textContent='暫無檢驗記錄'; tr.appendChild(td); el.recordsBody.appendChild(tr); }
-      else{
-        pageList.forEach(rec=>{
-          const tr = document.createElement('tr');
-          tr.appendChild(safeCell(utils.fmtDate(rec.inspectionDate)));
-          tr.appendChild(safeCell(rec.productNumber));
-          tr.appendChild(safeCell(rec.batchNumber));
-          tr.appendChild(safeCell(rec.userName||''));
-          const tdStatus = document.createElement('td'); tdStatus.textContent = rec.status==='pass' ? '合格':'不合格'; tdStatus.className = rec.status==='pass'? 'status-pass':'status-fail'; tr.appendChild(tdStatus);
-          const tdOps = document.createElement('td');
-          const btnV = document.createElement('button'); btnV.className='btn-small'; btnV.textContent='查看'; btnV.addEventListener('click',()=>viewRecord(rec.id));
-          const btnD = document.createElement('button'); btnD.className='btn-small btn-danger'; btnD.style.marginLeft='8px'; btnD.textContent='刪除'; btnD.addEventListener('click',()=>deleteRecord(rec.id));
-          tdOps.appendChild(btnV); tdOps.appendChild(btnD); tr.appendChild(tdOps);
-          el.recordsBody.appendChild(tr);
-        });
-      }
-      el.pageInfo.textContent = `第 ${state.page} / ${totalPages} 頁`;
-    }
-
-    function viewRecord(id){
-      const r = state.records.find(x=>x.id===id); if(!r) return;
-      let msg = `產品圖號: ${r.productNumber}\n批號: ${r.batchNumber}\n檢驗日期: ${utils.fmtDate(r.inspectionDate)}\n結果: ${r.status==='pass'?'合格':'不合格'}\n\n`;
-      if(r.measurements?.length){ msg += '尺寸測量結果:\n'; r.measurements.forEach(m=>{ msg += `${m.name}: ${m.actual} (標準:${m.standard}, 公差:${m.upperTol>=0? '+'+m.upperTol:m.upperTol}/${m.lowerTol>=0? '+'+m.lowerTol:m.lowerTol})\n`; }); }
-      if(r.notes) msg += `\n備註: ${r.notes}`;
-      alert(msg);
-    }
-
-    async function deleteRecord(id){ if(!confirm('確定刪除此記錄？此操作無法復原。')) return; state.records = state.records.filter(r=>r.id!==id); try{ await persist(); utils.showMsg('記錄已刪除'); refreshDash(); renderTable(); }catch(err){ utils.showMsg('刪除失敗：'+err.message, true); }}
-
-    function exportCSV(){
-      const list = getFilteredSortedRecords();
-      const rows = [ ['日期','產品圖號','批號','檢驗員','結果','備註'] ];
-      list.forEach(r=> rows.push([ utils.fmtDate(r.inspectionDate), r.productNumber, r.batchNumber, r.userName||'', r.status==='pass'?'合格':'不合格', (r.notes||'').replace(/\n/g,' ') ]));
-      const csv = rows.map(row=> row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-      const blob = new Blob(["\ufeff"+csv], {type:'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='inspection_records.csv'; a.click(); URL.revokeObjectURL(url);
-    }
-
-    // ========= 用戶資料 =========
-    async function handleUpdateProfile(){ if(!state.currentUser) return; const name=document.getElementById('profile-name').value.trim(); const email=document.getElementById('profile-email').value.trim(); const department=document.getElementById('profile-department').value.trim(); const title=document.getElementById('profile-title').value.trim(); if(!name||!email){ utils.showMsg('請填寫姓名與電子郵件', true); return; } const i = state.users.findIndex(u=>u.id===state.currentUser.id); if(i>-1){ state.users[i] = {...state.users[i], name,email,department,title}; state.currentUser = state.users[i]; state.records.forEach(r=>{ if(r.userId===state.currentUser.id) r.userName=name; }); await persist(); localStorage.setItem('currentUser', JSON.stringify(state.currentUser)); loadUser(); renderTable(); utils.showMsg('個人資料已更新'); } }
-
-    async function handleChangePassword(){ if(!state.currentUser) return; const cur=document.getElementById('current-password').value; const nw=document.getElementById('new-password').value; const cfm=document.getElementById('confirm-new-password').value; if(!cur||!nw||!cfm){ utils.showMsg('請填寫所有密碼欄位', true); return; } if(nw!==cfm){ utils.showMsg('新密碼確認不一致', true); return; } if(nw.length<6){ utils.showMsg('新密碼至少 6 碼', true); return; } const i = state.users.findIndex(u=>u.id===state.currentUser.id); if(i>-1){ const ok = state.users[i].passwordHash ? (await utils.hash(cur)===state.users[i].passwordHash) : (state.users[i].password===cur); if(!ok){ utils.showMsg('當前密碼不正確', true); return; } state.users[i].passwordHash = await utils.hash(nw); delete state.users[i].password; state.currentUser = state.users[i]; await persist(); localStorage.setItem('currentUser', JSON.stringify(state.currentUser)); ['current-password','new-password','confirm-new-password'].forEach(id=> document.getElementById(id).value=''); utils.showMsg('密碼已更新'); } }
-
-    // ========= 同步儲存 =========
-    async function persist(){ const payload = { users: state.users, records: state.records }; return config.useLocalStorage ? utils.saveLocal(payload) : utils.updateRemote(payload); }
-
-    // 啟動
-    bootstrapConfigFromFunction().finally(init);
   </script>
 </body>
 </html>
