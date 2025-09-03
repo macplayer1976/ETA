@@ -1,11 +1,21 @@
 // netlify/functions/inspections.js
-// 讀–合併–寫 + 重試 + 去重複 + 巢狀資料自動攤平 + 帳號角色授權(相容舊通關碼) + 單筆刪除(僅 boss/admin)
+// 在不破壞原功能前提下，加入「input/viewer 可改帳號名、但密碼固定」的帳號擴充機制。
 exports.handler = async (event) => {
   const ENV = process.env || {};
   const API_KEY   = ENV.JSONBIN_API_KEY;
   const BIN_ID    = ENV.JSONBIN_BIN_ID;
   const PASSCODE  = ENV.PASSCODE;
-  const ACCOUNTS  = parseAccounts(ENV.ACCOUNTS_JSON); // ← 若有就啟用帳號模式
+
+  // 解析 ACCOUNTS_JSON（舊機制）
+  const BASE_ACCOUNTS = parseAccounts(ENV.ACCOUNTS_JSON);
+
+  // 依環境變數擴充 input/viewer（新機制）；若沒設定，則回退到原本 BASE_ACCOUNTS
+  const ACCOUNTS = buildAccounts(BASE_ACCOUNTS, {
+    INPUT_USERS_CSV:   ENV.INPUT_USERS_CSV || '',
+    INPUT_FIXED_PWD:   ENV.INPUT_FIXED_PWD || '',
+    VIEWER_USERS_CSV:  ENV.VIEWER_USERS_CSV || '',
+    VIEWER_FIXED_PWD:  ENV.VIEWER_FIXED_PWD || '',
+  });
 
   // CORS
   if (event.httpMethod === 'OPTIONS') return text(200, 'OK');
@@ -25,7 +35,7 @@ exports.handler = async (event) => {
   const auth = authenticate(ACCOUNTS, PASSCODE, event.headers);
   if (!auth.ok) return json(auth.status || 401, { error: auth.error || 'Unauthorized' });
 
-  // 僅回報「我現在是誰 & 模式」給前端
+  // 只回傳目前身分（前端登入檢查用）
   if (event.httpMethod === 'GET' && (qs.auth === '1' || qs.auth === 'true')) {
     return json(200, { ok: true, mode: auth.mode, role: auth.role, user: auth.user || '' });
   }
@@ -94,7 +104,6 @@ exports.handler = async (event) => {
       const status = result.lastStatus || 500;
       return json(status, { error: 'Failed to delete', lastStatus: result.lastStatus, lastText: result.lastText });
     }
-    // 就算已不存在也視為成功（deleted=0）
     return json(200, { ok: true, deleted: result.deleted ? 1 : 0, id });
   }
 
@@ -111,6 +120,36 @@ exports.handler = async (event) => {
   function json(code, obj) { return { statusCode: code, headers: headers(), body: JSON.stringify(obj) }; }
   function text(code, s)    { return { statusCode: code, headers: headers(), body: s }; }
 };
+
+/* ======= 帳號擴充（保留 admin，input/viewer 走固定密碼 + 可改帳號名） ======= */
+function buildAccounts(baseAccounts, env) {
+  const base = Array.isArray(baseAccounts) ? baseAccounts : [];
+  const admins = base.filter(a => (a.role || '').toLowerCase() === 'admin'); // admin 維持原樣
+
+  // 解析 CSV → 陣列（允許中英文、空白會自動修剪）
+  const parseCsv = (s) => String(s || '')
+    .split(/[,，\n]/).map(x => x.trim()).filter(Boolean);
+
+  const inputUsers  = parseCsv(env.INPUT_USERS_CSV);
+  const viewerUsers = parseCsv(env.VIEWER_USERS_CSV);
+  const inputPwd    = String(env.INPUT_FIXED_PWD || '');
+  const viewerPwd   = String(env.VIEWER_FIXED_PWD || '');
+
+  // 若有設定新的 CSV + 固定密碼 → 以新機制擴充（搭配 admin）
+  if ((inputUsers.length && inputPwd) || (viewerUsers.length && viewerPwd)) {
+    const out = [...admins];
+    for (const u of inputUsers)  out.push({ user: u, pwd: inputPwd,  role: 'input'  });
+    for (const u of viewerUsers) out.push({ user: u, pwd: viewerPwd, role: 'viewer' });
+    // 去重（同帳號+角色只保留一筆；admin 不受影響）
+    const key = (a) => `${(a.role||'').toLowerCase()}::${String(a.user||'')}`;
+    const seen = new Set(); const uniq = [];
+    for (const a of out) { const k = key(a); if (!seen.has(k)) { seen.add(k); uniq.push(a); } }
+    return uniq;
+  }
+
+  // 沒設定新機制 → 完全沿用原本 ACCOUNTS_JSON
+  return base;
+}
 
 /* ======= 驗證與授權 ======= */
 function parseAccounts(raw) {
@@ -163,7 +202,7 @@ async function jsonbinPut(binId, apiKey, list) {
       headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey },
       body: JSON.stringify({ record: list }),
     });
-  const text = await r.text();
+    const text = await r.text();
     return { ok: r.ok, status: r.status, text };
   } catch (e) {
     return { ok: false, status: 0, text: String(e) };
