@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>安拓實業有限公司｜品檢報告（單筆）</title>
+  <style>
+    :root { --gray:#6b7280; --line:#e5e7eb; --title:#111827; --muted:#374151; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin:0; background:#fff; color:#111; }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 24px 16px 48px; }
+    header { display:flex; align-items:flex-end; justify-content:space-between; border-bottom:2px solid #111; padding-bottom:12px; margin-bottom:16px; }
+    .brand { font-size:22px; font-weight:700; letter-spacing:.05em; }
+    .title { font-size:20px; font-weight:600; color:var(--title); }
+    .muted { color: var(--gray); font-size: 13px; }
+    .row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:8px; }
+    .block { border:1px solid var(--line); border-radius:10px; padding:12px; }
+    .block h3 { margin:0 0 8px 0; font-size:16px; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border:1px solid var(--line); padding:8px; text-align:left; vertical-align:top; }
+    th { background:#f7f7f7; }
+    .result { font-weight:700; }
+    .pass { color:#116329; }
+    .fail { color:#c02020; }
+    .toolbar { display:flex; gap:8px; align-items:center; margin: 8px 0 12px; }
+    .btn { padding:10px 14px; border:none; border-radius:10px; background:#2563eb; color:#fff; cursor:pointer; }
+    .btn.outline { background:#f3f4f6; color:#111; }
+    .sign { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-top:12px; }
+    .sign .cell { border:1px solid var(--line); border-radius:10px; padding:10px; height:80px; }
+    .cell small { color:var(--gray); display:block; margin-bottom:6px; }
+    @media print {
+      .noprint { display:none; }
+      body { background:#fff; }
+      .wrap { padding: 12px 0 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">安拓實業有限公司</div>
+      <div class="title">品檢報告 Inspection Report</div>
+    </header>
+
+    <div class="toolbar noprint">
+      <button class="btn" id="btnPrint">列印 / 下載 PDF</button>
+      <a class="btn outline" href="report.html">返回報告列表</a>
+      <span class="muted" id="tip"></span>
+    </div>
+
+    <!-- 基本資訊 -->
+    <div class="block">
+      <h3>基本資訊</h3>
+      <div class="row">
+        <div><strong>報告編號：</strong><span id="f-id"></span></div>
+        <div><strong>檢驗時間：</strong><span id="f-time"></span></div>
+        <div><strong>檢驗人員：</strong><span id="f-inspector"></span></div>
+        <div><strong>檢驗結果：</strong><span id="f-overall" class="result"></span></div>
+      </div>
+    </div>
+
+    <!-- 料件資訊 -->
+    <div class="block" style="margin-top:10px">
+      <h3>料件資訊</h3>
+      <div class="row">
+        <div><strong>供應商：</strong><span id="f-supplier"></span></div>
+        <div><strong>料號 Part No.：</strong><span id="f-part"></span></div>
+        <div><strong>圖號 Drawing No.：</strong><span id="f-draw"></span></div>
+        <div><strong>版次 Revision：</strong><span id="f-rev"></span></div>
+      </div>
+      <div style="margin-top:8px"><strong>備註：</strong><span id="f-notes"></span></div>
+    </div>
+
+    <!-- 量測明細 -->
+    <div class="block" style="margin-top:10px">
+      <h3>量測明細</h3>
+      <div id="measurements"></div>
+    </div>
+
+    <!-- 簽核區 -->
+    <div class="block" style="margin-top:10px">
+      <h3>簽核</h3>
+      <div class="sign">
+        <div class="cell"><small>檢驗人員</small></div>
+        <div class="cell"><small>品保主管</small></div>
+        <div class="cell"><small>核准</small></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tip = document.getElementById('tip');
+    document.getElementById('btnPrint').addEventListener('click', () => window.print());
+
+    // 讀取網址 id
+    const params = new URLSearchParams(location.search);
+    const ID = params.get('id') || '';
+
+    // 確保登入（沿用你的前端規格）
+    async function ensureAuth() {
+      let user = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
+      let pass = localStorage.getItem('qci_pass') || localStorage.getItem('qci_passcode') || '';
+      if (!user || !pass) {
+        user = prompt('請輸入帳號（檢驗人員）') || '';
+        pass = prompt('請輸入密碼（通關碼/密碼）') || '';
+        if (!user || !pass) return { ok:false };
+        localStorage.setItem('qci_user', user);
+        localStorage.setItem('qci_pass', pass);
+        localStorage.setItem('qci_inspector', user);
+        localStorage.setItem('qci_passcode', pass);
+      }
+      try {
+        const res = await fetch('/api/inspections?auth=1', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+        const t = await res.text(); let j={}; try{ j=JSON.parse(t);}catch{}
+        if (!res.ok || !j.ok) return { ok:false };
+        const role = (j.role||'').toLowerCase();
+        if (!['admin','viewer'].includes(role)) return { ok:false, msg:'此帳號沒有檢視權限' };
+        return { ok:true };
+      } catch { return { ok:false }; }
+    }
+
+    function listFromJson(x) {
+      if (!x) return [];
+      if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
+      if (x && typeof x === 'object') {
+        if (x.record !== undefined) return listFromJson(x.record);
+        if (x.records !== undefined) return listFromJson(x.records);
+        if (looksLikeRecord(x)) return [x];
+      }
+      return [];
+    }
+    function looksLikeRecord(o) {
+      return o && typeof o === 'object'
+        && typeof o.id === 'string'
+        && typeof o.timestamp === 'string'
+        && Array.isArray(o.measurements);
+    }
+    function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
+    function fmtTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
+    function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+
+    function buildMeasurementsTable(list){
+      if (!list.length) return '<div class="muted">（無資料）</div>';
+      const rows = list.map(m=>{
+        const arr = Array.isArray(m.measured) ? m.measured
+                    : ((typeof m.measured==='number' || (typeof m.measured==='string'&&m.measured!=='')) ? [m.measured] : []);
+        const cells = [0,1,2,3,4].map(i=>num(arr[i]));
+        return `
+          <tr>
+            <td>${esc(m.name)}</td>
+            <td>${num(m.nominal)}</td>
+            <td>${num(m.tolMinus)}</td>
+            <td>${num(m.tolPlus)}</td>
+            <td>${cells[0]}</td>
+            <td>${cells[1]}</td>
+            <td>${cells[2]}</td>
+            <td>${cells[3]}</td>
+            <td>${cells[4]}</td>
+            <td>${m.pass ? 'PASS' : 'FAIL'}</td>
+          </tr>`;
+      }).join('');
+      return `
+        <table>
+          <thead>
+            <tr>
+              <th>尺寸</th><th>名目</th><th>下限公差</th><th>上限公差</th>
+              <th>實測1</th><th>實測2</th><th>實測3</th><th>實測4</th><th>實測5</th>
+              <th>判定</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+    async function load() {
+      tip.textContent = '載入中...';
+      const ok = await ensureAuth();
+      if (!ok.ok) { tip.textContent = '❌ 沒有權限或登入失敗'; return; }
+      if (!ID) { tip.textContent = '❌ 缺少 id 參數'; return; }
+
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      try {
+        const res = await fetch('/api/inspections', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+        const text = await res.text(); let data={}; try{ data=JSON.parse(text);}catch{ data=text; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const list = listFromJson(data);
+        const r = list.find(x => x && String(x.id) === String(ID));
+        if (!r) { tip.textContent = '❌ 查無此報告編號'; return; }
+
+        // 填資料
+        document.getElementById('f-id').textContent = r.id || '';
+        document.getElementById('f-time').textContent = fmtTime(r.timestamp);
+        document.getElementById('f-inspector').textContent = r.inspector || '';
+        const overall = document.getElementById('f-overall');
+        overall.textContent = (r.overallResult === 'PASS' ? 'PASS' : 'FAIL');
+        overall.className = 'result ' + (r.overallResult === 'PASS' ? 'pass' : 'fail');
+
+        document.getElementById('f-supplier').textContent = r.supplier || '';
+        document.getElementById('f-part').textContent = r.partNo || '';
+        document.getElementById('f-draw').textContent = r.drawingNo || '';
+        document.getElementById('f-rev').textContent = r.revision || '';
+        document.getElementById('f-notes').textContent = r.notes || '';
+
+        document.getElementById('measurements').innerHTML = buildMeasurementsTable(r.measurements || []);
+        tip.textContent = '提示：按上方「列印 / 下載 PDF」可輸出此單筆報告。';
+      } catch (e) {
+        tip.textContent = '❌ 載入失敗：' + e.message;
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
