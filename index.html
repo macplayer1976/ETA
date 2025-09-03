@@ -82,9 +82,9 @@
         <textarea id="notes" rows="2" placeholder="例如：現場尺寸穩定/外觀無瑕疵"></textarea>
       </div>
 
-      <!-- 整合表：第1列＝外觀檢查；第2列起＝尺寸量測 -->
+      <!-- 整合表：第1列＝外觀；第2列起＝尺寸 -->
       <h3 style="margin-top:20px">尺寸與外觀檢驗</h3>
-      <p class="hint">第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（請選 O.K / NG）；從第 <strong>2</strong> 列開始為尺寸量測。</p>
+      <p class="hint">第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（請於「實測1～5」各自選 O.K / NG；至少選一個）。從第 <strong>2</strong> 列開始為尺寸量測。</p>
 
       <table id="tbl">
         <thead>
@@ -118,7 +118,7 @@
       <p id="msg" class="muted" style="margin-top:8px"></p>
     </div>
 
-    <!-- viewer 專用提示 -->
+    <!-- viewer 提示 -->
     <p id="viewOnlyTip" class="muted hidden">
       您的角色是 <strong>viewer</strong>（只能看/印報告）。請改到 <a href="report.html">報告頁</a>。
     </p>
@@ -141,14 +141,14 @@
       alert('本機登入資訊已清除。');
     });
 
-    // 整合表按鈕
+    // 表格按鈕
     document.getElementById('btnAdd').addEventListener('click', addMeasureRow);
     document.getElementById('btnRemove').addEventListener('click', removeLastMeasureRow);
     document.getElementById('btnClearRows').addEventListener('click', () => { clearMeasureRows(); ensureMeasureRows(2); });
 
     document.getElementById('btnSave').addEventListener('click', save);
 
-    // 自動登入驗證
+    // 自動驗證
     window.addEventListener('DOMContentLoaded', async () => {
       const u = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
       const p = localStorage.getItem('qci_pass') || localStorage.getItem('qci_passcode') || '';
@@ -164,7 +164,7 @@
           localStorage.setItem('qci_role', info.role);
           showByRole(info.role);
           if (info.role !== 'viewer') {
-            ensureAppearanceRow();      // 建立外觀列
+            ensureAppearanceRow();                  // 外觀列
             if (countMeasureRows() === 0) ensureMeasureRows(2); // 預設兩列尺寸
           }
           loginMsg.textContent = '';
@@ -222,7 +222,7 @@
       } catch { return null; }
     }
 
-    /* ========= 整合表：外觀（第1列） + 尺寸（第2列起） ========= */
+    /* ======== 外觀（第1列） + 尺寸（第2列起） ======== */
 
     function ensureAppearanceRow() {
       if (tbody.querySelector('tr[data-type="appearance"]')) return;
@@ -233,31 +233,34 @@
         <td class="disabled"><input value="" placeholder="—" disabled /></td>
         <td class="disabled"><input value="" placeholder="—" disabled /></td>
         <td class="disabled"><input value="" placeholder="—" disabled /></td>
-        <td>
-          <select id="appearanceSelect">
-            <option value="">— 請選擇 —</option>
-            <option value="OK">O.K</option>
-            <option value="NG">NG</option>
-          </select>
-        </td>
-        <td class="disabled"><input value="" placeholder="—" disabled /></td>
-        <td class="disabled"><input value="" placeholder="—" disabled /></td>
-        <td class="disabled"><input value="" placeholder="—" disabled /></td>
-        <td class="disabled"><input value="" placeholder="—" disabled /></td>
+        <td>${buildApSelect('ap1')}</td>
+        <td>${buildApSelect('ap2')}</td>
+        <td>${buildApSelect('ap3')}</td>
+        <td>${buildApSelect('ap4')}</td>
+        <td>${buildApSelect('ap5')}</td>
         <td><span class="tag">—</span></td>
       `;
-      // 變更外觀選擇 → 更新結果
-      tr.querySelector('#appearanceSelect').addEventListener('change', () => updateAppearanceRow(tr));
+      tr.querySelectorAll('select.ap').forEach(s => s.addEventListener('change', () => updateAppearanceRow(tr)));
       tbody.prepend(tr);
+    }
+    function buildApSelect(id){
+      return `
+        <select id="${id}" class="ap">
+          <option value="">—</option>
+          <option value="OK">O.K</option>
+          <option value="NG">NG</option>
+        </select>`;
     }
 
     function updateAppearanceRow(tr) {
-      const select = tr.querySelector('#appearanceSelect');
+      const sels = [...tr.querySelectorAll('select.ap')];
+      const values = sels.map(s => (s.value || '').toUpperCase()).filter(Boolean);
       const tag = tr.querySelector('.tag');
-      const v = (select.value || '').toUpperCase();
-      if (v === 'OK') { tag.textContent = 'PASS'; tag.className = 'tag pass'; }
-      else if (v === 'NG') { tag.textContent = 'FAIL'; tag.className = 'tag fail'; }
-      else { tag.textContent = '—'; tag.className = 'tag'; }
+
+      if (values.length === 0) { tag.textContent = '—'; tag.className = 'tag'; return; }
+      const pass = values.every(v => v === 'OK');
+      tag.textContent = pass ? 'PASS' : 'FAIL';
+      tag.className = 'tag ' + (pass ? 'pass' : 'fail');
     }
 
     function countMeasureRows() {
@@ -342,8 +345,7 @@
         }
         msg.textContent = '✅ 已儲存到雲端（可到報告頁查看/列印）';
         // 重置：外觀清空、尺寸重建
-        const ap = tbody.querySelector('tr[data-type="appearance"] #appearanceSelect');
-        if (ap) ap.value = '';
+        tbody.querySelectorAll('tr[data-type="appearance"] select.ap').forEach(s => s.value = '');
         const apTag = tbody.querySelector('tr[data-type="appearance"] .tag');
         if (apTag) { apTag.textContent = '—'; apTag.className = 'tag'; }
         clearMeasureRows(); ensureMeasureRows(2);
@@ -368,13 +370,13 @@
 
       const rows = [...tbody.querySelectorAll('tr')];
 
-      // 1) 外觀列
+      // 1) 外觀列（實測1～5 各自可 O.K / NG）
       const apRow = rows.find(tr => tr.dataset.type === 'appearance');
-      const apSel = apRow ? apRow.querySelector('#appearanceSelect') : null;
-      const apVal = apSel ? (apSel.value || '').toUpperCase() : '';
-      if (!apVal) { alert('請選擇外觀檢查結果（O.K 或 NG）'); return null; }
-      const appearance = [{ sample: '外觀', result: apVal, note: '' }];
-      const appearancePass = (apVal === 'OK');
+      const sels = apRow ? [...apRow.querySelectorAll('select.ap')] : [];
+      const apValues = sels.map((s, i) => ({ i: i+1, v: (s.value || '').toUpperCase() })).filter(x => x.v);
+      if (apValues.length === 0) { alert('請至少在外觀選擇一個實測結果（O.K / NG）'); return null; }
+      const appearance = apValues.map(x => ({ sample: `樣品${x.i}`, result: x.v, note: '' }));
+      const appearancePass = appearance.every(x => x.result === 'OK');
 
       // 2) 尺寸列
       const measureRows = rows.filter(tr => tr.dataset.type !== 'appearance');
@@ -412,7 +414,7 @@
         id, timestamp: isoLocal, inspector: inspectorName,
         supplier, partNo, drawingNo, revision, notes,
         measurements,
-        appearance,                  // ← 第1列外觀，轉成一筆 appearance（與報表相容）
+        appearance,                  // ← 外觀「實測1～5」已轉為陣列
         overallResult: overall
       };
     }
