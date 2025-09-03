@@ -6,7 +6,7 @@
   <title>品檢報告（安拓）</title>
   <style>
     body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 16px; }
-    .card { max-width: 1100px; margin: 0 auto; }
+    .card { max-width: 1120px; margin: 0 auto; }
     table { width: 100%; border-collapse: collapse; margin: 12px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; vertical-align: top; }
     th { background: #f7f7f7; }
@@ -41,8 +41,8 @@
         <tr>
           <th style="width:18%">基本資訊</th>
           <th style="width:22%">料件資訊</th>
-          <th style="width:44%">量測明細</th>
-          <th style="width:16%">結果</th>
+          <th style="width:48%">量測明細</th>
+          <th style="width:12%">結果</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -77,7 +77,7 @@
 
     let role = '';          // 目前角色
     let currentUser = '';   // 目前帳號
-    let canDelete = false;  // 是否顯示刪除按鈕（boss+admin）
+    let canDelete = false;  // boss+admin 才能刪
     let records = [];
 
     // 事件委派：刪除按鈕（只對 boss+admin 會渲染）
@@ -210,7 +210,6 @@
           }
           throw new Error(`HTTP ${res.status}：${text || '（無訊息）'}`);
         }
-        // 從前端移除並重畫
         records = records.filter(r => r.id !== id);
         render();
         msg.textContent = '✅ 已刪除 1 筆。';
@@ -219,7 +218,7 @@
       }
     }
 
-    // 與你原本版本一致的工具群
+    /* --------- 工具群（相容舊/新資料） ---------- */
     function listFromJson(x) {
       if (!x) return [];
       if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
@@ -237,30 +236,44 @@
         && Array.isArray(o.measurements);
     }
     function isValidRecord(r) { return looksLikeRecord(r) && !!(r.supplier || r.partNo || r.drawingNo || r.inspector); }
+
+    // 明細表：移除「偏差」欄；支援實測1~5。舊資料（單一 measured）自動放到實測1。
     function buildMeasurements(list) {
       if (!list.length) return '(無)';
-      const rows = list.map(m => `
-        <tr>
-          <td>${escapeHtml(m.name)}</td>
-          <td>${num(m.nominal)}</td>
-          <td>${num(m.tolMinus)}</td>
-          <td>${num(m.tolPlus)}</td>
-          <td>${num(m.measured)}</td>
-          <td>${num(m.deviation)}</td>
-          <td>${m.pass ? 'PASS' : 'FAIL'}</td>
-        </tr>
-      `).join('');
+      const rows = list.map(m => {
+        const arr =
+          Array.isArray(m.measured) ? m.measured :
+          (typeof m.measured === 'number' || (typeof m.measured === 'string' && m.measured !== ''))
+            ? [m.measured] : [];
+        const cells = [0,1,2,3,4].map(i => num(arr[i]));
+        return `
+          <tr>
+            <td>${escapeHtml(m.name)}</td>
+            <td>${num(m.nominal)}</td>
+            <td>${num(m.tolMinus)}</td>
+            <td>${num(m.tolPlus)}</td>
+            <td>${cells[0]}</td>
+            <td>${cells[1]}</td>
+            <td>${cells[2]}</td>
+            <td>${cells[3]}</td>
+            <td>${cells[4]}</td>
+            <td>${m.pass ? 'PASS' : 'FAIL'}</td>
+          </tr>
+        `;
+      }).join('');
       return `
         <table>
           <thead>
             <tr>
               <th>尺寸</th><th>名目</th><th>下限公差</th><th>上限公差</th>
-              <th>實測</th><th>偏差</th><th>判定</th>
+              <th>實測1</th><th>實測2</th><th>實測3</th><th>實測4</th><th>實測5</th>
+              <th>判定</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>`;
     }
+
     function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
     function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
     function escapeAttr(s){ return String(s||'').replace(/"/g, '&quot;'); }

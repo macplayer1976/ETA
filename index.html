@@ -6,7 +6,7 @@
   <title>現場品檢（安拓）</title>
   <style>
     body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 16px; background:#fafafa; }
-    .card { max-width: 920px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px; background:#fff; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+    .card { max-width: 1120px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px; background:#fff; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
     h2 { margin-top:0; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     label { font-size: 14px; color: #333; display: block; margin-bottom: 4px; }
@@ -84,12 +84,16 @@
       <table id="tbl">
         <thead>
           <tr>
-            <th style="width:20%">尺寸名稱</th>
-            <th style="width:16%">名目值</th>
-            <th style="width:16%">下限公差</th>
-            <th style="width:16%">上限公差</th>
-            <th style="width:16%">實測值</th>
-            <th style="width:16%">結果</th>
+            <th style="width:14%">尺寸名稱</th>
+            <th style="width:10%">名目值</th>
+            <th style="width:10%">下限公差</th>
+            <th style="width:10%">上限公差</th>
+            <th style="width:8%">實測1</th>
+            <th style="width:8%">實測2</th>
+            <th style="width:8%">實測3</th>
+            <th style="width:8%">實測4</th>
+            <th style="width:8%">實測5</th>
+            <th style="width:8%">結果</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -117,8 +121,8 @@
   <script>
     const loginView = document.getElementById('loginView');
     const formView  = document.getElementById('formView');
-    const inspector = document.getElementById('inspector'); // ← 當帳號
-    const passcode  = document.getElementById('passcode');  // ← 當密碼
+    const inspector = document.getElementById('inspector'); // 帳號
+    const passcode  = document.getElementById('passcode');  // 密碼
     const loginMsg  = document.getElementById('loginMsg');
     const viewOnlyTip = document.getElementById('viewOnlyTip');
 
@@ -198,8 +202,7 @@
         const res = await fetch('/api/inspections?auth=1', {
           headers: {
             'x-user': user, 'x-pass': pass,
-            // 舊模式相容（後端若走 PASSCODE 也能通）
-            'x-passcode': pass
+            'x-passcode': pass // 相容舊 PASSCODE 模式
           }
         });
         const t = await res.text();
@@ -211,6 +214,7 @@
     }
 
     function ensureRows(n) { for (let i=0; i<n; i++) addRow(); }
+
     function addRow() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -218,23 +222,42 @@
         <td><input type="number" inputmode="decimal" step="0.001" placeholder="例：3.000" /></td>
         <td><input type="number" inputmode="decimal" step="0.001" placeholder="例：-0.100" /></td>
         <td><input type="number" inputmode="decimal" step="0.001" placeholder="例：0.100" /></td>
-        <td><input type="number" inputmode="decimal" step="0.001" placeholder="例：3.060" /></td>
+        <td><input type="number" inputmode="decimal" step="0.001" placeholder="實測1" /></td>
+        <td><input type="number" inputmode="decimal" step="0.001" placeholder="實測2" /></td>
+        <td><input type="number" inputmode="decimal" step="0.001" placeholder="實測3" /></td>
+        <td><input type="number" inputmode="decimal" step="0.001" placeholder="實測4" /></td>
+        <td><input type="number" inputmode="decimal" step="0.001" placeholder="實測5" /></td>
         <td><span class="tag">—</span></td>
       `;
       tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => updateRow(tr)));
       tbody.appendChild(tr);
     }
+
     function removeLastRow(){ if (tbody.lastElementChild) tbody.removeChild(tbody.lastElementChild); }
+
+    // 即時計算 PASS/FAIL：所有「已填」的實測值都在公差範圍內才 PASS
     function updateRow(tr) {
-      const [name, nominal, tolMinus, tolPlus, measured] = [...tr.querySelectorAll('input')].map(i => i.value);
+      const inputs = [...tr.querySelectorAll('input')].map(i => i.value);
+      const [name, nominal, tolMinus, tolPlus, m1, m2, m3, m4, m5] = inputs;
       const tag = tr.querySelector('.tag');
-      if (nominal !== '' && tolMinus !== '' && tolPlus !== '' && measured !== '') {
-        const n = parseFloat(nominal), lo = parseFloat(tolMinus), hi = parseFloat(tolPlus), m = parseFloat(measured);
+
+      // 沒有名目/公差就不判
+      if (nominal === '' || tolMinus === '' || tolPlus === '') {
+        tag.textContent = '—'; tag.className = 'tag'; return;
+      }
+
+      const n = parseFloat(nominal), lo = parseFloat(tolMinus), hi = parseFloat(tolPlus);
+      const arr = [m1, m2, m3, m4, m5].filter(s => s !== '');
+      if (arr.length === 0) { tag.textContent = '—'; tag.className = 'tag'; return; }
+
+      let ok = true;
+      for (const s of arr) {
+        const m = parseFloat(s);
         const dev = m - n;
-        const ok  = dev >= lo && dev <= hi;
-        tag.textContent = ok ? 'PASS' : 'FAIL';
-        tag.className = 'tag ' + (ok ? 'pass' : 'fail');
-      } else { tag.textContent = '—'; tag.className = 'tag'; }
+        if (!(dev >= lo && dev <= hi)) { ok = false; break; }
+      }
+      tag.textContent = ok ? 'PASS' : 'FAIL';
+      tag.className = 'tag ' + (ok ? 'pass' : 'fail');
     }
 
     async function save() {
@@ -271,6 +294,8 @@
     }
 
     function showLogin(s){ loginView.classList.remove('hidden'); formView.classList.add('hidden'); if (s) loginMsg.innerHTML = '<span class="error">'+s+'</span>'; }
+
+    // 把畫面資料打包；每列至少要有「一個實測值」
     function buildRecord() {
       const inspectorName = localStorage.getItem('qci_user') || '';
       const pass = localStorage.getItem('qci_pass') || '';
@@ -286,22 +311,50 @@
       const rows = [...tbody.querySelectorAll('tr')];
       const measurements = [];
       let allPass = true;
+
       for (const tr of rows) {
-        const [name, nominal, tolMinus, tolPlus, measured] = [...tr.querySelectorAll('input')].map(i => i.value.trim());
-        if (!name && !nominal && !tolMinus && !tolPlus && !measured) continue;
-        if (!name || !nominal || !tolMinus || !tolPlus || !measured) { alert('有未填欄位'); return null; }
-        const n = parseFloat(nominal), lo = parseFloat(tolMinus), hi = parseFloat(tolPlus), m = parseFloat(measured);
-        const dev = +(m - n).toFixed(3);
-        const pass = dev >= lo && dev <= hi;
-        if (!pass) allPass = false;
-        measurements.push({ name, nominal: n, tolMinus: lo, tolPlus: hi, measured: m, deviation: dev, pass });
+        const [name, nominal, tolMinus, tolPlus, m1, m2, m3, m4, m5] =
+          [...tr.querySelectorAll('input')].map(i => i.value.trim());
+
+        // 整列空白就跳過
+        if (!name && !nominal && !tolMinus && !tolPlus && !m1 && !m2 && !m3 && !m4 && !m5) continue;
+
+        if (!name || !nominal || !tolMinus || !tolPlus) { alert('有未填欄位（名稱/名目/公差）'); return null; }
+
+        const arrRaw = [m1, m2, m3, m4, m5].filter(s => s !== '');
+        if (arrRaw.length === 0) { alert('每列至少填一個「實測」'); return null; }
+
+        const n = parseFloat(nominal), lo = parseFloat(tolMinus), hi = parseFloat(tolPlus);
+        const arr = arrRaw.map(s => parseFloat(s));
+
+        let passRow = true;
+        for (const m of arr) {
+          const dev = m - n;
+          if (!(dev >= lo && dev <= hi)) { passRow = false; break; }
+        }
+        if (!passRow) allPass = false;
+
+        measurements.push({
+          name,
+          nominal: n,
+          tolMinus: lo,
+          tolPlus: hi,
+          measured: arr,     // ← 實測陣列
+          pass: passRow
+        });
       }
+
       if (measurements.length === 0) { alert('至少需要一筆尺寸資料'); return null; }
 
       const now = new Date();
       const id = `INS-${now.toISOString().slice(0,19).replace(/[-:T]/g,'')}-${Math.floor(Math.random()*900+100)}`;
       const isoLocal = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString();
-      return { id, timestamp: isoLocal, inspector: inspectorName, supplier, partNo, drawingNo, revision, notes, measurements, overallResult: allPass ? 'PASS' : 'FAIL' };
+      return {
+        id, timestamp: isoLocal, inspector: inspectorName,
+        supplier, partNo, drawingNo, revision, notes,
+        measurements,
+        overallResult: allPass ? 'PASS' : 'FAIL'
+      };
     }
   </script>
 </body>
