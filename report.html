@@ -237,4 +237,69 @@
         && typeof o.timestamp === 'string'
         && Array.isArray(o.measurements);
     }
-    function isValidReco
+    function isValidRecord(r) {
+      return looksLikeRecord(r) && !!(r.supplier || r.partNo || r.drawingNo || r.inspector);
+    }
+    function buildMeasurements(list) {
+      if (!list.length) return '(無)';
+      const rows = list.map(m => {
+        const arr =
+          Array.isArray(m.measured) ? m.measured :
+          (typeof m.measured === 'number' || (typeof m.measured === 'string' && m.measured !== ''))
+            ? [m.measured] : [];
+        const cells = [0,1,2,3,4].map(i => num(arr[i]));
+        return `
+          <tr>
+            <td>${escapeHtml(m.name)}</td>
+            <td>${num(m.nominal)}</td>
+            <td>${num(m.tolMinus)}</td>
+            <td>${num(m.tolPlus)}</td>
+            <td>${cells[0]}</td>
+            <td>${cells[1]}</td>
+            <td>${cells[2]}</td>
+            <td>${cells[3]}</td>
+            <td>${cells[4]}</td>
+            <td>${m.pass ? 'PASS' : 'FAIL'}</td>
+          </tr>
+        `;
+      }).join('');
+      return `
+        <table>
+          <thead>
+            <tr>
+              <th>尺寸</th><th>名目</th><th>下限公差</th><th>上限公差</th>
+              <th>實測1</th><th>實測2</th><th>實測3</th><th>實測4</th><th>實測5</th>
+              <th>判定</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+    function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+    function escapeAttr(s){ return String(s||'').replace(/"/g, '&quot;'); }
+    function formatTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
+
+    async function diag() {
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      const r = await fetch('/api/inspections?diag=1', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+      const t = await r.text();
+      raw.style.display = 'block'; raw.textContent = '診斷結果：\n' + t;
+    }
+    async function repair() {
+      if (role !== 'admin') { alert('只有 admin 可以修復'); return; }
+      const ok = confirm('這會嘗試把雲端資料攤平成乾淨的清單並寫回。要繼續嗎？');
+      if (!ok) return;
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      const r = await fetch('/api/inspections?repair=1', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+      const t = await r.text();
+      raw.style.display = 'block'; raw.textContent = '修復結果：\n' + t;
+      await load();
+    }
+
+    load();
+  </script>
+</body>
+</html>
