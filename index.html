@@ -32,28 +32,28 @@
   <div class="card">
     <h2>現場品檢（安拓）</h2>
 
-    <!-- 登入區 -->
+    <!-- 登入區（帳號=檢驗人員、密碼=通關碼/密碼） -->
     <div id="loginView">
-      <p class="muted">請輸入檢驗人員姓名與團隊通關碼。</p>
+      <p class="muted">請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。</p>
       <div class="row">
         <div>
-          <label>檢驗人員</label>
-          <input id="inspector" placeholder="例如：王小明" />
+          <label>帳號（檢驗人員）</label>
+          <input id="inspector" placeholder="例如：boss / worker1 / qa1" />
         </div>
         <div>
-          <label>通關碼（主管設定）</label>
-          <input id="passcode" type="password" placeholder="例如：A1234" />
+          <label>密碼（通關碼/密碼）</label>
+          <input id="passcode" type="password" placeholder="例如：admin123 / in1111 / view2222" />
         </div>
       </div>
       <div class="toolbar">
         <button class="btn btn-primary" id="btnLogin">登入</button>
-        <button class="btn btn-ghost" id="btnResetPass">清除通關碼</button>
+        <button class="btn btn-ghost" id="btnResetPass">清除本機記錄</button>
         <a class="btn btn-ghost" href="/api/inspections?health=1" target="_blank">健康檢查</a>
       </div>
       <p id="loginMsg" class="muted"></p>
     </div>
 
-    <!-- 表單區 -->
+    <!-- 表單區（input/admin 可見） -->
     <div id="formView" class="hidden">
       <div class="row">
         <div>
@@ -107,89 +107,110 @@
 
       <p id="msg" class="muted" style="margin-top:8px"></p>
     </div>
+
+    <!-- viewer 專用提示 -->
+    <p id="viewOnlyTip" class="muted hidden">
+      您的角色是 <strong>viewer</strong>（只能看/印報告）。請改到 <a href="report.html">報告頁</a>。
+    </p>
   </div>
 
   <script>
     const loginView = document.getElementById('loginView');
     const formView  = document.getElementById('formView');
-    const inspector = document.getElementById('inspector');
-    const passcode  = document.getElementById('passcode');
+    const inspector = document.getElementById('inspector'); // ← 當帳號
+    const passcode  = document.getElementById('passcode');  // ← 當密碼
     const loginMsg  = document.getElementById('loginMsg');
+    const viewOnlyTip = document.getElementById('viewOnlyTip');
 
     const tbody = document.getElementById('tbody');
     const msg   = document.getElementById('msg');
 
     document.getElementById('btnLogin').addEventListener('click', onLogin);
     document.getElementById('btnResetPass').addEventListener('click', () => {
-      localStorage.removeItem('qci_passcode'); alert('通關碼已清除。');
+      ['qci_user','qci_pass','qci_role','qci_passcode','qci_inspector'].forEach(k => localStorage.removeItem(k));
+      alert('本機登入資訊已清除。');
     });
     document.getElementById('btnAdd').addEventListener('click', addRow);
     document.getElementById('btnRemove').addEventListener('click', removeLastRow);
     document.getElementById('btnClearRows').addEventListener('click', () => { tbody.innerHTML=''; ensureRows(3); });
     document.getElementById('btnSave').addEventListener('click', save);
 
-    // 進入頁面：若有上次的姓名/通關碼 → 也要先驗證通關碼
+    // 自動登入（若本機有記錄 → 先驗證拿角色）
     window.addEventListener('DOMContentLoaded', async () => {
-      const name = localStorage.getItem('qci_inspector') || '';
-      const code = localStorage.getItem('qci_passcode') || '';
-      if (name) inspector.value = name;
-      if (code) passcode.value = code;
+      const u = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
+      const p = localStorage.getItem('qci_pass') || localStorage.getItem('qci_passcode') || '';
+      if (u) inspector.value = u;
+      if (p) passcode.value = p;
 
-      if (name && code) {
+      if (u && p) {
         loginMsg.textContent = '自動驗證中...';
-        const ok = await validatePasscode(code);
-        if (ok) {
-          showForm();
-          ensureRows(3);
+        const info = await authCheck(u, p);
+        if (info && info.ok) {
+          localStorage.setItem('qci_user', u);
+          localStorage.setItem('qci_pass', p);
+          localStorage.setItem('qci_role', info.role);
+          showByRole(info.role);
+          if (info.role !== 'viewer' && tbody.children.length === 0) ensureRows(3);
           loginMsg.textContent = '';
-        } else {
-          localStorage.removeItem('qci_passcode');
-          loginMsg.innerHTML = '<span class="error">❌ 通關碼錯誤或已變更，請重新輸入。</span>';
+          return;
         }
+        loginMsg.innerHTML = '<span class="error">❌ 帳號或密碼已變更，請重新登入。</span>';
       }
     });
 
     async function onLogin() {
-      const name = inspector.value.trim();
-      const code = passcode.value.trim();
-      if (!name || !code) { loginMsg.innerHTML = '<span class="error">請輸入姓名與通關碼</span>'; return; }
+      const u = inspector.value.trim();
+      const p = passcode.value.trim();
+      if (!u || !p) { loginMsg.innerHTML = '<span class="error">請輸入帳號與密碼</span>'; return; }
 
       loginMsg.textContent = '驗證中...';
-      const ok = await validatePasscode(code);
-      if (!ok) {
-        loginMsg.innerHTML = '<span class="error">❌ 通關碼錯誤，請重新輸入。</span>';
-        return; // 留在登入頁
+      const info = await authCheck(u, p);
+      if (!info || !info.ok) {
+        loginMsg.innerHTML = '<span class="error">❌ 帳號或密碼錯誤</span>'; return;
       }
 
-      // 只有通關碼正確才記錄與換頁
-      localStorage.setItem('qci_inspector', name);
-      localStorage.setItem('qci_passcode', code);
-      showForm();
-      if (tbody.children.length === 0) ensureRows(3);
+      localStorage.setItem('qci_user', u);
+      localStorage.setItem('qci_pass', p);
+      localStorage.setItem('qci_role', info.role);
+      // 兼容舊鍵名
+      localStorage.setItem('qci_inspector', u);
+      localStorage.setItem('qci_passcode', p);
+
+      showByRole(info.role);
+      if (info.role !== 'viewer' && tbody.children.length === 0) ensureRows(3);
       loginMsg.textContent = '';
     }
 
-    function showForm() {
-      loginView.classList.add('hidden');
-      formView.classList.remove('hidden');
-    }
-    function showLogin(msgText) {
-      if (msgText) loginMsg.innerHTML = '<span class="error">' + msgText + '</span>';
-      formView.classList.add('hidden');
-      loginView.classList.remove('hidden');
+    function showByRole(role) {
+      if (role === 'viewer') {
+        loginView.classList.add('hidden');
+        formView.classList.add('hidden');
+        viewOnlyTip.classList.remove('hidden');
+      } else {
+        loginView.classList.add('hidden');
+        formView.classList.remove('hidden');
+        viewOnlyTip.classList.add('hidden');
+      }
     }
 
-    async function validatePasscode(code) {
+    async function authCheck(user, pass) {
       try {
-        const res = await fetch('/api/inspections', { headers: { 'x-passcode': code } });
-        return res.ok; // 200 表示通關碼正確；401 就是錯誤
+        const res = await fetch('/api/inspections?auth=1', {
+          headers: {
+            'x-user': user, 'x-pass': pass,
+            // 舊模式相容（後端若走 PASSCODE 也能通）
+            'x-passcode': pass
+          }
+        });
+        const t = await res.text();
+        let j = {}; try { j = JSON.parse(t); } catch {}
+        return { ok: res.ok && j.ok, role: j.role || 'admin', mode: j.mode || 'passcode' };
       } catch {
-        return false;
+        return null;
       }
     }
 
     function ensureRows(n) { for (let i=0; i<n; i++) addRow(); }
-
     function addRow() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -200,13 +221,10 @@
         <td><input type="number" inputmode="decimal" step="0.001" placeholder="例：3.060" /></td>
         <td><span class="tag">—</span></td>
       `;
-      const inputs = tr.querySelectorAll('input');
-      inputs.forEach(inp => inp.addEventListener('input', () => updateRow(tr)));
+      tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => updateRow(tr)));
       tbody.appendChild(tr);
     }
-
     function removeLastRow(){ if (tbody.lastElementChild) tbody.removeChild(tbody.lastElementChild); }
-
     function updateRow(tr) {
       const [name, nominal, tolMinus, tolPlus, measured] = [...tr.querySelectorAll('input')].map(i => i.value);
       const tag = tr.querySelector('.tag');
@@ -216,92 +234,74 @@
         const ok  = dev >= lo && dev <= hi;
         tag.textContent = ok ? 'PASS' : 'FAIL';
         tag.className = 'tag ' + (ok ? 'pass' : 'fail');
-      } else {
-        tag.textContent = '—';
-        tag.className = 'tag';
-      }
+      } else { tag.textContent = '—'; tag.className = 'tag'; }
     }
 
     async function save() {
-      const record = buildRecord();
-      if (!record) return;
+      const role = (localStorage.getItem('qci_role') || '').toLowerCase();
+      if (role === 'viewer') { alert('viewer 沒有上傳權限'); return; }
 
+      const record = buildRecord(); if (!record) return;
       msg.textContent = '儲存中...';
-      const btn = document.getElementById('btnSave');
-      btn.disabled = true;
+      const btn = document.getElementById('btnSave'); btn.disabled = true;
 
-      const code = localStorage.getItem('qci_passcode');
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      const code = pass; // 舊模式相容
+
       try {
         const res = await fetch('/api/inspections', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-passcode': code },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user': user, 'x-pass': pass, 'x-passcode': code
+          },
           body: JSON.stringify({ record })
         });
-        let text = '';
-        try { text = await res.text(); } catch {}
+        const text = await res.text();
         if (!res.ok) {
-          if (res.status === 401) {
-            showLogin('❌ 通關碼錯誤或已失效，請重新登入。');
-          }
+          if (res.status === 401) { showLogin('❌ 登入過期，請重新登入。'); }
           throw new Error(`HTTP ${res.status}；訊息：${text || '（無訊息）'}`);
         }
-
         msg.textContent = '✅ 已儲存到雲端（可到報告頁查看/列印）';
-        tbody.innerHTML = '';
-        ensureRows(3);
+        tbody.innerHTML = ''; ensureRows(3);
       } catch (e) {
         msg.textContent = '❌ 儲存失敗：' + e.message;
-        console.error(e);
-      } finally {
-        btn.disabled = false;
-      }
+      } finally { btn.disabled = false; }
     }
 
+    function showLogin(s){ loginView.classList.remove('hidden'); formView.classList.add('hidden'); if (s) loginMsg.innerHTML = '<span class="error">'+s+'</span>'; }
     function buildRecord() {
-      const inspectorName = localStorage.getItem('qci_inspector') || '';
-      const code = localStorage.getItem('qci_passcode') || '';
-      if (!inspectorName || !code) { showLogin('請先登入'); return null; }
+      const inspectorName = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      if (!inspectorName || !pass) { showLogin('請先登入'); return null; }
 
       const supplier = document.getElementById('supplier').value.trim();
       const partNo = document.getElementById('partNo').value.trim();
       const drawingNo = document.getElementById('drawingNo').value.trim();
       const revision = document.getElementById('revision').value.trim();
       const notes = document.getElementById('notes').value.trim();
-
       if (!supplier || !partNo) { alert('請輸入供應商與料號'); return null; }
 
       const rows = [...tbody.querySelectorAll('tr')];
       const measurements = [];
       let allPass = true;
-
       for (const tr of rows) {
         const [name, nominal, tolMinus, tolPlus, measured] = [...tr.querySelectorAll('input')].map(i => i.value.trim());
         if (!name && !nominal && !tolMinus && !tolPlus && !measured) continue;
         if (!name || !nominal || !tolMinus || !tolPlus || !measured) { alert('有未填欄位'); return null; }
-
         const n = parseFloat(nominal), lo = parseFloat(tolMinus), hi = parseFloat(tolPlus), m = parseFloat(measured);
         const dev = +(m - n).toFixed(3);
         const pass = dev >= lo && dev <= hi;
         if (!pass) allPass = false;
-
         measurements.push({ name, nominal: n, tolMinus: lo, tolPlus: hi, measured: m, deviation: dev, pass });
       }
-
       if (measurements.length === 0) { alert('至少需要一筆尺寸資料'); return null; }
 
       const now = new Date();
       const id = `INS-${now.toISOString().slice(0,19).replace(/[-:T]/g,'')}-${Math.floor(Math.random()*900+100)}`;
       const isoLocal = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString();
-
-      return {
-        id,
-        timestamp: isoLocal,
-        inspector: inspectorName,
-        supplier, partNo, drawingNo, revision,
-        notes,
-        measurements,
-        overallResult: allPass ? 'PASS' : 'FAIL'
-      };
+      return { id, timestamp: isoLocal, inspector: inspectorName, supplier, partNo, drawingNo, revision, notes, measurements, overallResult: allPass ? 'PASS' : 'FAIL' };
     }
   </script>
 </body>
