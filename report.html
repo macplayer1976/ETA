@@ -20,6 +20,8 @@
     a.btn { text-decoration: none; display: inline-block; }
     @media print { .noprint { display: none; } body { padding: 0; } }
     pre { background:#f7f7f7; padding:12px; border-radius:8px; overflow:auto; }
+    .mini { font-size: 13px; color:#333; margin-top:6px; }
+    .mini table th, .mini table td { font-size: 12px; padding:6px; }
   </style>
 </head>
 <body>
@@ -42,8 +44,8 @@
         <tr>
           <th style="width:18%">基本資訊</th>
           <th style="width:22%">料件資訊</th>
-          <th style="width:48%">量測明細</th>
-          <th style="width:12%">結果</th>
+          <th style="width:38%">量測明細</th>
+          <th style="width:22%">結果 / 外觀</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -76,19 +78,14 @@
       history.replaceState(null, '', location.pathname + location.search);
     }
 
-    let role = '';          // 目前角色
-    let currentUser = '';   // 目前帳號
-    let canDelete = false;  // boss+admin 才能刪
+    let role = '';
+    let currentUser = '';
+    let canDelete = false;
     let records = [];
 
-    // 事件委派：刪除按鈕
     tbody.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn-delete');
-      if (btn) {
-        const id = btn.getAttribute('data-id');
-        onDelete(id);
-        return;
-      }
+      if (btn) { onDelete(btn.getAttribute('data-id')); return; }
     });
 
     async function ensureAuth() {
@@ -106,16 +103,12 @@
       const u2 = localStorage.getItem('qci_user') || '';
       const p2 = localStorage.getItem('qci_pass') || '';
       try {
-        const res = await fetch('/api/inspections?auth=1', {
-          headers: { 'x-user': u2, 'x-pass': p2, 'x-passcode': p2 }
-        });
-        const t = await res.text();
-        let j = {}; try { j = JSON.parse(t); } catch {}
+        const res = await fetch('/api/inspections?auth=1', { headers: { 'x-user': u2, 'x-pass': p2, 'x-passcode': p2 } });
+        const t = await res.text(); let j={}; try{ j=JSON.parse(t);}catch{}
         if (!res.ok || !j.ok) return { ok:false };
         role = (j.role || '').toLowerCase();
         currentUser = (j.user || '');
         canDelete = (role === 'admin' && String(currentUser).toLowerCase() === 'boss');
-        // admin 才顯示修復
         btnRepair.style.display = role === 'admin' ? '' : 'none';
         return { ok:true };
       } catch { return { ok:false }; }
@@ -125,10 +118,7 @@
       msg.textContent = '驗證中...';
       const ok = await ensureAuth();
       if (!ok.ok) { msg.textContent = '❌ 請重新登入（帳號/密碼）'; return; }
-      if (!['admin','viewer'].includes(role)) {
-        msg.textContent = '您的帳號沒有檢視報告的權限（input）。';
-        return;
-      }
+      if (!['admin','viewer'].includes(role)) { msg.textContent = '您的帳號沒有檢視報告的權限（input）。'; return; }
 
       msg.textContent = '載入中...';
       raw.style.display = 'none'; raw.textContent = '';
@@ -137,7 +127,6 @@
       try {
         const res = await fetch('/api/inspections', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass } });
         const text = await res.text();
-
         if (DEBUG) { raw.style.display = 'block'; raw.textContent = '原始回應（前 1000 字）：\n' + (text || '').slice(0, 1000); }
         if (!res.ok) throw new Error(`HTTP ${res.status}：${text || '（無訊息）'}`);
 
@@ -147,9 +136,7 @@
         records = list;
         render();
         msg.textContent = records.length ? `共 ${records.length} 筆。可用關鍵字快速過濾。` : '目前沒有可顯示的資料。';
-      } catch (e) {
-        msg.textContent = '❌ 載入失敗：' + e.message;
-      }
+      } catch (e) { msg.textContent = '❌ 載入失敗：' + e.message; }
     }
 
     function render() {
@@ -178,8 +165,11 @@
           </td>
           <td>${buildMeasurements(r.measurements || [])}</td>
           <td>
-            <div><strong>${r.overallResult === 'PASS' ? '✅ PASS' : '❌ FAIL'}</strong></div>
-            <div class="noprint" style="margin-top:6px; display:flex; flex-direction:column; gap:6px">
+            <div><strong>整體結果：</strong>${r.overallResult === 'PASS' ? '✅ PASS' : '❌ FAIL'}</div>
+            <div class="mini" style="margin-top:6px">
+              ${buildAppearanceMini(r.appearance)}
+            </div>
+            <div class="noprint" style="margin-top:8px; display:flex; flex-direction:column; gap:6px">
               <a class="btn btn-gray" target="_blank" href="print.html?id=${encodeURIComponent(r.id)}">單筆列印</a>
               ${canDelete ? `<button class="btn btn-danger btn-delete" data-id="${escapeAttr(r.id)}">刪除此筆</button>` : ``}
             </div>
@@ -215,12 +205,10 @@
         records = records.filter(r => r.id !== id);
         render();
         msg.textContent = '✅ 已刪除 1 筆。';
-      } catch (e) {
-        msg.textContent = '❌ 刪除失敗：' + e.message;
-      }
+      } catch (e) { msg.textContent = '❌ 刪除失敗：' + e.message; }
     }
 
-    /* --------- 工具群（相容舊/新資料） ---------- */
+    /* --------- 小工具（相容舊/新資料） ---------- */
     function listFromJson(x) {
       if (!x) return [];
       if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
@@ -260,8 +248,7 @@
             <td>${cells[3]}</td>
             <td>${cells[4]}</td>
             <td>${m.pass ? 'PASS' : 'FAIL'}</td>
-          </tr>
-        `;
+          </tr>`;
       }).join('');
       return `
         <table>
@@ -274,6 +261,20 @@
           </thead>
           <tbody>${rows}</tbody>
         </table>`;
+    }
+    function buildAppearanceMini(app){
+      if (!Array.isArray(app) || app.length===0) return '外觀：<em>（未填）</em>';
+      const pass = app.every(x => (x && String(x.result).toUpperCase()==='OK'));
+      const rows = app.map(x => `
+        <tr><td>${escapeHtml(x.sample||'樣品')}</td><td>${escapeHtml((x.result||'').toUpperCase())}</td><td>${escapeHtml(x.note||'')}</td></tr>
+      `).join('');
+      return `
+        <div><strong>外觀：</strong>${pass ? '全部 O.K' : '有 NG'}</div>
+        <div class="mini"><table>
+          <thead><tr><th>樣品</th><th>結果</th><th>備註</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      `;
     }
     function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
     function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }

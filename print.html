@@ -30,7 +30,6 @@
     .cell small { color:var(--gray); display:block; margin-bottom:6px; }
     @media print {
       .noprint { display:none; }
-      body { background:#fff; }
       .wrap { padding: 12px 0 0; }
     }
   </style>
@@ -77,6 +76,12 @@
       <div id="measurements"></div>
     </div>
 
+    <!-- 外觀檢查 -->
+    <div class="block" style="margin-top:10px">
+      <h3>外觀檢查</h3>
+      <div id="appearance"></div>
+    </div>
+
     <!-- 簽核區 -->
     <div class="block" style="margin-top:10px">
       <h3>簽核</h3>
@@ -92,11 +97,9 @@
     const tip = document.getElementById('tip');
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
 
-    // 讀取網址 id
     const params = new URLSearchParams(location.search);
     const ID = params.get('id') || '';
 
-    // 確保登入（沿用你的前端規格）
     async function ensureAuth() {
       let user = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
       let pass = localStorage.getItem('qci_pass') || localStorage.getItem('qci_passcode') || '';
@@ -143,7 +146,8 @@
       if (!list.length) return '<div class="muted">（無資料）</div>';
       const rows = list.map(m=>{
         const arr = Array.isArray(m.measured) ? m.measured
-                    : ((typeof m.measured==='number' || (typeof m.measured==='string'&&m.measured!=='')) ? [m.measured] : []);
+                    : ((typeof m.measured==='number' || (typeof m.measured==='string'&&m.measured!==''))
+                        ? [m.measured] : []);
         const cells = [0,1,2,3,4].map(i=>num(arr[i]));
         return `
           <tr>
@@ -172,6 +176,21 @@
         </table>`;
     }
 
+    function buildAppearanceTable(app){
+      if (!Array.isArray(app) || app.length===0) return '<div class="muted">（未填）</div>';
+      const pass = app.every(x => (x && String(x.result).toUpperCase()==='OK'));
+      const rows = app.map(x => `
+        <tr><td>${esc(x.sample||'樣品')}</td><td>${esc((x.result||'').toUpperCase())}</td><td>${esc(x.note||'')}</td></tr>
+      `).join('');
+      return `
+        <div style="margin-bottom:6px"><strong>外觀整體：</strong>${pass ? '全部 O.K' : '有 NG'}</div>
+        <table>
+          <thead><tr><th>樣品</th><th>結果</th><th>備註</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
     async function load() {
       tip.textContent = '載入中...';
       const ok = await ensureAuth();
@@ -188,7 +207,6 @@
         const r = list.find(x => x && String(x.id) === String(ID));
         if (!r) { tip.textContent = '❌ 查無此報告編號'; return; }
 
-        // 填資料
         document.getElementById('f-id').textContent = r.id || '';
         document.getElementById('f-time').textContent = fmtTime(r.timestamp);
         document.getElementById('f-inspector').textContent = r.inspector || '';
@@ -203,10 +221,9 @@
         document.getElementById('f-notes').textContent = r.notes || '';
 
         document.getElementById('measurements').innerHTML = buildMeasurementsTable(r.measurements || []);
+        document.getElementById('appearance').innerHTML   = buildAppearanceTable(r.appearance || []);
         tip.textContent = '提示：按上方「列印 / 下載 PDF」可輸出此單筆報告。';
-      } catch (e) {
-        tip.textContent = '❌ 載入失敗：' + e.message;
-      }
+      } catch (e) { tip.textContent = '❌ 載入失敗：' + e.message; }
     }
 
     load();

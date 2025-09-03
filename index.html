@@ -10,9 +10,9 @@
     h2 { margin-top:0; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     label { font-size: 14px; color: #333; display: block; margin-bottom: 4px; }
-    input, textarea { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 10px; box-sizing: border-box; }
+    input, textarea, select { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 10px; box-sizing: border-box; }
     table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; vertical-align: top; }
     th { background: #f7f7f7; }
     .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
     .pass { background: #e7f7ec; color: #116329; }
@@ -80,6 +80,7 @@
         <textarea id="notes" rows="2" placeholder="例如：現場尺寸穩定"></textarea>
       </div>
 
+      <!-- 尺寸量測 -->
       <h3 style="margin-top:20px">尺寸量測</h3>
       <table id="tbl">
         <thead>
@@ -104,6 +105,24 @@
         <button class="btn btn-ghost" id="btnClearRows">清空尺寸表</button>
       </div>
 
+      <!-- 外觀檢查 -->
+      <h3 style="margin-top:20px">外觀檢查（O.K / NG）</h3>
+      <table id="tblApp">
+        <thead>
+          <tr>
+            <th style="width:30%">樣品名稱/編號</th>
+            <th style="width:20%">結果</th>
+            <th>備註（可留空）</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyApp"></tbody>
+      </table>
+      <div class="toolbar">
+        <button class="btn btn-ghost" id="btnAddApp">＋新增樣品</button>
+        <button class="btn btn-ghost" id="btnRemoveApp">－刪除最後一列</button>
+        <button class="btn btn-ghost" id="btnClearApp">清空外觀表</button>
+      </div>
+
       <div class="toolbar">
         <button class="btn btn-primary" id="btnSave">儲存到雲端</button>
         <a class="btn btn-secondary" href="report.html">查看/列印報告</a>
@@ -121,25 +140,36 @@
   <script>
     const loginView = document.getElementById('loginView');
     const formView  = document.getElementById('formView');
-    const inspector = document.getElementById('inspector'); // 帳號
-    const passcode  = document.getElementById('passcode');  // 密碼
+    const inspector = document.getElementById('inspector');
+    const passcode  = document.getElementById('passcode');
     const loginMsg  = document.getElementById('loginMsg');
     const viewOnlyTip = document.getElementById('viewOnlyTip');
 
     const tbody = document.getElementById('tbody');
     const msg   = document.getElementById('msg');
 
+    // 外觀 DOM
+    const tbodyApp = document.getElementById('tbodyApp');
+
     document.getElementById('btnLogin').addEventListener('click', onLogin);
     document.getElementById('btnResetPass').addEventListener('click', () => {
       ['qci_user','qci_pass','qci_role','qci_passcode','qci_inspector'].forEach(k => localStorage.removeItem(k));
       alert('本機登入資訊已清除。');
     });
+
+    // 尺寸量測按鈕
     document.getElementById('btnAdd').addEventListener('click', addRow);
     document.getElementById('btnRemove').addEventListener('click', removeLastRow);
     document.getElementById('btnClearRows').addEventListener('click', () => { tbody.innerHTML=''; ensureRows(3); });
+
+    // 外觀檢查按鈕
+    document.getElementById('btnAddApp').addEventListener('click', addAppRow);
+    document.getElementById('btnRemoveApp').addEventListener('click', removeLastAppRow);
+    document.getElementById('btnClearApp').addEventListener('click', () => { tbodyApp.innerHTML=''; ensureAppRows(3); });
+
     document.getElementById('btnSave').addEventListener('click', save);
 
-    // 自動登入（若本機有記錄 → 先驗證拿角色）
+    // 自動登入驗證
     window.addEventListener('DOMContentLoaded', async () => {
       const u = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
       const p = localStorage.getItem('qci_pass') || localStorage.getItem('qci_passcode') || '';
@@ -154,7 +184,10 @@
           localStorage.setItem('qci_pass', p);
           localStorage.setItem('qci_role', info.role);
           showByRole(info.role);
-          if (info.role !== 'viewer' && tbody.children.length === 0) ensureRows(3);
+          if (info.role !== 'viewer') {
+            if (tbody.children.length === 0) ensureRows(3);
+            if (tbodyApp.children.length === 0) ensureAppRows(3);
+          }
           loginMsg.textContent = '';
           return;
         }
@@ -176,12 +209,14 @@
       localStorage.setItem('qci_user', u);
       localStorage.setItem('qci_pass', p);
       localStorage.setItem('qci_role', info.role);
-      // 兼容舊鍵名
       localStorage.setItem('qci_inspector', u);
       localStorage.setItem('qci_passcode', p);
 
       showByRole(info.role);
-      if (info.role !== 'viewer' && tbody.children.length === 0) ensureRows(3);
+      if (info.role !== 'viewer') {
+        if (tbody.children.length === 0) ensureRows(3);
+        if (tbodyApp.children.length === 0) ensureAppRows(3);
+      }
       loginMsg.textContent = '';
     }
 
@@ -200,21 +235,16 @@
     async function authCheck(user, pass) {
       try {
         const res = await fetch('/api/inspections?auth=1', {
-          headers: {
-            'x-user': user, 'x-pass': pass,
-            'x-passcode': pass // 相容舊 PASSCODE 模式
-          }
+          headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }
         });
         const t = await res.text();
         let j = {}; try { j = JSON.parse(t); } catch {}
         return { ok: res.ok && j.ok, role: j.role || 'admin', mode: j.mode || 'passcode' };
-      } catch {
-        return null;
-      }
+      } catch { return null; }
     }
 
+    /* ==== 尺寸量測 ==== */
     function ensureRows(n) { for (let i=0; i<n; i++) addRow(); }
-
     function addRow() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -232,34 +262,49 @@
       tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => updateRow(tr)));
       tbody.appendChild(tr);
     }
-
     function removeLastRow(){ if (tbody.lastElementChild) tbody.removeChild(tbody.lastElementChild); }
-
-    // 即時計算 PASS/FAIL：所有「已填」的實測值都在公差範圍內才 PASS
     function updateRow(tr) {
       const inputs = [...tr.querySelectorAll('input')].map(i => i.value);
       const [name, nominal, tolMinus, tolPlus, m1, m2, m3, m4, m5] = inputs;
       const tag = tr.querySelector('.tag');
 
-      // 沒有名目/公差就不判
       if (nominal === '' || tolMinus === '' || tolPlus === '') {
         tag.textContent = '—'; tag.className = 'tag'; return;
       }
-
       const n = parseFloat(nominal), lo = parseFloat(tolMinus), hi = parseFloat(tolPlus);
       const arr = [m1, m2, m3, m4, m5].filter(s => s !== '');
       if (arr.length === 0) { tag.textContent = '—'; tag.className = 'tag'; return; }
 
       let ok = true;
       for (const s of arr) {
-        const m = parseFloat(s);
-        const dev = m - n;
+        const m = parseFloat(s); const dev = m - n;
         if (!(dev >= lo && dev <= hi)) { ok = false; break; }
       }
       tag.textContent = ok ? 'PASS' : 'FAIL';
       tag.className = 'tag ' + (ok ? 'pass' : 'fail');
     }
 
+    /* ==== 外觀檢查 ==== */
+    function ensureAppRows(n){ for(let i=0;i<n;i++) addAppRow(); }
+    function addAppRow(){
+      const tr = document.createElement('tr');
+      const idx = tbodyApp.children.length + 1;
+      tr.innerHTML = `
+        <td><input placeholder="例：樣品${idx}" value="樣品${idx}" /></td>
+        <td>
+          <select>
+            <option value="">— 請選擇 —</option>
+            <option value="OK">O.K</option>
+            <option value="NG">NG</option>
+          </select>
+        </td>
+        <td><input placeholder="備註（可留空）" /></td>
+      `;
+      tbodyApp.appendChild(tr);
+    }
+    function removeLastAppRow(){ if (tbodyApp.lastElementChild) tbodyApp.removeChild(tbodyApp.lastElementChild); }
+
+    /* ==== 儲存 ==== */
     async function save() {
       const role = (localStorage.getItem('qci_role') || '').toLowerCase();
       if (role === 'viewer') { alert('viewer 沒有上傳權限'); return; }
@@ -270,15 +315,12 @@
 
       const user = localStorage.getItem('qci_user') || '';
       const pass = localStorage.getItem('qci_pass') || '';
-      const code = pass; // 舊模式相容
+      const code = pass;
 
       try {
         const res = await fetch('/api/inspections', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-user': user, 'x-pass': pass, 'x-passcode': code
-          },
+          headers: { 'Content-Type': 'application/json','x-user': user,'x-pass': pass,'x-passcode': code },
           body: JSON.stringify({ record })
         });
         const text = await res.text();
@@ -288,6 +330,7 @@
         }
         msg.textContent = '✅ 已儲存到雲端（可到報告頁查看/列印）';
         tbody.innerHTML = ''; ensureRows(3);
+        tbodyApp.innerHTML = ''; ensureAppRows(3);
       } catch (e) {
         msg.textContent = '❌ 儲存失敗：' + e.message;
       } finally { btn.disabled = false; }
@@ -295,7 +338,6 @@
 
     function showLogin(s){ loginView.classList.remove('hidden'); formView.classList.add('hidden'); if (s) loginMsg.innerHTML = '<span class="error">'+s+'</span>'; }
 
-    // 把畫面資料打包；每列至少要有「一個實測值」
     function buildRecord() {
       const inspectorName = localStorage.getItem('qci_user') || '';
       const pass = localStorage.getItem('qci_pass') || '';
@@ -308,43 +350,49 @@
       const notes = document.getElementById('notes').value.trim();
       if (!supplier || !partNo) { alert('請輸入供應商與料號'); return null; }
 
+      // 尺寸
       const rows = [...tbody.querySelectorAll('tr')];
       const measurements = [];
-      let allPass = true;
+      let allDimPass = true;
 
       for (const tr of rows) {
         const [name, nominal, tolMinus, tolPlus, m1, m2, m3, m4, m5] =
           [...tr.querySelectorAll('input')].map(i => i.value.trim());
 
-        // 整列空白就跳過
         if (!name && !nominal && !tolMinus && !tolPlus && !m1 && !m2 && !m3 && !m4 && !m5) continue;
-
-        if (!name || !nominal || !tolMinus || !tolPlus) { alert('有未填欄位（名稱/名目/公差）'); return null; }
+        if (!name || !nominal || !tolMinus || !tolPlus) { alert('尺寸表有未填欄位（名稱/名目/公差）'); return null; }
 
         const arrRaw = [m1, m2, m3, m4, m5].filter(s => s !== '');
-        if (arrRaw.length === 0) { alert('每列至少填一個「實測」'); return null; }
+        if (arrRaw.length === 0) { alert('每列尺寸至少填一個「實測」'); return null; }
 
         const n = parseFloat(nominal), lo = parseFloat(tolMinus), hi = parseFloat(tolPlus);
         const arr = arrRaw.map(s => parseFloat(s));
 
         let passRow = true;
-        for (const m of arr) {
-          const dev = m - n;
-          if (!(dev >= lo && dev <= hi)) { passRow = false; break; }
-        }
-        if (!passRow) allPass = false;
+        for (const m of arr) { const dev = m - n; if (!(dev >= lo && dev <= hi)) { passRow = false; break; } }
+        if (!passRow) allDimPass = false;
 
-        measurements.push({
-          name,
-          nominal: n,
-          tolMinus: lo,
-          tolPlus: hi,
-          measured: arr,     // ← 實測陣列
-          pass: passRow
-        });
+        measurements.push({ name, nominal:n, tolMinus:lo, tolPlus:hi, measured:arr, pass:passRow });
       }
-
       if (measurements.length === 0) { alert('至少需要一筆尺寸資料'); return null; }
+
+      // 外觀
+      const appRows = [...tbodyApp.querySelectorAll('tr')];
+      const appearance = [];
+      for (const tr of appRows) {
+        const [sampleInput, selectEl, noteInput] = tr.querySelectorAll('input, select');
+        const sample = (sampleInput.value || '').trim();
+        const result = (selectEl.value || '').toUpperCase(); // '', 'OK', 'NG'
+        const note = (noteInput.value || '').trim();
+        if (!sample && !result && !note) continue; // 整列空白 → 略過
+        if (!sample || !result) { alert('外觀表有未填欄位（樣品/結果）'); return null; }
+        appearance.push({ sample, result, note });
+      }
+      // 外觀判定：若有填至少一列 → 全部為 OK 才算 PASS；若一列都沒填，視為 PASS（不影響）
+      const appearancePass = appearance.length ? appearance.every(x => x.result === 'OK') : true;
+
+      // 總結果
+      const overall = (allDimPass && appearancePass) ? 'PASS' : 'FAIL';
 
       const now = new Date();
       const id = `INS-${now.toISOString().slice(0,19).replace(/[-:T]/g,'')}-${Math.floor(Math.random()*900+100)}`;
@@ -353,7 +401,8 @@
         id, timestamp: isoLocal, inspector: inspectorName,
         supplier, partNo, drawingNo, revision, notes,
         measurements,
-        overallResult: allPass ? 'PASS' : 'FAIL'
+        appearance,                  // ← 新增：外觀檢查陣列
+        overallResult: overall       // ← 尺寸 + 外觀 共同決定
       };
     }
   </script>
