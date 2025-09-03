@@ -1,5 +1,5 @@
 // netlify/functions/inspections.js
-// 讀–合併–寫 + 重試 + 去重複 + 巢狀資料自動攤平 + 帳號角色授權(相容舊通關碼)
+// 讀–合併–寫 + 重試 + 去重複 + 巢狀資料自動攤平 + 帳號角色授權(相容舊通關碼) + 單筆刪除(僅 boss/admin)
 exports.handler = async (event) => {
   const ENV = process.env || {};
   const API_KEY   = ENV.JSONBIN_API_KEY;
@@ -81,6 +81,23 @@ exports.handler = async (event) => {
     return json(200, { ok: true });
   }
 
+  // 刪除一筆：僅 boss（且是 admin）
+  if (event.httpMethod === 'DELETE') {
+    const id = (qs.id || '').trim();
+    if (!id) return json(400, { error: 'Missing id' });
+
+    const isBoss = (String(auth.user || '').toLowerCase() === 'boss') && allow(auth.role, ['admin']);
+    if (!isBoss) return json(403, { error: 'Forbidden' });
+
+    const result = await deleteWithRetry(BIN_ID, API_KEY, id, 5);
+    if (!result.ok) {
+      const status = result.lastStatus || 500;
+      return json(status, { error: 'Failed to delete', lastStatus: result.lastStatus, lastText: result.lastText });
+    }
+    // 就算已不存在也視為成功（deleted=0）
+    return json(200, { ok: true, deleted: result.deleted ? 1 : 0, id });
+  }
+
   return json(405, { error: 'Method Not Allowed' });
 
   // ---- 小工具 ----
@@ -88,7 +105,7 @@ exports.handler = async (event) => {
     return {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'Content-Type, x-passcode, x-user, x-pass',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     };
   }
   function json(code, obj) { return { statusCode: code, headers: headers(), body: JSON.stringify(obj) }; }
@@ -146,14 +163,14 @@ async function jsonbinPut(binId, apiKey, list) {
       headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey },
       body: JSON.stringify({ record: list }),
     });
-    const text = await r.text();
+  const text = await r.text();
     return { ok: r.ok, status: r.status, text };
   } catch (e) {
     return { ok: false, status: 0, text: String(e) };
   }
 }
 
-/* ======= 攤平 + 去重 ＆ 儲存重試 ======= */
+/* ======= 攤平 + 去重 ＆ 儲存/刪除 重試 ======= */
 function looksLikeRecord(o) {
   return o && typeof o === 'object'
     && typeof o.id === 'string'
@@ -188,6 +205,25 @@ async function saveWithRetry(binId, apiKey, newRecord, maxTry) {
     const merged = dedupById([...latest, newRecord]);
     const p = await jsonbinPut(binId, apiKey, merged);
     if (p.ok) return { ok: true };
+    lastStatus = p.status; lastText = p.text;
+    await sleep(150 * (i + 1));
+  }
+  return { ok: false, lastStatus, lastText };
+}
+async function deleteWithRetry(binId, apiKey, id, maxTry) {
+  let lastStatus = 0, lastText = '';
+  for (let i = 0; i < maxTry; i++) {
+    const g = await jsonbinGet(binId, apiKey);
+    if (!g.ok) { lastStatus = g.status; lastText = g.text; await sleep(120 * (i + 1)); continue; }
+
+    const latest = listFromJson(g.json);
+    const exists = latest.some(it => it && String(it.id) === String(id));
+    if (!exists) return { ok: true, deleted: 0 }; // 已不存在，視為成功
+
+    const kept = latest.filter(it => it && String(it.id) !== String(id));
+    const p = await jsonbinPut(binId, apiKey, kept);
+    if (p.ok) return { ok: true, deleted: 1 };
+
     lastStatus = p.status; lastText = p.text;
     await sleep(150 * (i + 1));
   }
