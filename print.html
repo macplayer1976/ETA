@@ -70,16 +70,10 @@
       <div style="margin-top:8px"><strong>備註：</strong><span id="f-notes"></span></div>
     </div>
 
-    <!-- 量測明細 -->
+    <!-- 外觀與量測明細（合併） -->
     <div class="block" style="margin-top:10px">
-      <h3>量測明細</h3>
-      <div id="measurements"></div>
-    </div>
-
-    <!-- 外觀檢查 -->
-    <div class="block" style="margin-top:10px">
-      <h3>外觀檢查</h3>
-      <div id="appearance"></div>
+      <h3>外觀與量測明細</h3>
+      <div id="unified"></div>
     </div>
 
     <!-- 簽核區 -->
@@ -142,53 +136,67 @@
     function fmtTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
     function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
 
-    function buildMeasurementsTable(list){
-      if (!list.length) return '<div class="muted">（無資料）</div>';
-      const rows = list.map(m=>{
+    function buildUnifiedTable(app, list){
+      const head = `
+        <thead>
+          <tr>
+            <th>項目 / 尺寸</th>
+            <th>名目</th>
+            <th>下限公差</th>
+            <th>上限公差</th>
+            <th>樣品/實測1</th>
+            <th>樣品/實測2</th>
+            <th>樣品/實測3</th>
+            <th>樣品/實測4</th>
+            <th>樣品/實測5</th>
+            <th>判定</th>
+          </tr>
+        </thead>`;
+
+      // 外觀第1列
+      const appMap = {};
+      if (Array.isArray(app)) {
+        for (const a of app) {
+          const m = String(a.sample || '').match(/(\d+)/);
+          const idx = m ? Number(m[1]) : null;
+          if (idx && idx >= 1 && idx <= 5) appMap[idx] = String(a.result || '').toUpperCase();
+        }
+      }
+      const cells = [1,2,3,4,5].map(i => esc(appMap[i] || ''));
+      const pass = (Object.keys(appMap).length > 0) && Object.values(appMap).every(v => v === 'OK');
+      const rowApp = `
+        <tr>
+          <td><strong>外觀</strong></td>
+          <td></td><td></td><td></td>
+          <td>${cells[0]}</td>
+          <td>${cells[1]}</td>
+          <td>${cells[2]}</td>
+          <td>${cells[3]}</td>
+          <td>${cells[4]}</td>
+          <td>${Object.keys(appMap).length ? (pass ? 'PASS' : 'FAIL') : '—'}</td>
+        </tr>`;
+
+      // 尺寸列
+      const rows = (Array.isArray(list) ? list : []).map(m=>{
         const arr = Array.isArray(m.measured) ? m.measured
-                    : ((typeof m.measured==='number' || (typeof m.measured==='string'&&m.measured!==''))
-                        ? [m.measured] : []);
-        const cells = [0,1,2,3,4].map(i=>num(arr[i]));
+                    : ((typeof m.measured==='number' || (typeof m.measured==='string'&&m.measured!=='')) ? [m.measured] : []);
+        const cs = [0,1,2,3,4].map(i=>num(arr[i]));
         return `
           <tr>
             <td>${esc(m.name)}</td>
             <td>${num(m.nominal)}</td>
             <td>${num(m.tolMinus)}</td>
             <td>${num(m.tolPlus)}</td>
-            <td>${cells[0]}</td>
-            <td>${cells[1]}</td>
-            <td>${cells[2]}</td>
-            <td>${cells[3]}</td>
-            <td>${cells[4]}</td>
+            <td>${cs[0]}</td>
+            <td>${cs[1]}</td>
+            <td>${cs[2]}</td>
+            <td>${cs[3]}</td>
+            <td>${cs[4]}</td>
             <td>${m.pass ? 'PASS' : 'FAIL'}</td>
           </tr>`;
       }).join('');
-      return `
-        <table>
-          <thead>
-            <tr>
-              <th>尺寸</th><th>名目</th><th>下限公差</th><th>上限公差</th>
-              <th>實測1</th><th>實測2</th><th>實測3</th><th>實測4</th><th>實測5</th>
-              <th>判定</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>`;
-    }
 
-    function buildAppearanceTable(app){
-      if (!Array.isArray(app) || app.length===0) return '<div class="muted">（未填）</div>';
-      const pass = app.every(x => (x && String(x.result).toUpperCase()==='OK'));
-      const rows = app.map(x => `
-        <tr><td>${esc(x.sample||'樣品')}</td><td>${esc((x.result||'').toUpperCase())}</td><td>${esc(x.note||'')}</td></tr>
-      `).join('');
-      return `
-        <div style="margin-bottom:6px"><strong>外觀整體：</strong>${pass ? '全部 O.K' : '有 NG'}</div>
-        <table>
-          <thead><tr><th>樣品</th><th>結果</th><th>備註</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
+      return `<table>${head}<tbody>${rowApp}${rows}</tbody></table>`;
     }
 
     async function load() {
@@ -220,8 +228,7 @@
         document.getElementById('f-rev').textContent = r.revision || '';
         document.getElementById('f-notes').textContent = r.notes || '';
 
-        document.getElementById('measurements').innerHTML = buildMeasurementsTable(r.measurements || []);
-        document.getElementById('appearance').innerHTML   = buildAppearanceTable(r.appearance || []);
+        document.getElementById('unified').innerHTML = buildUnifiedTable(r.appearance || [], r.measurements || []);
         tip.textContent = '提示：按上方「列印 / 下載 PDF」可輸出此單筆報告。';
       } catch (e) { tip.textContent = '❌ 載入失敗：' + e.message; }
     }

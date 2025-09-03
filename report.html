@@ -42,10 +42,10 @@
     <table id="tbl">
       <thead>
         <tr>
-          <th style="width:18%">基本資訊</th>
+          <th style="width:20%">基本資訊</th>
           <th style="width:22%">料件資訊</th>
-          <th style="width:38%">量測明細</th>
-          <th style="width:22%">結果 / 外觀</th>
+          <th style="width:42%">外觀與量測明細</th>
+          <th style="width:16%">結果 / 操作</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -163,12 +163,9 @@
             <div><strong>版次：</strong>${escapeHtml(r.revision || '')}</div>
             <div><strong>備註：</strong>${escapeHtml(r.notes || '')}</div>
           </td>
-          <td>${buildMeasurements(r.measurements || [])}</td>
+          <td>${buildUnifiedTable(r.appearance || [], r.measurements || [])}</td>
           <td>
             <div><strong>整體結果：</strong>${r.overallResult === 'PASS' ? '✅ PASS' : '❌ FAIL'}</div>
-            <div class="mini" style="margin-top:6px">
-              ${buildAppearanceMini(r.appearance)}
-            </div>
             <div class="noprint" style="margin-top:8px; display:flex; flex-direction:column; gap:6px">
               <a class="btn btn-gray" target="_blank" href="print.html?id=${encodeURIComponent(r.id)}">單筆列印</a>
               ${canDelete ? `<button class="btn btn-danger btn-delete" data-id="${escapeAttr(r.id)}">刪除此筆</button>` : ``}
@@ -228,9 +225,50 @@
     function isValidRecord(r) {
       return looksLikeRecord(r) && !!(r.supplier || r.partNo || r.drawingNo || r.inspector);
     }
-    function buildMeasurements(list) {
-      if (!list.length) return '(無)';
-      const rows = list.map(m => {
+
+    function buildUnifiedTable(appearance, measurements) {
+      // 產生「樣品/實測1～5」欄位
+      const head = `
+        <thead>
+          <tr>
+            <th>項目 / 尺寸</th>
+            <th>名目</th>
+            <th>下限公差</th>
+            <th>上限公差</th>
+            <th>樣品/實測1</th>
+            <th>樣品/實測2</th>
+            <th>樣品/實測3</th>
+            <th>樣品/實測4</th>
+            <th>樣品/實測5</th>
+            <th>判定</th>
+          </tr>
+        </thead>`;
+
+      // 外觀第1列
+      const appMap = {};
+      if (Array.isArray(appearance)) {
+        for (const a of appearance) {
+          const m = String(a.sample || '').match(/(\d+)/);
+          const idx = m ? Number(m[1]) : null;
+          if (idx && idx >= 1 && idx <= 5) appMap[idx] = String(a.result || '').toUpperCase();
+        }
+      }
+      const appCells = [1,2,3,4,5].map(i => escapeHtml(appMap[i] || ''));
+      const appPass = (Object.keys(appMap).length > 0) && Object.values(appMap).every(v => v === 'OK');
+      const rowAppearance = `
+        <tr>
+          <td><strong>外觀</strong></td>
+          <td></td><td></td><td></td>
+          <td>${appCells[0]}</td>
+          <td>${appCells[1]}</td>
+          <td>${appCells[2]}</td>
+          <td>${appCells[3]}</td>
+          <td>${appCells[4]}</td>
+          <td>${Object.keys(appMap).length ? (appPass ? 'PASS' : 'FAIL') : '—'}</td>
+        </tr>`;
+
+      // 尺寸列（第2列起）
+      const rowsMeasure = (Array.isArray(measurements) ? measurements : []).map(m => {
         const arr =
           Array.isArray(m.measured) ? m.measured :
           (typeof m.measured === 'number' || (typeof m.measured === 'string' && m.measured !== ''))
@@ -250,32 +288,10 @@
             <td>${m.pass ? 'PASS' : 'FAIL'}</td>
           </tr>`;
       }).join('');
-      return `
-        <table>
-          <thead>
-            <tr>
-              <th>尺寸</th><th>名目</th><th>下限公差</th><th>上限公差</th>
-              <th>實測1</th><th>實測2</th><th>實測3</th><th>實測4</th><th>實測5</th>
-              <th>判定</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>`;
+
+      return `<table>${head}<tbody>${rowAppearance}${rowsMeasure}</tbody></table>`;
     }
-    function buildAppearanceMini(app){
-      if (!Array.isArray(app) || app.length===0) return '外觀：<em>（未填）</em>';
-      const pass = app.every(x => (x && String(x.result).toUpperCase()==='OK'));
-      const rows = app.map(x => `
-        <tr><td>${escapeHtml(x.sample||'樣品')}</td><td>${escapeHtml((x.result||'').toUpperCase())}</td><td>${escapeHtml(x.note||'')}</td></tr>
-      `).join('');
-      return `
-        <div><strong>外觀：</strong>${pass ? '全部 O.K' : '有 NG'}</div>
-        <div class="mini"><table>
-          <thead><tr><th>樣品</th><th>結果</th><th>備註</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table></div>
-      `;
-    }
+
     function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
     function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
     function escapeAttr(s){ return String(s||'').replace(/"/g, '&quot;'); }
