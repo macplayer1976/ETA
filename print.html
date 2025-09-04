@@ -30,13 +30,14 @@
     .cell small { color:var(--gray); display:block; margin-bottom:6px; }
     @media print { .noprint { display:none; } .wrap { padding: 12px 0 0; } }
 
-    /* 語言選擇視窗 */
+    /* ✅ 語言選擇視窗（修正：補上 .hidden、修正遮罩透明度小數點） */
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 50; }
     .modal .panel { background: #fff; border-radius: 14px; padding: 16px; width: 360px; box-shadow: 0 10px 25px rgba(0,0,0,.15); }
     .modal h3 { margin: 0 0 8px 0; }
     .lang-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
     .lang-btn { padding: 10px; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; background:#f9fafb; }
     .lang-btn:hover { background:#eef2ff; }
+    .hidden { display: none !important; } /* ← 這行是關鍵，讓 hideLangModal() 生效 */
   </style>
 </head>
 <body>
@@ -93,7 +94,7 @@
     </div>
   </div>
 
-  <!-- 語言選擇視窗 -->
+  <!-- 語言選擇視窗（預設隱藏；未選過才顯示） -->
   <div id="langModal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="panel">
       <h3 data-i18n="lang_title">選擇語言</h3>
@@ -184,7 +185,7 @@
         lang_tip: "请选择显示语言（之后可再更改）："
       },
       "en": {
-        title_print: "Anto Co., Ltd. | Inspection Report (Single)",
+        title_print: "Antor Co., Ltd. | Inspection Report (Single)",
         title_print_inner: "Inspection Report",
         btn_print: "Print / Download PDF",
         btn_back: "Back to list",
@@ -221,36 +222,51 @@
         lang_tip: "Pick a display language (you can change it later):"
       }
     };
+
     function getLang(){ const s = localStorage.getItem('qci_lang'); return ['zh-Hant','zh-Hans','en'].includes(s) ? s : null; }
     function setLang(x){ localStorage.setItem('qci_lang', x); applyI18n(); }
     function t(key){ const lang = getLang() || 'zh-Hant'; const d = I18N[lang] || I18N['zh-Hant']; return d[key] || I18N['zh-Hant'][key] || key; }
     function applyI18n(){
       document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
-      const titleEl = document.querySelector('title[data-i18n]'); if (titleEl) titleEl.textContent = t(titleEl.getAttribute('data-i18n'));
-      document.getElementById('unified').innerHTML = buildUnifiedTable(curr.appearance || [], curr.measurements || []);
+      const titleEl = document.querySelector('title[data-i18n="title_print"]'); if (titleEl) titleEl.textContent = t('title_print');
+      // 依最新語言重建明細表（curr 在載入後會有值）
+      if (curr) document.getElementById('unified').innerHTML = buildUnifiedTable(curr.appearance || [], curr.measurements || []);
     }
 
+    // 語言視窗控制
     const langModal = document.getElementById('langModal');
-    document.getElementById('btnLang')?.addEventListener('click', ()=>showLangModal());
     function showLangModal(){ langModal.classList.remove('hidden'); }
     function hideLangModal(){ langModal.classList.add('hidden'); }
-    langModal.querySelectorAll('.lang-btn').forEach(b=>b.addEventListener('click', ()=>{ setLang(b.getAttribute('data-lang')); hideLangModal(); }));
+    document.getElementById('btnLang')?.addEventListener('click', showLangModal);
+    langModal.querySelectorAll('.lang-btn').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const lang = b.getAttribute('data-lang');
+        setLang(lang);
+        hideLangModal();           // ✅ 選擇後立刻關閉
+      });
+    });
+    // 點背景關閉（點內層 panel 不關閉）
+    langModal.addEventListener('click', (e)=>{ if (e.target === langModal) hideLangModal(); });
+    // Esc 關閉
+    window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') hideLangModal(); });
 
     function chooseLanguageIfNeeded(){
+      if (getLang()) { applyI18n(); return Promise.resolve(); }
+      applyI18n(); showLangModal(); // 第一次沒選過 → 開窗
       return new Promise(resolve=>{
-        if (getLang()) { applyI18n(); return resolve(); }
-        applyI18n(); showLangModal();
-        const onPick=()=>{ if(getLang()){ langModal.removeEventListener('click', onPick); resolve(); } };
-        langModal.addEventListener('click', onPick);
+        const onChange = () => { if (getLang()) { langModal.removeEventListener('click', onChange); resolve(); } };
+        langModal.addEventListener('click', onChange);
       });
     }
 
-    /* ---- 原本單筆頁邏輯（保留） ---- */
+    /* ---- 單筆頁原本邏輯（保留） ---- */
     const tip = document.getElementById('tip');
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
     const params = new URLSearchParams(location.search);
     const ID = params.get('id') || '';
-    let curr = { appearance: [], measurements: [] };
+    let curr = null;
+
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
     async function ensureAuth() {
       let user = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
@@ -269,134 +285,129 @@
         const t = await res.text(); let j={}; try{ j=JSON.parse(t);}catch{}
         if (!res.ok || !j.ok) return { ok:false };
         const role = (j.role||'').toLowerCase();
-        if (!['admin','viewer'].includes(role)) return { ok:false, msg:'此帳號沒有檢視權限' };
+        if (!['admin','viewer'].includes(role)) return { ok:false };
         return { ok:true };
       } catch { return { ok:false }; }
     }
 
-    function listFromJson(x) {
-      if (!x) return [];
-      if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
-      if (x && typeof x === 'object') {
-        if (x.record !== undefined) return listFromJson(x.record);
-        if (x.records !== undefined) return listFromJson(x.records);
-        if (looksLikeRecord(x)) return [x];
+    async function loadRecord(){
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      const res = await fetch('/api/inspections', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+      const text = await res.text(); if (!res.ok) throw new Error(text||('HTTP '+res.status));
+      let data={}; try{ data=JSON.parse(text);}catch{ data=text; }
+      const list = listFromJson(data).filter(isValidRecord);
+      const r = list.find(x => String(x.id||'') === String(ID));
+      if (!r) throw new Error('Record not found');
+      curr = r;
+
+      // 基本資訊
+      setText('f-id', r.id);
+      setText('f-time', (r.timestamp||'').replace('T',' ').replace('Z',''));
+      setText('f-inspector', r.inspector);
+      const ov = String(r.overallResult||'').toUpperCase();
+      const ovEl = document.getElementById('f-overall');
+      ovEl.textContent = ov || '';
+      ovEl.className = 'result ' + (ov === 'PASS' ? 'pass' : (ov === 'FAIL' ? 'fail' : ''));
+
+      // 料件
+      setText('f-supplier', r.supplier);
+      setText('f-part', r.partNo);
+      setText('f-draw', r.drawingNo);
+      setText('f-rev', r.revision);
+      setText('f-notes', r.notes);
+
+      // 明細表
+      document.getElementById('unified').innerHTML = buildUnifiedTable(r.appearance||[], r.measurements||[]);
+    }
+
+    function setText(id, v){ const el=document.getElementById(id); if (el) el.textContent = v || ''; }
+
+    // 與 report.html 相同的 JSONBin 結構處理（精簡版）
+    function listFromJson(data){
+      // 可能是 {record:[...]} 或 [{record:{record:[...]}, metadata:{...}}] 等包裝
+      if (Array.isArray(data)) {
+        // 找到最深一層的 list
+        if (data.length && data[0] && data[0].record && data[0].record.record) return data[0].record.record;
+        return data;
       }
+      if (data && data.record && Array.isArray(data.record)) return data.record;
       return [];
     }
-    function looksLikeRecord(o) {
-      return o && typeof o === 'object'
-        && typeof o.id === 'string'
-        && typeof o.timestamp === 'string'
-        && Array.isArray(o.measurements);
-    }
-    function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
-    function fmtTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
-    function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+    function isValidRecord(r){ return r && (r.id || r.timestamp || r.inspector || r.supplier || r.partNo); }
 
-    function buildUnifiedTable(app, list){
-      const head = `
-        <thead>
-          <tr>
-            <th>${t('col_item')}</th>
-            <th>${t('col_nominal')}</th>
-            <th>${t('col_tol_minus')}</th>
-            <th>${t('col_tol_plus')}</th>
-            <th>${t('col_m1')}</th>
-            <th>${t('col_m2')}</th>
-            <th>${t('col_m3')}</th>
-            <th>${t('col_m4')}</th>
-            <th>${t('col_m5')}</th>
-            <th>${t('col_judgement')}</th>
-          </tr>
-        </thead>`;
-
-      const appMap = {};
-      if (Array.isArray(app)) {
-        for (const a of app) {
-          const m = String(a.sample || '').match(/(\d+)/);
-          const idx = m ? Number(m[1]) : null;
-          if (idx && idx >= 1 && idx <= 5) appMap[idx] = String(a.result || '').toUpperCase();
-        }
-      }
-      const hasApp = Object.keys(appMap).length > 0;
-      const cells = [1,2,3,4,5].map(i => esc(appMap[i] || ''));
-      const pass = hasApp && Object.values(appMap).every(v => v === 'OK');
-      const rowApp = hasApp ? `
+    function buildUnifiedTable(appearance, measurements){
+      // appearance 是陣列（長度 5 以內），元素可能為 '', 'O.K', 'NG'
+      const hasAp = Array.isArray(appearance) && appearance.some(x => String(x||'').trim() !== '');
+      const apRow = hasAp ? `
         <tr>
-          <td><strong>${(getLang()==='en')?'Appearance':'外觀'}</strong></td>
-          <td></td><td></td><td></td>
-          <td>${cells[0]}</td>
-          <td>${cells[1]}</td>
-          <td>${cells[2]}</td>
-          <td>${cells[3]}</td>
-          <td>${cells[4]}</td>
-          <td>${pass ? 'PASS' : 'FAIL'}</td>
+          <th>${t('appearance') || '外觀'}</th>
+          <td colspan="3"></td>
+          ${[0,1,2,3,4].map(i => `<td>${escapeHtml(appearance[i]||'')}</td>`).join('')}
+          <td></td>
         </tr>` : '';
 
-      const rows = (Array.isArray(list) ? list : []).map(m=>{
-        const arr = Array.isArray(m.measured) ? m.measured
-                    : ((typeof m.measured==='number' || (typeof m.measured==='string'&&m.measured!=='')) ? [m.measured] : []);
-        const cs = [0,1,2,3,4].map(i=>num(arr[i]));
+      const rows = (Array.isArray(measurements)?measurements:[]).map(m=>{
+        const name = m.name || '';
+        const nom  = (m.nominal!=null? m.nominal : '');
+        const lo   = (m.tolMinus!=null? m.tolMinus : '');
+        const hi   = (m.tolPlus!=null? m.tolPlus : '');
+        const m1=m.m1??m.measured1??m.measured?.[0]??'', m2=m.m2??m.measured2??m.measured?.[1]??'';
+        const m3=m.m3??m.measured3??m.measured?.[2]??'', m4=m.m4??m.measured4??m.measured?.[3]??'';
+        const m5=m.m5??m.measured5??m.measured?.[4]??'';
+        const dec = m.decision || m.pass;
+        const decTxt = typeof dec==='boolean' ? (dec?'PASS':'FAIL') : (dec||'');
         return `
           <tr>
-            <td>${esc(m.name)}</td>
-            <td>${num(m.nominal)}</td>
-            <td>${num(m.tolMinus)}</td>
-            <td>${num(m.tolPlus)}</td>
-            <td>${cs[0]}</td>
-            <td>${cs[1]}</td>
-            <td>${cs[2]}</td>
-            <td>${cs[3]}</td>
-            <td>${cs[4]}</td>
-            <td>${m.pass ? 'PASS' : 'FAIL'}</td>
+            <td>${escapeHtml(name)}</td>
+            <td>${nom}</td>
+            <td>${lo}</td>
+            <td>${hi}</td>
+            <td>${m1}</td>
+            <td>${m2}</td>
+            <td>${m3}</td>
+            <td>${m4}</td>
+            <td>${m5}</td>
+            <td>${escapeHtml(decTxt)}</td>
           </tr>`;
       }).join('');
 
-      return `<table>${head}<tbody>${rowApp}${rows}</tbody></table>`;
+      if (!hasAp && !rows) return '<div class="muted">（無明細）</div>';
+
+      return `
+        <table class="mini">
+          <thead>
+            <tr>
+              <th>${t('col_item')}</th>
+              <th>${t('col_nominal')}</th>
+              <th>${t('col_tol_minus')}</th>
+              <th>${t('col_tol_plus')}</th>
+              <th>${t('col_m1')}</th>
+              <th>${t('col_m2')}</th>
+              <th>${t('col_m3')}</th>
+              <th>${t('col_m4')}</th>
+              <th>${t('col_m5')}</th>
+              <th>${t('col_judgement')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${apRow}
+            ${rows}
+          </tbody>
+        </table>`;
     }
 
-    async function load() {
-      tip.textContent = 'Loading... / 載入中... / 载入中...';
-      const ok = await ensureAuth();
-      if (!ok.ok) { tip.textContent = '❌ No permission / 沒有權限'; return; }
-      await chooseLanguageIfNeeded();
-
-      if (!ID) { tip.textContent = '❌ Missing id'; return; }
-
-      const user = localStorage.getItem('qci_user') || '';
-      const pass = localStorage.getItem('qci_pass') || '';
+    // 啟動流程
+    (async () => {
+      applyI18n();
+      await ensureAuth();
+      await chooseLanguageIfNeeded(); // 若未選過語言，先選語言再載資料
       try {
-        const res = await fetch('/api/inspections', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
-        const text = await res.text(); let data={}; try{ data=JSON.parse(text);}catch{ data=text; }
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const list = listFromJson(data);
-        const r = list.find(x => x && String(x.id) === String(ID));
-        if (!r) { tip.textContent = '❌ Not found'; return; }
-
-        curr = r;
-
-        document.getElementById('f-id').textContent = r.id || '';
-        document.getElementById('f-time').textContent = fmtTime(r.timestamp);
-        document.getElementById('f-inspector').textContent = r.inspector || '';
-        const overall = document.getElementById('f-overall');
-        overall.textContent = (r.overallResult === 'PASS' ? 'PASS' : 'FAIL');
-        overall.className = 'result ' + (r.overallResult === 'PASS' ? 'pass' : 'fail');
-
-        document.getElementById('f-supplier').textContent = r.supplier || '';
-        document.getElementById('f-part').textContent = r.partNo || '';
-        document.getElementById('f-draw').textContent = r.drawingNo || '';
-        document.getElementById('f-rev').textContent = r.revision || '';
-        document.getElementById('f-notes').textContent = r.notes || '';
-
-        document.getElementById('unified').innerHTML = buildUnifiedTable(r.appearance || [], r.measurements || []);
-        tip.textContent = '';
-        applyI18n();
-      } catch (e) { tip.textContent = '❌ ' + e.message; }
-    }
-
-    document.getElementById('btnPrint').addEventListener('click', () => window.print());
-    chooseLanguageIfNeeded().then(load);
+        await loadRecord();
+      } catch(e) {
+        document.getElementById('tip').textContent = '❌ ' + (e.message||e);
+      }
+    })();
   </script>
 </body>
 </html>
