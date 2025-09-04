@@ -1,425 +1,134 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title data-i18n="title">現場品檢（安拓）</title>
-  <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 16px; background:#fafafa; }
-    .card { max-width: 1120px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px; background:#fff; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
-    h2 { margin-top:0; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    label { font-size: 14px; color: #333; display: block; margin-bottom: 4px; }
-    input, textarea, select { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 10px; box-sizing: border-box; background:#fff; }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; vertical-align: top; }
-    th { background: #f7f7f7; }
-    .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
-    .pass { background: #e7f7ec; color: #116329; }
-    .fail { background: #fde8e8; color: #c02020; }
-    .btn { padding: 12px 16px; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; }
-    .btn-primary { background: #2563eb; color: white; }
-    .btn-secondary { background: #111827; color: white; }
-    .btn-ghost { background: #f3f4f6; color:#111827; }
-    .muted { color: #6b7280; font-size: 13px; }
-    .error { color: #b91c1c; }
-    .hidden { display: none; }
-    .toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-    a.btn { text-decoration: none; display:inline-block; }
-    .hint { margin: 6px 0 0; color:#6b7280; font-size:13px; }
-    td.disabled input { background:#fafafa; color:#9ca3af; }
-    /* 語言選擇彈窗 */
-    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; z-index:9999; }
-    .modal { background:#fff; border-radius:12px; padding:16px; width: min(92vw, 420px); box-shadow:0 10px 30px rgba(0,0,0,.18); }
-    .modal h3 { margin:0 0 8px 0; }
-    .modal .grid { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; margin-top:8px; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h2 data-i18n="title">現場品檢（安拓）</h2>
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>安拓｜QC 輸入</title><style>
+*{box-sizing:border-box}body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;margin:0;background:#f8fafc;color:#111}.wrap{max-width:1024px;margin:0 auto;padding:16px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;box-shadow:0 6px 20px rgba(0,0,0,.06)}h1{margin:0 0 8px 0;font-size:20px}label{font-size:13px;color:#374151}input,select,textarea{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;vertical-align:top}th{background:#f3f4f6}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.muted{color:#6b7280;font-size:12px}.btn{padding:10px 14px;border:none;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}.btn.secondary{background:#e5e7eb;color:#111}.toolbar{display:flex;gap:8px;align-items:center;margin:8px 0}.noprint{display:block}.hidden{display:none!important}.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:50}.panel{background:#fff;border-radius:14px;padding:16px;width:360px;box-shadow:0 10px 25px rgba(0,0,0,.15)}.lang-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}.lang-btn{padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;cursor:pointer}.lang-btn:hover{background:#eef2ff}
+</style></head><body><div class="wrap">
+<div class="card" id="loginCard"><h1>登入</h1><div class="row"><div><label>帳號</label><input id="loginUser" autocomplete="username"/></div><div><label>密碼</label><input id="loginPass" type="password" autocomplete="current-password"/></div></div><div class="toolbar"><button class="btn" id="btnLogin">登入</button><span class="muted" id="loginMsg"></span></div></div>
 
-    <!-- 登入區 -->
-    <div id="loginView">
-      <p class="muted" data-i18n="loginPrompt">請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。</p>
-      <div class="row">
-        <div>
-          <label data-i18n="labelAccount">帳號（檢驗人員）</label>
-          <input id="inspector" />
-        </div>
-        <div>
-          <label data-i18n="labelPassword">密碼（通關碼/密碼）</label>
-          <input id="passcode" type="password" />
-        </div>
-      </div>
-      <div class="toolbar">
-        <button class="btn btn-primary" id="btnLogin" data-i18n="btnLogin">登入</button>
-        <button class="btn btn-ghost" id="btnResetPass" data-i18n="btnReset">清除本機記錄</button>
-        <a class="btn btn-ghost" href="/api/inspections?health=1" target="_blank" id="btnHealth" data-i18n="btnHealth">健康檢查</a>
-        <button class="btn btn-ghost" id="btnLang">🌐 語言</button>
-      </div>
-      <p id="loginMsg" class="muted"></p>
-    </div>
-
-    <!-- 表單區 -->
-    <div id="formView" class="hidden">
-      <div class="row">
-        <div>
-          <label data-i18n="labelSupplier">供應商</label>
-          <!-- ✅ 改成下拉 -->
-          <select id="supplier"></select>
-        </div>
-        <div>
-          <label data-i18n="labelPartNo">料號 (Part No.)</label>
-          <input id="partNo" />
-        </div>
-      </div>
-      <div class="row">
-        <div>
-          <label data-i18n="labelDrawingNo">圖號 (Drawing No.)</label>
-          <input id="drawingNo" />
-        </div>
-        <div>
-          <label data-i18n="labelRevision">版次 (Revision)</label>
-          <input id="revision" />
-        </div>
-      </div>
-
-      <!-- ✅ 新增：檢驗製程 -->
-      <div class="row">
-        <div>
-          <label data-i18n="labelProcess">檢驗製程</label>
-          <select id="process"></select>
-        </div>
-        <div>
-          <label data-i18n="labelNotes">備註</label>
-          <textarea id="notes" rows="2"></textarea>
-        </div>
-      </div>
-
-      <!-- 整合表：第1列＝外觀（可略過）；第2列起＝尺寸 -->
-      <h3 style="margin-top:20px" data-i18n="sectionTitle">尺寸與外觀檢驗</h3>
-      <p class="hint" data-i18n="hintAppearance">第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。</p>
-
-      <table id="tbl">
-        <thead>
-          <tr>
-            <th style="width:14%" data-i18n="thItem">項目 / 尺寸名稱</th>
-            <th style="width:10%" data-i18n="thNominal">名目值</th>
-            <th style="width:10%" data-i18n="thTolMinus">下限公差</th>
-            <th style="width:10%" data-i18n="thTolPlus">上限公差</th>
-            <th style="width:8%" data-i18n="thM1">實測1</th>
-            <th style="width:8%" data-i18n="thM2">實測2</th>
-            <th style="width:8%" data-i18n="thM3">實測3</th>
-            <th style="width:8%" data-i18n="thM4">實測4</th>
-            <th style="width:8%" data-i18n="thM5">實測5</th>
-            <th style="width:8%" data-i18n="thDecision">結果</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-
-      <div class="toolbar">
-        <button class="btn btn-ghost" id="btnAdd" data-i18n="btnAdd">＋新增尺寸</button>
-        <button class="btn btn-ghost" id="btnRemove" data-i18n="btnRemove">－刪除最後一列</button>
-        <button class="btn btn-ghost" id="btnClearRows" data-i18n="btnClearRows">清空尺寸列（保留外觀）</button>
-        <button class="btn btn-ghost" id="btnLang2">🌐 語言</button>
-      </div>
-
-      <div class="toolbar">
-        <button class="btn btn-primary" id="btnSave" data-i18n="btnSave">儲存到雲端</button>
-        <a class="btn btn-secondary" href="report.html" id="btnGoReport" data-i18n="btnGoReport">查看/列印報告</a>
-      </div>
-
-      <p id="msg" class="muted" style="margin-top:8px"></p>
-    </div>
-
-    <!-- viewer 提示 -->
-    <p id="viewOnlyTip" class="muted hidden" data-i18n="viewOnlyTip">
-      您的角色是 <strong>viewer</strong>（只能看/印報告）。請改到 <a href="report.html">報告頁</a>。
-    </p>
+<div class="card hidden" id="mainCard">
+  <h1>QC 輸入（安拓）</h1>
+  <div class="toolbar">
+    <button class="btn secondary" id="btnLang">🌐 語言</button>
+    <span class="muted" id="roleTip"></span>
   </div>
 
-  <!-- 語言選擇彈窗 -->
-  <div class="modal-backdrop" id="langModal">
-    <div class="modal">
-      <h3 data-i18n="langTitle">選擇語言 / Language</h3>
-      <p class="muted" data-i18n="langHint">請選擇介面語言：</p>
-      <div class="grid">
-        <button class="btn btn-ghost" onclick="selectLang('zh-TW')">繁體中文</button>
-        <button class="btn btn-ghost" onclick="selectLang('zh-CN')">简体中文</button>
-        <button class="btn btn-ghost" onclick="selectLang('en')">English</button>
-      </div>
+  <div class="row3">
+    <div><label>供應商 Supplier</label>
+      <select id="supplier">
+        <!-- 依需求：下拉可增加，見最下方 SUPPLIERS 說明 -->
+      </select>
+      <div class="muted" id="supplierEn"></div>
     </div>
+    <div><label>料號 Part No.</label><input id="partNo"/></div>
+    <div><label>圖號 Drawing No.</label><input id="drawingNo"/></div>
+  </div>
+  <div class="row3" style="margin-top:8px">
+    <div><label>版次 Revision</label><input id="revision"/></div>
+    <div><label>檢驗製程 Process</label>
+      <select id="process">
+        <option value="">--</option>
+        <option>線材 (WIRE)</option>
+        <option>成形 (FORMING)</option>
+        <option>攻牙 (TAPING)</option>
+        <option>割溝 (CUTTING)</option>
+        <option>電鍍 (PLATING)</option>
+        <option>成品 (FINISHED)</option>
+        <option>組立 (ASSEMBLY)</option>
+        <option>最終成品 (FINAL FINISHED)</option>
+      </select>
+    </div>
+    <div><label>備註 Notes</label><input id="notes"/></div>
   </div>
 
-  <script>
-    /* ============ 供應商 / 製程 選項 ============ */
-    // ✅ 你要新增廠商，就在這裡加一行，例如：
-    // { code:'NEWCO', zh:'新公司', en:'NEWCO' }
-    const SUPPLIERS = [
-      { code:'ANCHOR', zh:'安拓', en:'Anchor' },
-      { code:'AKF',    zh:'安可', en:'AKF'    },
-    ];
+  <div style="margin-top:12px"><strong>外觀與尺寸明細</strong>（第 1 列＝外觀；第 2 列起＝尺寸）</div>
+  <table id="tbl">
+    <thead><tr>
+      <th>項目/尺寸</th><th>名目</th><th>下限公差</th><th>上限公差</th>
+      <th>樣品/實測1</th><th>樣品/實測2</th><th>樣品/實測3</th><th>樣品/實測4</th><th>樣品/實測5</th><th>判定</th><th class="noprint">操作</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
 
-    const PROCESSES = [
-      { code:'WIRE',            zh:'線材',     en:'WIRE' },
-      { code:'FORMING',         zh:'成形',     en:'FORMING' },
-      { code:'TAPING',          zh:'攻牙',     en:'TAPING' },
-      { code:'CUTTING',         zh:'割溝',     en:'CUTTING' },
-      { code:'PLATING',         zh:'電鍍',     en:'PLATING' },
-      { code:'FINISHED',        zh:'成品',     en:'FINISHED' },
-      { code:'ASSEMBLY',        zh:'組立',     en:'ASSEMBLY' },
-      { code:'FINAL_FINISHED',  zh:'最終成品', en:'FINAL FINISHED' },
-    ];
+  <div class="toolbar">
+    <button class="btn secondary" id="btnAdd">+ 新增尺寸列</button>
+    <button class="btn" id="btnSave">儲存至雲端</button>
+    <a class="btn secondary" href="report.html">查看/列印</a>
+    <span class="muted" id="saveMsg"></span>
+  </div>
+</div>
+</div>
 
-    /* ============ I18N 字典（新增新欄位字串） ============ */
-    const I18N = {
-      'zh-TW': {
-        title:'現場品檢（安拓）',
-        loginPrompt:'請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。',
-        labelAccount:'帳號（檢驗人員）', labelPassword:'密碼（通關碼/密碼）',
-        btnLogin:'登入', btnReset:'清除本機記錄', btnHealth:'健康檢查',
-        labelSupplier:'供應商', labelPartNo:'料號 (Part No.)', labelDrawingNo:'圖號 (Drawing No.)', labelRevision:'版次 (Revision)', labelNotes:'備註',
-        labelProcess:'檢驗製程',  /* ✅ 新增 */
-        sectionTitle:'尺寸與外觀檢驗',
-        hintAppearance:'第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。',
-        thItem:'項目 / 尺寸名稱', thNominal:'名目值', thTolMinus:'下限公差', thTolPlus:'上限公差',
-        thM1:'實測1', thM2:'實測2', thM3:'實測3', thM4:'實測4', thM5:'實測5', thDecision:'結果',
-        btnAdd:'＋新增尺寸', btnRemove:'－刪除最後一列', btnClearRows:'清空尺寸列（保留外觀）',
-        btnSave:'儲存到雲端', btnGoReport:'查看/列印報告',
-        viewOnlyTip:'您的角色是 <strong>viewer</strong>（只能看/印報告）。請改到 <a href="report.html">報告頁</a>。',
-        langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：',
-        phAccount:'例如：boss / worker1 / qa1', phPassword:'例如：admin123 / in1111 / view2222',
-        phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：現場尺寸穩定/外觀無瑕疵',
-        phName:'例：頭部厚度', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
-        phM1:'實測1', phM2:'實測2', phM3:'實測3', phM4:'實測4', phM5:'實測5',
-        login_msg_need:'請輸入帳號與密碼', login_msg_auto:'自動驗證中...', login_msg_changed:'❌ 帳號或密碼已變更，請重新登入。', login_msg_wrong:'❌ 帳號或密碼錯誤', login_verifying:'驗證中...',
-        save_saving:'儲存中...', save_ok:'✅ 已儲存到雲端（可到報告頁查看/列印）', save_fail:'❌ 儲存失敗：',
-        need_supplier_part:'請選擇供應商並輸入料號', row_missing:'尺寸表有未填欄位（名稱/名目/公差）', need_one_meas:'每列尺寸至少填一個「實測」', need_one_dim:'至少需要一筆尺寸資料', need_login:'請先登入',
-        appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG'
-      },
-      'zh-CN': {
-        title:'现场品检（安拓）',
-        loginPrompt:'请输入「账号（检验人员）」与「密码（通关码/密码）」。',
-        labelAccount:'账号（检验人员）', labelPassword:'密码（通关码/密码）',
-        btnLogin:'登录', btnReset:'清除本机记录', btnHealth:'健康检查',
-        labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)', labelRevision:'版次 (Revision)', labelNotes:'备注',
-        labelProcess:'检验制程',
-        sectionTitle:'尺寸与外观检验',
-        hintAppearance:'第 <strong>1</strong> 行为 <strong>外观检查</strong>（可留空）；第 <strong>2</strong> 行开始为尺寸量测。',
-        thItem:'项目 / 尺寸名称', thNominal:'名义值', thTolMinus:'下限公差', thTolPlus:'上限公差',
-        thM1:'实测1', thM2:'实测2', thM3:'实测3', thM4:'实测4', thM5:'实测5', thDecision:'判定',
-        btnAdd:'＋新增尺寸', btnRemove:'－删除最后一行', btnClearRows:'清空尺寸行（保留外观）',
-        btnSave:'保存到云端', btnGoReport:'查看/打印报告',
-        viewOnlyTip:'您的账号没有检视报告的权限（input）。请改到 <a href="report.html">报告页</a>。',
-        langTitle:'选择语言 / Language', langHint:'请选择界面语言：',
-        phAccount:'例如：boss / worker1 / qa1', phPassword:'例如：admin123 / in1111 / view2222',
-        phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：现场尺寸稳定/外观无瑕疵',
-        phName:'例：头部厚度', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
-        phM1:'实测1', phM2:'实测2', phM3:'实测3', phM4:'实测4', phM5:'实测5',
-        login_msg_need:'请输入账号与密码', login_msg_auto:'自动验证中...', login_msg_changed:'❌ 账号或密码已变更，请重新登录。', login_msg_wrong:'❌ 账号或密码错误', login_verifying:'验证中...',
-        save_saving:'保存中...', save_ok:'✅ 已保存到云端（可到报告页查看/打印）', save_fail:'❌ 保存失败：',
-        need_supplier_part:'请选择供应商并输入料号', row_missing:'尺寸表有未填栏位（名称/名目/公差）', need_one_meas:'每行尺寸至少填一个「实测」', need_one_dim:'至少需要一笔尺寸资料', need_login:'请先登录',
-        appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG'
-      },
-      'en': {
-        title:'On-site QC (Antor)',
-        loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
-        labelAccount:'Account (Inspector)', labelPassword:'Password',
-        btnLogin:'Sign in', btnReset:'Clear local data', btnHealth:'Health Check',
-        labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.', labelRevision:'Revision', labelNotes:'Notes',
-        labelProcess:'Process',
-        sectionTitle:'Appearance & Dimensional Inspection',
-        hintAppearance:'Row <strong>1</strong> is <strong>Appearance</strong> (optional). From row <strong>2</strong> onwards are dimensions.',
-        thItem:'Item / Dimension', thNominal:'Nominal', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
-        thM1:'Sample1', thM2:'Sample2', thM3:'Sample3', thM4:'Sample4', thM5:'Sample5', thDecision:'Decision',
-        btnAdd:'＋Add dimension', btnRemove:'－Remove last row', btnClearRows:'Clear dimension rows (keep appearance)',
-        btnSave:'Save to cloud', btnGoReport:'View/Print Reports',
-        viewOnlyTip:'Your role is <strong>viewer</strong> (view/print only). Go to <a href="report.html">Reports</a>.',
-        langTitle:'Choose language', langHint:'Select UI language:',
-        phAccount:'e.g. boss / worker1 / qa1', phPassword:'e.g. admin123 / in1111 / view2222',
-        phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6', phRevision:'e.g. Rev.B', phNotes:'e.g. Dimensions stable / No defects',
-        phName:'e.g. Head thickness', phNominal:'e.g. 3.000', phTolMinus:'e.g. -0.100', phTolPlus:'e.g. 0.100',
-        phM1:'Sample1', phM2:'Sample2', phM3:'Sample3', phM4:'Sample4', phM5:'Sample5',
-        login_msg_need:'Please enter account & password', login_msg_auto:'Auto checking...', login_msg_changed:'❌ Account or password changed, sign in again.', login_msg_wrong:'❌ Wrong account or password', login_verifying:'Verifying...',
-        save_saving:'Saving...', save_ok:'✅ Saved (check the report page to view/print)', save_fail:'❌ Save failed: ',
-        need_supplier_part:'Pick supplier & enter part no.', row_missing:'Some required fields (name/nominal/tolerance) are missing', need_one_meas:'Enter at least 1 sample for each row', need_one_dim:'Enter at least one dimension row', need_login:'Please sign in first',
-        appearanceTitle:'Appearance', optionDash:'—', optionOK:'O.K', optionNG:'NG'
-      }
-    };
+<!-- 語言選擇 -->
+<div id="langModal" class="modal hidden"><div class="panel">
+  <h3>選擇語言</h3><div class="lang-grid">
+    <button class="lang-btn" data-lang="zh-Hant">繁體</button>
+    <button class="lang-btn" data-lang="zh-Hans">简体</button>
+    <button class="lang-btn" data-lang="en">English</button>
+  </div>
+</div></div>
 
-    function getLang(){ return localStorage.getItem('qci_lang') || ''; }
-    function setLang(lang){ localStorage.setItem('qci_lang', lang); applyI18n(); }
-    function selectLang(lang){ setLang(lang); closeLangModal(); if (typeof _afterPick === 'function') _afterPick(); }
-    function openLangModal(){ document.getElementById('langModal').style.display='flex'; }
-    function closeLangModal(){ document.getElementById('langModal').style.display='none'; }
+<script>
+/* ====== 基本與登入 ====== */
+const SUPPLIERS=[{id:"安拓",label:"安拓 (Anchor)",en:"Anchor"},{id:"安可",label:"安可 (AKF)",en:"AKF"}];
+const loginCard=document.getElementById('loginCard'),mainCard=document.getElementById('mainCard');
+const loginUser=document.getElementById('loginUser'),loginPass=document.getElementById('loginPass'),loginMsg=document.getElementById('loginMsg');
+const roleTip=document.getElementById('roleTip'); let ROLE=""; let USER="";
+function fillSupplierSelect(){const s=document.getElementById('supplier'); s.innerHTML=SUPPLIERS.map(x=>`<option value="${x.id}">${x.label}</option>`).join(''); onSupplierChange(); }
+function onSupplierChange(){const id=document.getElementById('supplier').value; const f=SUPPLIERS.find(x=>x.id===id); document.getElementById('supplierEn').textContent=f?`English: ${f.en}`:"";}
+document.getElementById('supplier').addEventListener('change',onSupplierChange);
 
-    function t(key){
-      const lang = getLang() || 'zh-TW';
-      const dict = I18N[lang] || I18N['zh-TW'];
-      return dict[key] ?? (I18N['zh-TW'][key] ?? key);
-    }
+async function authCheck(u,p){try{const r=await fetch('/api/inspections?auth=1',{headers:{'x-user':u,'x-pass':p,'x-passcode':p}});const t=await r.text();let j={};try{j=JSON.parse(t)}catch{}if(!r.ok||!j.ok){loginMsg.innerHTML=`❌ 登入失敗（HTTP ${r.status}）${j.error?`：${j.error}`:""}`;return{ok:!1}}return{ok:!0,role:(j.role||'admin')}}catch(e){loginMsg.textContent='❌ 連線錯誤：'+e;return{ok:!1}}}
+document.getElementById('btnLogin').onclick=async()=>{const u=loginUser.value.trim(),p=loginPass.value.trim(); if(!u||!p){loginMsg.textContent='請輸入帳號與密碼';return;} loginMsg.textContent='驗證中...'; const info=await authCheck(u,p); if(!info.ok)return; ROLE=info.role; USER=u; localStorage.setItem('qci_user',u);localStorage.setItem('qci_pass',p);localStorage.setItem('qci_role',ROLE);localStorage.setItem('qci_inspector',u);localStorage.setItem('qci_passcode',p); openLang();};
+window.addEventListener('DOMContentLoaded',async()=>{fillSupplierSelect(); const u=localStorage.getItem('qci_user')||"",p=localStorage.getItem('qci_pass')||""; if(u&&p){loginMsg.textContent='自動驗證中...';const info=await authCheck(u,p); if(info.ok){ROLE=info.role;USER=u; showMain();} else loginMsg.innerHTML='❌ 帳號或密碼已變更，請重新登入。';}});
 
-    function applyI18n(){
-      // 文案
-      document.querySelectorAll('[data-i18n]').forEach(el=>{
-        const k = el.getAttribute('data-i18n');
-        if (k) { el.innerHTML = t(k); }
-      });
-      // placeholder（select 就不設）
-      const m = {
-        '#inspector':'phAccount', '#passcode':'phPassword',
-        '#partNo':'phPartNo', '#drawingNo':'phDrawingNo', '#revision':'phRevision', '#notes':'phNotes'
-      };
-      Object.entries(m).forEach(([sel,key])=>{
-        const el = document.querySelector(sel); if (el && el.tagName === 'INPUT' || el?.tagName === 'TEXTAREA') el.placeholder = t(key);
-      });
+function showMain(){loginCard.classList.add('hidden'); mainCard.classList.remove('hidden'); roleTip.textContent=`目前角色：${ROLE}`; if(ROLE==='viewer'){document.getElementById('btnAdd').disabled=true;document.getElementById('btnSave').disabled=true;document.querySelectorAll('input,select,textarea').forEach(el=>el.disabled=true);} ensureAppearanceRow(); if(countMeasureRows()===0) addMeasureRow();}
 
-      // 表格列 placeholder
-      document.querySelectorAll('tr[data-type="measure"]').forEach(tr=>{
-        const ins = tr.querySelectorAll('input');
-        if (ins[0]) ins[0].placeholder = t('phName');
-        if (ins[1]) ins[1].placeholder = t('phNominal');
-        if (ins[2]) ins[2].placeholder = t('phTolMinus');
-        if (ins[3]) ins[3].placeholder = t('phTolPlus');
-        if (ins[4]) ins[4].placeholder = t('phM1');
-        if (ins[5]) ins[5].placeholder = t('phM2');
-        if (ins[6]) ins[6].placeholder = t('phM3');
-        if (ins[7]) ins[7].placeholder = t('phM4');
-        if (ins[8]) ins[8].placeholder = t('phM5');
-      });
+/* ====== 語言 ====== */
+const langModal=document.getElementById('langModal'); document.getElementById('btnLang').onclick=()=>langModal.classList.remove('hidden');
+langModal.addEventListener('click',e=>{if(e.target.classList.contains('lang-btn')){localStorage.setItem('qci_lang',e.target.dataset.lang);langModal.classList.add('hidden');applyI18n();if(loginCard.classList.contains('hidden')===!1){} else showMain();}else if(e.target===langModal){langModal.classList.add('hidden')}}); 
+function openLang(){ if(localStorage.getItem('qci_lang')){applyI18n();showMain();} else {langModal.classList.remove('hidden');}}
+function applyI18n(){/* 此處如需更多多語，可擴充；頁面主要為中文 UI，略過詳列 */}
 
-      // 外觀列下拉選單顯示文字
-      document.querySelectorAll('tr[data-type="appearance"] select.ap').forEach(sel=>{
-        sel.options[0].text = t('optionDash');
-        sel.options[1].text = t('optionOK');
-        sel.options[2].text = t('optionNG');
-      });
-    }
+/* ====== 明細表（第1列=外觀，可空白；第2列起=尺寸） ====== */
+const tbody=document.getElementById('tbody');
+function ensureAppearanceRow(){ if(tbody.querySelector('tr[data-kind="appearance"]'))return; const tr=document.createElement('tr'); tr.dataset.kind='appearance'; tr.innerHTML=`
+  <td><strong>外觀</strong></td><td></td><td></td><td></td>
+  <td>${apSel()}</td><td>${apSel()}</td><td>${apSel()}</td><td>${apSel()}</td><td>${apSel()}</td>
+  <td class="ap-judge"></td><td class="noprint"><button class="btn secondary" onclick="clearAppearance(this)">清空</button></td>`; tbody.appendChild(tr); updateAppearanceJudge();}
+function apSel(){return `<select class="ap"><option value=""></option><option value="OK">OK</option><option value="NG">NG</option></select>`}
+function clearAppearance(btn){btn.closest('tr').querySelectorAll('select.ap').forEach(s=>s.value=""); updateAppearanceJudge();}
+tbody.addEventListener('change',e=>{if(e.target.classList.contains('ap'))updateAppearanceJudge(); if(e.target.classList.contains('mcell')) updateRowJudge(e.target.closest('tr'));});
+function updateAppearanceJudge(){const tr=tbody.querySelector('tr[data-kind="appearance"]'); if(!tr)return; const vals=[...tr.querySelectorAll('select.ap')].map(s=>s.value); const has=vals.some(v=>v); tr.querySelector('.ap-judge').textContent=has?(vals.every(v=>v==='OK')?'PASS':'FAIL'):"";}
+function countMeasureRows(){return tbody.querySelectorAll('tr[data-kind="measure"]').length}
+function addMeasureRow(){const tr=document.createElement('tr'); tr.dataset.kind='measure'; tr.innerHTML=`
+  <td><input class="name" placeholder="尺寸代號/說明"></td>
+  <td><input class="nom" type="number" step="0.001"></td>
+  <td><input class="lo" type="number" step="0.001"></td>
+  <td><input class="hi" type="number" step="0.001"></td>
+  <td><input class="mcell" type="number" step="0.001"></td>
+  <td><input class="mcell" type="number" step="0.001"></td>
+  <td><input class="mcell" type="number" step="0.001"></td>
+  <td><input class="mcell" type="number" step="0.001"></td>
+  <td><input class="mcell" type="number" step="0.001"></td>
+  <td class="judge"></td>
+  <td class="noprint"><button class="btn secondary" onclick="delRow(this)">刪除</button></td>`; tbody.appendChild(tr);}
+function delRow(btn){btn.closest('tr').remove();}
+document.getElementById('btnAdd').onclick=()=>addMeasureRow();
 
-    /* ====== 既有功能（節錄重點&保持不變） ====== */
-    const loginView = document.getElementById('loginView');
-    const formView  = document.getElementById('formView');
-    const inspector = document.getElementById('inspector');
-    const passcode  = document.getElementById('passcode');
-    const loginMsg  = document.getElementById('loginMsg');
-    const viewOnlyTip = document.getElementById('viewOnlyTip');
+function updateRowJudge(tr){const nom=n(tr.querySelector('.nom')),lo=n(tr.querySelector('.lo')),hi=n(tr.querySelector('.hi')); const ms=[...tr.querySelectorAll('.mcell')].map(i=>i.value===""?null:Number(i.value)); if([nom,lo,hi].some(v=>Number.isNaN(v))) {tr.querySelector('.judge').textContent="";return;} const min=nom+lo,max=nom+hi; const ok=ms.filter(v=>v!==null).every(v=>v>=min&&v<=max); tr.querySelector('.judge').textContent=ms.some(v=>v!==null)?(ok?'PASS':'FAIL'):"";}
+function n(x){return x&&x.value!==""?Number(x.value):NaN}
 
-    // 新欄位 DOM
-    const elSupplier = document.getElementById('supplier');
-    const elProcess  = document.getElementById('process');
-
-    const tbody = document.getElementById('tbody');
-    const msg   = document.getElementById('msg');
-
-    document.getElementById('btnLogin').addEventListener('click', onLogin);
-    document.getElementById('btnResetPass').addEventListener('click', () => {
-      ['qci_user','qci_pass','qci_role','qci_passcode','qci_inspector','qci_lang'].forEach(k => localStorage.removeItem(k));
-      alert('Cleared. / 已清除。');
-    });
-    document.getElementById('btnLang').addEventListener('click', ()=>{ _afterPick = applyI18n; openLangModal(); });
-    document.getElementById('btnLang2').addEventListener('click', ()=>{ _afterPick = applyI18n; openLangModal(); });
-
-    document.getElementById('btnAdd').addEventListener('click', addMeasureRow);
-    document.getElementById('btnRemove').addEventListener('click', removeLastMeasureRow);
-    document.getElementById('btnClearRows').addEventListener('click', () => { clearMeasureRows(); ensureMeasureRows(2); });
-    document.getElementById('btnSave').addEventListener('click', save);
-
-    // 初始化選單
-    function buildSupplierOptions(){
-      elSupplier.innerHTML = '';
-      SUPPLIERS.forEach(s=>{
-        const opt = document.createElement('option');
-        opt.value = s.code;
-        opt.textContent = `${s.zh} (${s.en})`; // 例：安拓 (Anchor)
-        opt.dataset.zh = s.zh;
-        opt.dataset.en = s.en;
-        elSupplier.appendChild(opt);
-      });
-    }
-    function buildProcessOptions(){
-      elProcess.innerHTML = '';
-      PROCESSES.forEach(p=>{
-        const opt = document.createElement('option');
-        opt.value = p.code;
-        opt.textContent = `${p.zh} (${p.en})`;
-        opt.dataset.zh = p.zh;
-        opt.dataset.en = p.en;
-        elProcess.appendChild(opt);
-      });
-    }
-
-    // 自動驗證 & 載入
-    window.addEventListener('DOMContentLoaded', async () => {
-      buildSupplierOptions();
-      buildProcessOptions();
-      applyI18n(); // 先套用語系
-      // 將本機已登入帳密帶回欄位
-      const u = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
-      const p = localStorage.getItem('qci_pass') || localStorage.getItem('qci_passcode') || '';
-      if (u) inspector.value = u;
-      if (p) passcode.value = p;
-
-      // 原本就有的自動登入流程（省略其餘細節，保持你原功能）
-      // ...
-    });
-
-    /* ====== 你原本的 onLogin / authCheck / 表格列處理 / overallResult 計算… 都沿用 ======
-       下面給出 save() 的更新，確保一起存 supplier / process 的中英與代碼。 ====== */
-
-    async function save(){
-      // 基本檢查
-      const sOpt = elSupplier.options[elSupplier.selectedIndex];
-      const pOpt = elProcess.options[elProcess.selectedIndex];
-      const partNo = (document.getElementById('partNo').value || '').trim();
-      if (!sOpt || !partNo) { msg.textContent = t('need_supplier_part'); return; }
-
-      // 組合外觀與尺寸資料（沿用你現有的表格收集方法）
-      const { appearance, measurements, overall } = collectRows(); // 你原本的函式，這裡假設會回傳
-      // 如果沒有該函式，就照你現有程式收集；核心是得到 appearance[], measurements[], overall(PASS/FAIL)
-
-      const record = {
-        id: genId(),                       // 你原本的 ID 產生函式
-        timestamp: new Date().toISOString(),
-        inspector: (localStorage.getItem('qci_user') || '').trim(),
-        // ✅ 供應商（中文/英文/代碼）
-        supplier: sOpt.dataset.zh,
-        supplierEn: sOpt.dataset.en,
-        supplierCode: sOpt.value,
-        // 料號/圖號/版次/備註
-        partNo,
-        drawingNo: (document.getElementById('drawingNo').value || '').trim(),
-        revision:  (document.getElementById('revision').value  || '').trim(),
-        notes:     (document.getElementById('notes').value     || '').trim(),
-        // ✅ 檢驗製程（中文/英文/代碼）
-        process: pOpt.dataset.zh,
-        processEn: pOpt.dataset.en,
-        processCode: pOpt.value,
-        // 明細
-        appearance,          // 外觀陣列（可為空）
-        measurements,        // 尺寸陣列
-        overallResult: overall // 'PASS' / 'FAIL'
-      };
-
-      msg.textContent = t('save_saving');
-      try {
-        const u = localStorage.getItem('qci_user') || '';
-        const p = localStorage.getItem('qci_pass') || '';
-        const res = await fetch('/api/inspections', {
-          method:'POST',
-          headers: { 'Content-Type':'application/json', 'x-user': u, 'x-pass': p, 'x-passcode': p },
-          body: JSON.stringify({ record })
-        });
-        const text = await res.text();
-        if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
-        msg.textContent = t('save_ok');
-      } catch (e) {
-        msg.textContent = t('save_fail') + (e.message || e);
-      }
-    }
-
-    /* ====== 其餘輔助函式（genId、collectRows、addMeasureRow...）用你原本版本即可 ====== */
-  </script>
-</body>
-</html>
+/* ====== 儲存 ====== */
+document.getElementById('btnSave').onclick=save;
+async function save(){if(ROLE==='viewer'){alert('viewer 無法儲存');return;} const supplier=document.getElementById('supplier').value, partNo=document.getElementById('partNo').value.trim(), drawingNo=document.getElementById('drawingNo').value.trim(), revision=document.getElementById('revision').value.trim(), notes=document.getElementById('notes').value.trim(), process=document.getElementById('process').value;
+  const apTr=tbody.querySelector('tr[data-kind="appearance"]'); let appearance=[]; if(apTr){const sel=[...apTr.querySelectorAll('select.ap')]; if(sel.some(s=>s.value)){appearance=sel.map((s,i)=>({sample:`樣品${i+1}`,result:s.value||"",note:""}));}}
+  const ms=[...tbody.querySelectorAll('tr[data-kind="measure"]')].map(tr=>{const m=[...tr.querySelectorAll('.mcell')].map(i=>i.value===""?null:Number(i.value)); const nom=n(tr.querySelector('.nom')),lo=n(tr.querySelector('.lo')),hi=n(tr.querySelector('.hi')); const min=nom+lo,max=nom+hi; const has=m.some(v=>v!==null); const pass=has?m.filter(v=>v!==null).every(v=>v>=min&&v<=max):""; return {name:tr.querySelector('.name').value.trim(),nominal:isNaN(nom)?null:nom,tolMinus:isNaN(lo)?null:lo,tolPlus:isNaN(hi)?null:hi,measured:m,pass:pass!==""?!!pass:""};});
+  const overall=(()=>{
+    const apOk=appearance.length?appearance.every(a=>(a.result||"").toUpperCase()==='OK'):true;
+    const mOk=ms.length?ms.every(x=>x.pass!==""?!!x.pass:true):true;
+    return apOk&&mOk?'PASS':'FAIL';
+  })();
+  const body={inspector:USER,supplier,partNo,drawingNo,revision,process,notes,appearance,measurements:ms,overallResult:overall};
+  const user=localStorage.getItem('qci_user')||"",pass=localStorage.getItem('qci_pass')||"";
+  document.getElementById('saveMsg').textContent='上傳中...';
+  try{const r=await fetch('/api/inspections',{method:'POST',headers:{'Content-Type':'application/json','x-user':user,'x-pass':pass,'x-passcode':pass},body:JSON.stringify(body)});const t=await r.text();let j={};try{j=JSON.parse(t)}catch{} if(!r.ok||!j.ok) throw new Error(t||('HTTP '+r.status)); document.getElementById('saveMsg').textContent='✅ 已儲存，ID：'+j.id;}catch(e){document.getElementById('saveMsg').textContent='❌ 儲存失敗：'+(e.message||e);}}
+</script>
+</body></html>
