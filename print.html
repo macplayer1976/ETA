@@ -1,83 +1,429 @@
-<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>安拓實業有限公司｜ANCHOR FASTENERS INDUSTRIAL CO.,LTD.｜品檢報告</title><style>
-*{box-sizing:border-box}body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;margin:0;background:#fff;color:#111}.wrap{max-width:1000px;margin:0 auto;padding:24px 16px 48px}header{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:12px}.brand{font-weight:700;font-size:18px;line-height:1.2}.brand small{display:block;color:#374151}.title{font-size:18px;font-weight:600}.toolbar{display:flex;gap:8px;align-items:center;margin:8px 0}.btn{padding:9px 12px;border:none;border-radius:10px;background:#2563eb;color:#fff;cursor:pointer}.btn.out{background:#e5e7eb;color:#111}.block{border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-top:8px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.muted{color:#6b7280;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:6px}th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;vertical-align:top}th{background:#f3f4f6}.result{font-weight:700}.pass{color:#116329}.fail{color:#c02020}.sign{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}.cell{border:1px solid #e5e7eb;border-radius:10px;padding:8px;height:80px}.cell small{display:block;color:#6b7280;margin-bottom:6px}@media print{.noprint{display:none}.wrap{padding:8px 0}}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:50}.panel{background:#fff;border-radius:14px;padding:16px;width:360px;box-shadow:0 10px 25px rgba(0,0,0,.15)}.lang-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.lang-btn{padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;cursor:pointer}.hidden{display:none!important}
-</style></head><body><div class="wrap">
-<header>
-  <div class="brand">安拓實業有限公司<small>ANCHOR FASTENERS INDUSTRIAL CO.,LTD.</small></div>
-  <div class="title">品檢報告 Inspection Report</div>
-</header>
-<div class="toolbar noprint">
-  <button class="btn" id="btnPrint">列印 / 下載 PDF</button>
-  <a class="btn out" href="report.html">返回列表</a>
-  <button class="btn out" id="btnLang">🌐 語言</button>
-  <span class="muted" id="tip"></span>
-</div>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title data-i18n="title_print">安拓實業有限公司｜品檢報告（單筆）</title>
+  <style>
+    :root { --gray:#6b7280; --line:#e5e7eb; --title:#111827; --muted:#374151; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin:0; background:#fff; color:#111; }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 24px 16px 48px; }
+    header { display:flex; align-items:flex-end; justify-content:space-between; border-bottom:2px solid #111; padding-bottom:12px; margin-bottom:16px; }
+    .brand { font-size:22px; font-weight:700; letter-spacing:.05em; }
+    .title { font-size:20px; font-weight:600; color:var(--title); }
+    .muted { color: var(--gray); font-size: 13px; }
+    .row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:8px; }
+    .block { border:1px solid var(--line); border-radius:10px; padding:12px; }
+    .block h3 { margin:0 0 8px 0; font-size:16px; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border:1px solid var(--line); padding:8px; text-align:left; vertical-align:top; }
+    th { background:#f7f7f7; }
+    .result { font-weight:700; }
+    .pass { color:#116329; }
+    .fail { color:#c02020; }
+    .toolbar { display:flex; gap:8px; align-items:center; margin: 8px 0 12px; }
+    .btn { padding:10px 14px; border:none; border-radius:10px; background:#2563eb; color:#fff; cursor:pointer; }
+    .btn.outline { background:#f3f4f6; color:#111; }
+    .sign { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-top:12px; }
+    .sign .cell { border:1px solid var(--line); border-radius:10px; padding:10px; height:80px; }
+    .cell small { color:var(--gray); display:block; margin-bottom:6px; }
+    @media print { .noprint { display:none; } .wrap { padding: 12px 0 0; } }
 
-<div class="block"><h3>基本資訊</h3>
-  <div class="row">
-    <div><strong>報告編號：</strong><span id="f-id"></span></div>
-    <div><strong>檢驗時間：</strong><span id="f-time"></span></div>
-    <div><strong>檢驗人員：</strong><span id="f-inspector"></span></div>
-    <div><strong>檢驗結果：</strong><span id="f-overall" class="result"></span></div>
+    /* 語言選擇視窗 */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 50; }
+    .modal .panel { background: #fff; border-radius: 14px; padding: 16px; width: 360px; box-shadow: 0 10px 25px rgba(0,0,0,.15); }
+    .modal h3 { margin: 0 0 8px 0; }
+    .lang-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .lang-btn { padding: 10px; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; background:#f9fafb; }
+    .lang-btn:hover { background:#eef2ff; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">安拓實業有限公司</div>
+      <div class="title" data-i18n="title_print_inner">品檢報告 Inspection Report</div>
+    </header>
+
+    <div class="toolbar noprint">
+      <button class="btn" id="btnPrint" data-i18n="btn_print">列印 / 下載 PDF</button>
+      <a class="btn outline" href="report.html" data-i18n="btn_back">返回報告列表</a>
+      <button class="btn outline" id="btnLang" title="Language / 語言 / 语言">🌐</button>
+      <span class="muted" id="tip"></span>
+    </div>
+
+    <!-- 基本資訊 -->
+    <div class="block">
+      <h3 data-i18n="section_basic">基本資訊</h3>
+      <div class="row">
+        <div><strong data-i18n="f_id">報告編號：</strong><span id="f-id"></span></div>
+        <div><strong data-i18n="f_time">檢驗時間：</strong><span id="f-time"></span></div>
+        <div><strong data-i18n="f_inspector">檢驗人員：</strong><span id="f-inspector"></span></div>
+        <div><strong data-i18n="f_overall">檢驗結果：</strong><span id="f-overall" class="result"></span></div>
+      </div>
+    </div>
+
+    <!-- 料件資訊 -->
+    <div class="block" style="margin-top:10px">
+      <h3 data-i18n="section_part">料件資訊</h3>
+      <div class="row">
+        <div><strong data-i18n="f_supplier">供應商：</strong><span id="f-supplier"></span></div>
+        <div><strong data-i18n="f_partno">料號 Part No.：</strong><span id="f-part"></span></div>
+        <div><strong data-i18n="f_drawing">圖號 Drawing No.：</strong><span id="f-draw"></span></div>
+        <div><strong data-i18n="f_revision">版次 Revision：</strong><span id="f-rev"></span></div>
+      </div>
+      <div style="margin-top:8px"><strong data-i18n="f_notes">備註：</strong><span id="f-notes"></span></div>
+    </div>
+
+    <!-- 外觀與量測明細（合併；外觀有資料才顯示） -->
+    <div class="block" style="margin-top:10px">
+      <h3 data-i18n="section_unified">外觀與量測明細</h3>
+      <div id="unified"></div>
+    </div>
+
+    <!-- 簽核區 -->
+    <div class="block" style="margin-top:10px">
+      <h3 data-i18n="section_sign">簽核</h3>
+      <div class="sign">
+        <div class="cell"><small data-i18n="sign_inspector">檢驗人員</small></div>
+        <div class="cell"><small data-i18n="sign_qc">品保主管</small></div>
+        <div class="cell"><small data-i18n="sign_approve">核准</small></div>
+      </div>
+    </div>
   </div>
-</div>
 
-<div class="block"><h3>料件資訊</h3>
-  <div class="row">
-    <div><strong>供應商：</strong><span id="f-supplier"></span></div>
-    <div><strong>製程：</strong><span id="f-process"></span></div>
-    <div><strong>料號：</strong><span id="f-part"></span></div>
-    <div><strong>圖號：</strong><span id="f-draw"></span></div>
-    <div><strong>版次：</strong><span id="f-rev"></span></div>
+  <!-- 語言選擇視窗（預設隱藏；未選過才顯示） -->
+  <div id="langModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="panel">
+      <h3 data-i18n="lang_title">選擇語言</h3>
+      <p class="muted" data-i18n="lang_tip">請選擇顯示語言（之後可再更改）：</p>
+      <div class="lang-grid">
+        <button class="lang-btn" data-lang="en">English</button>
+        <button class="lang-btn" data-lang="zh-Hant">繁體中文</button>
+        <button class="lang-btn" data-lang="zh-Hans">简体中文</button>
+      </div>
+    </div>
   </div>
-  <div style="margin-top:6px"><strong>備註：</strong><span id="f-notes"></span></div>
-</div>
 
-<div class="block"><h3>外觀與量測明細</h3><div id="unified"></div></div>
+  <script>
+    /* ---- I18N ---- */
+    const I18N = {
+      "zh-Hant": {
+        title_print: "安拓實業有限公司｜品檢報告（單筆）",
+        title_print_inner: "品檢報告 Inspection Report",
+        btn_print: "列印 / 下載 PDF",
+        btn_back: "返回報告列表",
+        section_basic: "基本資訊",
+        section_part: "料件資訊",
+        section_unified: "外觀與量測明細",
+        section_sign: "簽核",
+        sign_inspector: "檢驗人員",
+        sign_qc: "品保主管",
+        sign_approve: "核准",
 
-<div class="block"><h3>簽核</h3>
-  <div class="sign">
-    <div class="cell"><small>檢驗人員</small><div id="sign-inspector"></div></div>
-    <div class="cell"><small>品保主管</small></div>
-    <div class="cell"><small>核准</small></div>
-  </div>
-</div>
-</div>
+        f_id: "報告編號：",
+        f_time: "檢驗時間：",
+        f_inspector: "檢驗人員：",
+        f_overall: "檢驗結果：",
+        f_supplier: "供應商：",
+        f_partno: "料號 Part No.：",
+        f_drawing: "圖號 Drawing No.：",
+        f_revision: "版次 Revision：",
+        f_notes: "備註：",
 
-<div id="langModal" class="modal hidden"><div class="panel"><h3>選擇語言</h3>
-  <div class="lang-grid"><button class="lang-btn" data-lang="zh-Hant">繁體</button><button class="lang-btn" data-lang="zh-Hans">简体</button><button class="lang-btn" data-lang="en">English</button></div>
-</div></div>
+        col_item: "項目 / 尺寸",
+        col_nominal: "名目",
+        col_tol_minus: "下限公差",
+        col_tol_plus: "上限公差",
+        col_m1: "樣品/實測1",
+        col_m2: "樣品/實測2",
+        col_m3: "樣品/實測3",
+        col_m4: "樣品/實測4",
+        col_m5: "樣品/實測5",
+        col_judgement: "判定",
 
-<script>
-const tip=document.getElementById('tip'); const ID=new URLSearchParams(location.search).get('id')||""; let curr=null;
-document.getElementById('btnPrint').onclick=()=>window.print();
-document.getElementById('btnLang').onclick=()=>document.getElementById('langModal').classList.remove('hidden');
-document.getElementById('langModal').addEventListener('click',e=>{if(e.target.dataset.lang){localStorage.setItem('qci_lang',e.target.dataset.lang);document.getElementById('langModal').classList.add('hidden');renderUnified();} if(e.target.id==='langModal')e.currentTarget.classList.add('hidden')});
+        appearance: "外觀",        /* ← 補上這個 key */
+        lang_title: "選擇語言",
+        lang_tip: "請選擇顯示語言（之後可再更改）："
+      },
+      "zh-Hans": {
+        title_print: "安拓实业有限公司｜品检报告（单笔）",
+        title_print_inner: "品检报告 Inspection Report",
+        btn_print: "打印 / 下载 PDF",
+        btn_back: "返回报告列表",
+        section_basic: "基本信息",
+        section_part: "料件信息",
+        section_unified: "外观与量测明细",
+        section_sign: "签核",
+        sign_inspector: "检验人员",
+        sign_qc: "品保主管",
+        sign_approve: "核准",
 
-function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function fmt3(v){return (v===0||v)?Number(v).toFixed(3):""}
-function getLang(){const s=localStorage.getItem('qci_lang');return["zh-Hant","zh-Hans","en"].includes(s)?s:"zh-Hant"}
-function tAppearance(){return{ "zh-Hant":"外觀","zh-Hans":"外观","en":"Appearance" }[getLang()]||"Appearance"}
-function tHead(){const L=getLang();const map={ "zh-Hant":["項目/尺寸","名目","下限公差","上限公差","樣品/實測1","樣品/實測2","樣品/實測3","樣品/實測4","樣品/實測5","判定"], "zh-Hans":["项目/尺寸","名义","下限公差","上限公差","样品/实测1","样品/实测2","样品/实测3","样品/实测4","样品/实测5","判定"], "en":["Item/Dim.","Nominal","Lower Tol.","Upper Tol.","Sample/Meas.1","Sample/Meas.2","Sample/Meas.3","Sample/Meas.4","Sample/Meas.5","Judgement"]}; return map[L]||map["zh-Hant"]; }
-function fmtOKNG(v){const L=getLang();const s=String(v||"").toUpperCase();if(s==="OK")return L==="en"?"OK":"O.K"; if(s==="NG")return "NG"; return "";}
-function listFromJson(x){if(Array.isArray(x))return x.length&&x[0]&&x[0].record&&x[0].record.record?x[0].record.record:x; if(x&&Array.isArray(x.record))return x.record; return[]}
-function buildUnified(ap=listAppearance(),ms=listMeasures()){
-  const H=tHead(); let thead=`<thead><tr>${H.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
-  let rows="";
-  if(ap.has){rows+=`<tr><td><strong>${tAppearance()}</strong></td><td></td><td></td><td></td>${ap.cells.map(x=>`<td>${x}</td>`).join('')}<td>${ap.pass?'PASS':'FAIL'}</td></tr>`}
-  rows+=ms.map(m=>`<tr><td>${esc(m.name||'')}</td><td>${fmt3(m.nominal)}</td><td>${fmt3(m.tolMinus)}</td><td>${fmt3(m.tolPlus)}</td>${m.mcells.map(x=>`<td>${x}</td>`).join('')}<td>${m.dec}</td></tr>`).join('');
-  return rows?`<table>${thead}<tbody>${rows}</tbody></table>`:'<div class="muted">（無明細）</div>';
-}
-function listAppearance(){const ap=Array.isArray(curr?.appearance)?curr.appearance:[]; const map={}; for(const a of ap){const m=String(a.sample||"").match(/(\d+)/);const i=m?Number(m[1]):null; if(i&&i>=1&&i<=5) map[i]=fmtOKNG(a.result);} const cells=[1,2,3,4,5].map(i=>esc(map[i]||"")); const has=Object.keys(map).length>0; const pass=has&&Object.values(map).every(v=>v==="OK"||v==="O.K"); return {has,cells,pass};}
-function listMeasures(){const L=Array.isArray(curr?.measurements)?curr.measurements:[]; return L.map(m=>{const arr=Array.isArray(m.measured)?m.measured:((typeof m.measured==='number'||(typeof m.measured==='string'&&m.measured!==''))?[m.measured]:[]); const mc=[0,1,2,3,4].map(i=>fmt3(arr[i])); const dec=typeof m.pass==='boolean'?(m.pass?'PASS':'FAIL'):esc(String(m.decision||'')); return {name:m.name,nominal:m.nominal,tolMinus:m.tolMinus,tolPlus:m.tolPlus,mcells:mc,dec};});}
-function renderUnified(){document.getElementById('unified').innerHTML=buildUnified();}
-async function ensureAuth(){let u=localStorage.getItem('qci_user')||"",p=localStorage.getItem('qci_pass')||"";if(!u||!p){u=prompt('帳號')||"";p=prompt('密碼')||"";if(!u||!p)return!1;localStorage.setItem('qci_user',u);localStorage.setItem('qci_pass',p)}try{const r=await fetch('/api/inspections?auth=1',{headers:{'x-user':u,'x-pass':p,'x-passcode':p}});const t=await r.text();let j={};try{j=JSON.parse(t)}catch{} return r.ok&&j.ok&&["admin","viewer"].includes((j.role||"").toLowerCase())}catch{return!1}}
-async function load(){tip.textContent='讀取中...'; try{const u=localStorage.getItem('qci_user')||"",p=localStorage.getItem('qci_pass')||"";const r=await fetch('/api/inspections',{headers:{'x-user':u,'x-pass':p,'x-passcode':p}});const t=await r.text();if(!r.ok)throw new Error(t||('HTTP '+r.status)); let j={};try{j=JSON.parse(t)}catch{j=[]} const list=listFromJson(j); curr=list.find(x=>String(x.id||'')===ID)||null; if(!curr){tip.textContent='找不到資料';return;}
-  // 基本+料件
-  document.getElementById('f-id').textContent=curr.id||''; document.getElementById('f-time').textContent=curr.timestamp?new Date(curr.timestamp).toLocaleString():''; document.getElementById('f-inspector').textContent=curr.inspector||''; document.getElementById('f-overall').textContent=(curr.overallResult||''); document.getElementById('f-overall').className='result '+((curr.overallResult||'')==='PASS'?'pass':'fail');
-  document.getElementById('f-supplier').textContent=curr.supplier||''; document.getElementById('f-process').textContent=curr.process||''; document.getElementById('f-part').textContent=curr.partNo||''; document.getElementById('f-draw').textContent=curr.drawingNo||''; document.getElementById('f-rev').textContent=curr.revision||''; document.getElementById('f-notes').textContent=curr.notes||'';
-  document.getElementById('sign-inspector').textContent=curr.inspector||''; // 簽核區帶入檢驗人員
-  renderUnified(); tip.textContent=''; }catch(e){tip.textContent='❌ 載入失敗：'+(e.message||e)}}
-(async()=>{const ok=await ensureAuth(); if(!ok){alert('未授權或登入失敗');location.href='index.html';return;} await load();})();
-</script>
-</body></html>
+        f_id: "报告编号：",
+        f_time: "检验时间：",
+        f_inspector: "检验人员：",
+        f_overall: "检验结果：",
+        f_supplier: "供应商：",
+        f_partno: "料号 Part No.：",
+        f_drawing: "图号 Drawing No.：",
+        f_revision: "版次 Revision：",
+        f_notes: "备注：",
+
+        col_item: "项目 / 尺寸",
+        col_nominal: "名义",
+        col_tol_minus: "下限公差",
+        col_tol_plus: "上限公差",
+        col_m1: "样品/实测1",
+        col_m2: "样品/实测2",
+        col_m3: "样品/实测3",
+        col_m4: "样品/实测4",
+        col_m5: "样品/实测5",
+        col_judgement: "判定",
+
+        appearance: "外观",
+        lang_title: "选择语言",
+        lang_tip: "请选择显示语言（之后可再更改）："
+      },
+      "en": {
+        title_print: "Antor Co., Ltd. | Inspection Report (Single)",
+        title_print_inner: "Inspection Report",
+        btn_print: "Print / Download PDF",
+        btn_back: "Back to list",
+        section_basic: "Basic Info",
+        section_part: "Part Info",
+        section_unified: "Appearance & Measurements",
+        section_sign: "Sign-off",
+        sign_inspector: "Inspector",
+        sign_qc: "QA Manager",
+        sign_approve: "Approved",
+
+        f_id: "Report ID: ",
+        f_time: "Time: ",
+        f_inspector: "Inspector: ",
+        f_overall: "Overall: ",
+        f_supplier: "Supplier: ",
+        f_partno: "Part No.: ",
+        f_drawing: "Drawing No.: ",
+        f_revision: "Revision: ",
+        f_notes: "Notes: ",
+
+        col_item: "Item / Dim.",
+        col_nominal: "Nominal",
+        col_tol_minus: "Lower Tol.",
+        col_tol_plus: "Upper Tol.",
+        col_m1: "Sample/Meas.1",
+        col_m2: "Sample/Meas.2",
+        col_m3: "Sample/Meas.3",
+        col_m4: "Sample/Meas.4",
+        col_m5: "Sample/Meas.5",
+        col_judgement: "Judgement",
+
+        appearance: "Appearance",
+        lang_title: "Choose language",
+        lang_tip: "Pick a display language (you can change it later):"
+      }
+    };
+
+    // 將 index/report 存的 qci_lang 做相容轉換
+    function normalizeLang(s){
+      if (s === 'zh-TW') return 'zh-Hant';
+      if (s === 'zh-CN') return 'zh-Hans';
+      return s;
+    }
+    function getLang(){
+      const raw = localStorage.getItem('qci_lang');
+      const n = normalizeLang(raw);
+      return ['zh-Hant','zh-Hans','en'].includes(n) ? n : null;
+    }
+    function setLang(x){ localStorage.setItem('qci_lang', x); applyI18n(); }
+    function t(key){
+      const lang = getLang() || 'zh-Hant';
+      const d = I18N[lang] || I18N['zh-Hant'];
+      return d[key] || I18N['zh-Hant'][key] || key;
+    }
+    function applyI18n(){
+      document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
+      const titleEl = document.querySelector('title[data-i18n="title_print"]');
+      if (titleEl) titleEl.textContent = t('title_print');
+      // 設定後若已有資料，重建明細表（讓表頭跟著語言變更）
+      if (curr) document.getElementById('unified').innerHTML = buildUnifiedTable(curr.appearance || [], curr.measurements || []);
+    }
+
+    // 語言視窗控制
+    const langModal = document.getElementById('langModal');
+    function showLangModal(){ langModal.classList.remove('hidden'); }
+    function hideLangModal(){ langModal.classList.add('hidden'); }
+    document.getElementById('btnLang')?.addEventListener('click', showLangModal);
+    langModal.querySelectorAll('.lang-btn').forEach(b=>{
+      b.addEventListener('click', ()=>{ setLang(b.getAttribute('data-lang')); hideLangModal(); });
+    });
+    langModal.addEventListener('click', (e)=>{ if (e.target === langModal) hideLangModal(); });
+    window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') hideLangModal(); });
+
+    function chooseLanguageIfNeeded(){
+      if (getLang()) { applyI18n(); return Promise.resolve(); }
+      applyI18n(); showLangModal(); // 第一次沒選過 → 開窗
+      return new Promise(resolve=>{
+        const onChange = () => { if (getLang()) { langModal.removeEventListener('click', onChange); resolve(); } };
+        langModal.addEventListener('click', onChange);
+      });
+    }
+
+    /* ---- 單筆頁原本邏輯（保留） ---- */
+    const tip = document.getElementById('tip');
+    document.getElementById('btnPrint').addEventListener('click', () => window.print());
+    const params = new URLSearchParams(location.search);
+    const ID = params.get('id') || '';
+    let curr = null;
+
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+    function fmtNum(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
+    function fmtTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
+    function fmtOkNg(v){
+      const L = getLang() || 'zh-Hant';
+      if (String(v).toUpperCase() === 'OK') return (L==='en') ? 'OK' : 'O.K';
+      if (String(v).toUpperCase() === 'NG') return 'NG';
+      return '';
+    }
+
+    async function ensureAuth() {
+      let user = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
+      let pass = localStorage.getItem('qci_pass') || localStorage.getItem('qci_passcode') || '';
+      if (!user || !pass) {
+        user = prompt('請輸入帳號（檢驗人員）') || '';
+        pass = prompt('請輸入密碼（通關碼/密碼）') || '';
+        if (!user || !pass) return { ok:false };
+        localStorage.setItem('qci_user', user);
+        localStorage.setItem('qci_pass', pass);
+        localStorage.setItem('qci_inspector', user);
+        localStorage.setItem('qci_passcode', pass);
+      }
+      try {
+        const res = await fetch('/api/inspections?auth=1', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+        const t = await res.text(); let j={}; try{ j=JSON.parse(t);}catch{}
+        if (!res.ok || !j.ok) return { ok:false };
+        const role = (j.role||'').toLowerCase();
+        if (!['admin','viewer'].includes(role)) return { ok:false, msg:'此帳號沒有檢視權限' };
+        return { ok:true };
+      } catch { return { ok:false }; }
+    }
+
+    function listFromJson(x) {
+      if (!x) return [];
+      if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
+      if (x && typeof x === 'object') {
+        if (x.record !== undefined) return listFromJson(x.record);
+        if (x.records !== undefined) return listFromJson(x.records);
+        // 也接受單筆物件
+        if (x.id && x.timestamp && Array.isArray(x.measurements)) return [x];
+      }
+      return [];
+    }
+
+    function buildUnifiedTable(app, list){
+      const head = `
+        <thead>
+          <tr>
+            <th>${t('col_item')}</th>
+            <th>${t('col_nominal')}</th>
+            <th>${t('col_tol_minus')}</th>
+            <th>${t('col_tol_plus')}</th>
+            <th>${t('col_m1')}</th>
+            <th>${t('col_m2')}</th>
+            <th>${t('col_m3')}</th>
+            <th>${t('col_m4')}</th>
+            <th>${t('col_m5')}</th>
+            <th>${t('col_judgement')}</th>
+          </tr>
+        </thead>`;
+
+      /* 1) 外觀列：把物件陣列轉成「樣品序號 → 結果字串」 */
+      const appMap = {};
+      if (Array.isArray(app)) {
+        for (const a of app) {
+          const m = String(a.sample || '').match(/(\d+)/);  // 樣品1 → 1
+          const idx = m ? Number(m[1]) : null;
+          if (idx && idx >= 1 && idx <= 5) appMap[idx] = fmtOkNg(a.result || '');
+        }
+      }
+      const hasApp = Object.keys(appMap).length > 0;
+      const cells = [1,2,3,4,5].map(i => escapeHtml(appMap[i] || ''));
+      const passApp = hasApp && Object.values(appMap).every(v => (v==='OK' || v==='O.K')); // 中文顯示 O.K 也算 OK
+
+      const rowApp = hasApp ? `
+        <tr>
+          <td><strong>${t('appearance')}</strong></td>
+          <td></td><td></td><td></td>
+          <td>${cells[0]}</td>
+          <td>${cells[1]}</td>
+          <td>${cells[2]}</td>
+          <td>${cells[3]}</td>
+          <td>${cells[4]}</td>
+          <td>${passApp ? 'PASS' : 'FAIL'}</td>
+        </tr>` : '';
+
+      /* 2) 尺寸列 */
+      const rows = (Array.isArray(list) ? list : []).map(m=>{
+        const arr =
+          Array.isArray(m.measured) ? m.measured :
+          ((typeof m.measured==='number' || (typeof m.measured==='string'&&m.measured!=='')) ? [m.measured] : []);
+        const cs = [0,1,2,3,4].map(i=>fmtNum(arr[i]));
+        const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : escapeHtml(String(m.decision||''));
+        return `
+          <tr>
+            <td>${escapeHtml(m.name||'')}</td>
+            <td>${fmtNum(m.nominal)}</td>
+            <td>${fmtNum(m.tolMinus)}</td>
+            <td>${fmtNum(m.tolPlus)}</td>
+            <td>${cs[0]}</td>
+            <td>${cs[1]}</td>
+            <td>${cs[2]}</td>
+            <td>${cs[3]}</td>
+            <td>${cs[4]}</td>
+            <td>${dec}</td>
+          </tr>`;
+      }).join('');
+
+      if (!hasApp && !rows) return '<div class="muted">（無明細）</div>';
+
+      return `<table class="mini">${head}<tbody>${rowApp}${rows}</tbody></table>`;
+    }
+
+    async function loadRecord(){
+      tip.textContent = '';
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      const res = await fetch('/api/inspections', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+      const text = await res.text(); let data={}; try{ data=JSON.parse(text);}catch{ data = {}; }
+      if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
+      const list = listFromJson(data);
+      const rec = list.find(r => r.id === ID);
+      if (!rec) { tip.textContent = '找不到這筆資料'; return; }
+
+      curr = rec; // 給 applyI18n 重建表格用
+
+      document.getElementById('f-id').textContent = rec.id || '';
+      document.getElementById('f-time').textContent = rec.timestamp ? (new Date(rec.timestamp)).toLocaleString() : '';
+      document.getElementById('f-inspector').textContent = rec.inspector || '';
+      document.getElementById('f-overall').textContent = (rec.overallResult || rec.overall || '');
+      document.getElementById('f-supplier').textContent = rec.supplier || '';
+      document.getElementById('f-part').textContent = rec.partNo || '';
+      document.getElementById('f-draw').textContent = rec.drawingNo || '';
+      document.getElementById('f-rev').textContent = rec.revision || '';
+      document.getElementById('f-notes').textContent = rec.notes || '';
+
+      document.getElementById('unified').innerHTML = buildUnifiedTable(rec.appearance || [], rec.measurements || []);
+    }
+
+    // 啟動流程
+    (async () => {
+      applyI18n();
+      await ensureAuth();
+      await chooseLanguageIfNeeded();   // 第一次沒選過才會出現
+      try { await loadRecord(); } catch(e) { document.getElementById('tip').textContent = '載入失敗：' + e.message; }
+    })();
+  </script>
+</body>
+</html>
