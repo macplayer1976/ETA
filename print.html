@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>安拓實業有限公司｜品檢報告（單筆）</title>
+  <title data-i18n="title_print">安拓實業有限公司｜品檢報告（單筆）</title>
   <style>
     :root { --gray:#6b7280; --line:#e5e7eb; --title:#111827; --muted:#374151; }
     * { box-sizing: border-box; }
@@ -28,78 +28,236 @@
     .sign { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-top:12px; }
     .sign .cell { border:1px solid var(--line); border-radius:10px; padding:10px; height:80px; }
     .cell small { color:var(--gray); display:block; margin-bottom:6px; }
-    @media print {
-      .noprint { display:none; }
-      .wrap { padding: 12px 0 0; }
-    }
+    @media print { .noprint { display:none; } .wrap { padding: 12px 0 0; } }
+
+    /* 語言選擇視窗 */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 50; }
+    .modal .panel { background: #fff; border-radius: 14px; padding: 16px; width: 360px; box-shadow: 0 10px 25px rgba(0,0,0,.15); }
+    .modal h3 { margin: 0 0 8px 0; }
+    .lang-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .lang-btn { padding: 10px; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; background:#f9fafb; }
+    .lang-btn:hover { background:#eef2ff; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div class="brand">安拓實業有限公司</div>
-      <div class="title">品檢報告 Inspection Report</div>
+      <div class="title" data-i18n="title_print_inner">品檢報告 Inspection Report</div>
     </header>
 
     <div class="toolbar noprint">
-      <button class="btn" id="btnPrint">列印 / 下載 PDF</button>
-      <a class="btn outline" href="report.html">返回報告列表</a>
+      <button class="btn" id="btnPrint" data-i18n="btn_print">列印 / 下載 PDF</button>
+      <a class="btn outline" href="report.html" data-i18n="btn_back">返回報告列表</a>
+      <button class="btn outline" id="btnLang" title="Language / 語言 / 语言">🌐</button>
       <span class="muted" id="tip"></span>
     </div>
 
     <!-- 基本資訊 -->
     <div class="block">
-      <h3>基本資訊</h3>
+      <h3 data-i18n="section_basic">基本資訊</h3>
       <div class="row">
-        <div><strong>報告編號：</strong><span id="f-id"></span></div>
-        <div><strong>檢驗時間：</strong><span id="f-time"></span></div>
-        <div><strong>檢驗人員：</strong><span id="f-inspector"></span></div>
-        <div><strong>檢驗結果：</strong><span id="f-overall" class="result"></span></div>
+        <div><strong data-i18n="f_id">報告編號：</strong><span id="f-id"></span></div>
+        <div><strong data-i18n="f_time">檢驗時間：</strong><span id="f-time"></span></div>
+        <div><strong data-i18n="f_inspector">檢驗人員：</strong><span id="f-inspector"></span></div>
+        <div><strong data-i18n="f_overall">檢驗結果：</strong><span id="f-overall" class="result"></span></div>
       </div>
     </div>
 
     <!-- 料件資訊 -->
     <div class="block" style="margin-top:10px">
-      <h3>料件資訊</h3>
+      <h3 data-i18n="section_part">料件資訊</h3>
       <div class="row">
-        <div><strong>供應商：</strong><span id="f-supplier"></span></div>
-        <div><strong>料號 Part No.：</strong><span id="f-part"></span></div>
-        <div><strong>圖號 Drawing No.：</strong><span id="f-draw"></span></div>
-        <div><strong>版次 Revision：</strong><span id="f-rev"></span></div>
+        <div><strong data-i18n="f_supplier">供應商：</strong><span id="f-supplier"></span></div>
+        <div><strong data-i18n="f_partno">料號 Part No.：</strong><span id="f-part"></span></div>
+        <div><strong data-i18n="f_drawing">圖號 Drawing No.：</strong><span id="f-draw"></span></div>
+        <div><strong data-i18n="f_revision">版次 Revision：</strong><span id="f-rev"></span></div>
       </div>
-      <div style="margin-top:8px"><strong>備註：</strong><span id="f-notes"></span></div>
+      <div style="margin-top:8px"><strong data-i18n="f_notes">備註：</strong><span id="f-notes"></span></div>
     </div>
 
     <!-- 外觀與量測明細（合併；外觀有資料才顯示） -->
     <div class="block" style="margin-top:10px">
-      <h3>外觀與量測明細</h3>
+      <h3 data-i18n="section_unified">外觀與量測明細</h3>
       <div id="unified"></div>
     </div>
 
     <!-- 簽核區 -->
     <div class="block" style="margin-top:10px">
-      <h3>簽核</h3>
+      <h3 data-i18n="section_sign">簽核</h3>
       <div class="sign">
-        <div class="cell"><small>檢驗人員</small></div>
-        <div class="cell"><small>品保主管</small></div>
-        <div class="cell"><small>核准</small></div>
+        <div class="cell"><small data-i18n="sign_inspector">檢驗人員</small></div>
+        <div class="cell"><small data-i18n="sign_qc">品保主管</small></div>
+        <div class="cell"><small data-i18n="sign_approve">核准</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 語言選擇視窗 -->
+  <div id="langModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="panel">
+      <h3 data-i18n="lang_title">選擇語言</h3>
+      <p class="muted" data-i18n="lang_tip">請選擇顯示語言（之後可再更改）：</p>
+      <div class="lang-grid">
+        <button class="lang-btn" data-lang="en">English</button>
+        <button class="lang-btn" data-lang="zh-Hant">繁體中文</button>
+        <button class="lang-btn" data-lang="zh-Hans">简体中文</button>
       </div>
     </div>
   </div>
 
   <script>
+    /* ---- I18N ---- */
+    const I18N = {
+      "zh-Hant": {
+        title_print: "安拓實業有限公司｜品檢報告（單筆）",
+        title_print_inner: "品檢報告 Inspection Report",
+        btn_print: "列印 / 下載 PDF",
+        btn_back: "返回報告列表",
+        section_basic: "基本資訊",
+        section_part: "料件資訊",
+        section_unified: "外觀與量測明細",
+        section_sign: "簽核",
+        sign_inspector: "檢驗人員",
+        sign_qc: "品保主管",
+        sign_approve: "核准",
+
+        f_id: "報告編號：",
+        f_time: "檢驗時間：",
+        f_inspector: "檢驗人員：",
+        f_overall: "檢驗結果：",
+        f_supplier: "供應商：",
+        f_partno: "料號 Part No.：",
+        f_drawing: "圖號 Drawing No.：",
+        f_revision: "版次 Revision：",
+        f_notes: "備註：",
+
+        col_item: "項目 / 尺寸",
+        col_nominal: "名目",
+        col_tol_minus: "下限公差",
+        col_tol_plus: "上限公差",
+        col_m1: "樣品/實測1",
+        col_m2: "樣品/實測2",
+        col_m3: "樣品/實測3",
+        col_m4: "樣品/實測4",
+        col_m5: "樣品/實測5",
+        col_judgement: "判定",
+
+        lang_title: "選擇語言",
+        lang_tip: "請選擇顯示語言（之後可再更改）："
+      },
+      "zh-Hans": {
+        title_print: "安拓实业有限公司｜品检报告（单笔）",
+        title_print_inner: "品检报告 Inspection Report",
+        btn_print: "打印 / 下载 PDF",
+        btn_back: "返回报告列表",
+        section_basic: "基本信息",
+        section_part: "料件信息",
+        section_unified: "外观与量测明细",
+        section_sign: "签核",
+        sign_inspector: "检验人员",
+        sign_qc: "品保主管",
+        sign_approve: "核准",
+
+        f_id: "报告编号：",
+        f_time: "检验时间：",
+        f_inspector: "检验人员：",
+        f_overall: "检验结果：",
+        f_supplier: "供应商：",
+        f_partno: "料号 Part No.：",
+        f_drawing: "图号 Drawing No.：",
+        f_revision: "版次 Revision：",
+        f_notes: "备注：",
+
+        col_item: "项目 / 尺寸",
+        col_nominal: "名义",
+        col_tol_minus: "下限公差",
+        col_tol_plus: "上限公差",
+        col_m1: "样品/实测1",
+        col_m2: "样品/实测2",
+        col_m3: "样品/实测3",
+        col_m4: "样品/实测4",
+        col_m5: "样品/实测5",
+        col_judgement: "判定",
+
+        lang_title: "选择语言",
+        lang_tip: "请选择显示语言（之后可再更改）："
+      },
+      "en": {
+        title_print: "Anto Co., Ltd. | Inspection Report (Single)",
+        title_print_inner: "Inspection Report",
+        btn_print: "Print / Download PDF",
+        btn_back: "Back to list",
+        section_basic: "Basic Info",
+        section_part: "Part Info",
+        section_unified: "Appearance & Measurements",
+        section_sign: "Sign-off",
+        sign_inspector: "Inspector",
+        sign_qc: "QA Manager",
+        sign_approve: "Approved",
+
+        f_id: "Report ID: ",
+        f_time: "Time: ",
+        f_inspector: "Inspector: ",
+        f_overall: "Overall: ",
+        f_supplier: "Supplier: ",
+        f_partno: "Part No.: ",
+        f_drawing: "Drawing No.: ",
+        f_revision: "Revision: ",
+        f_notes: "Notes: ",
+
+        col_item: "Item / Dim.",
+        col_nominal: "Nominal",
+        col_tol_minus: "Lower Tol.",
+        col_tol_plus: "Upper Tol.",
+        col_m1: "Sample/Meas.1",
+        col_m2: "Sample/Meas.2",
+        col_m3: "Sample/Meas.3",
+        col_m4: "Sample/Meas.4",
+        col_m5: "Sample/Meas.5",
+        col_judgement: "Judgement",
+
+        lang_title: "Choose language",
+        lang_tip: "Pick a display language (you can change it later):"
+      }
+    };
+    function getLang(){ const s = localStorage.getItem('qci_lang'); return ['zh-Hant','zh-Hans','en'].includes(s) ? s : null; }
+    function setLang(x){ localStorage.setItem('qci_lang', x); applyI18n(); }
+    function t(key){ const lang = getLang() || 'zh-Hant'; const d = I18N[lang] || I18N['zh-Hant']; return d[key] || I18N['zh-Hant'][key] || key; }
+    function applyI18n(){
+      document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
+      const titleEl = document.querySelector('title[data-i18n]'); if (titleEl) titleEl.textContent = t(titleEl.getAttribute('data-i18n'));
+      document.getElementById('unified').innerHTML = buildUnifiedTable(curr.appearance || [], curr.measurements || []);
+    }
+
+    const langModal = document.getElementById('langModal');
+    document.getElementById('btnLang')?.addEventListener('click', ()=>showLangModal());
+    function showLangModal(){ langModal.classList.remove('hidden'); }
+    function hideLangModal(){ langModal.classList.add('hidden'); }
+    langModal.querySelectorAll('.lang-btn').forEach(b=>b.addEventListener('click', ()=>{ setLang(b.getAttribute('data-lang')); hideLangModal(); }));
+
+    function chooseLanguageIfNeeded(){
+      return new Promise(resolve=>{
+        if (getLang()) { applyI18n(); return resolve(); }
+        applyI18n(); showLangModal();
+        const onPick=()=>{ if(getLang()){ langModal.removeEventListener('click', onPick); resolve(); } };
+        langModal.addEventListener('click', onPick);
+      });
+    }
+
+    /* ---- 原本單筆頁邏輯（保留） ---- */
     const tip = document.getElementById('tip');
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
-
     const params = new URLSearchParams(location.search);
     const ID = params.get('id') || '';
+    let curr = { appearance: [], measurements: [] };
 
     async function ensureAuth() {
       let user = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
       let pass = localStorage.getItem('qci_pass') || localStorage.getItem('qci_passcode') || '';
       if (!user || !pass) {
-        user = prompt('請輸入帳號（檢驗人員）') || '';
-        pass = prompt('請輸入密碼（通關碼/密碼）') || '';
+        user = prompt('Account / 帳號 / 账号') || '';
+        pass = prompt('Password / 密碼 / 密码') || '';
         if (!user || !pass) return { ok:false };
         localStorage.setItem('qci_user', user);
         localStorage.setItem('qci_pass', pass);
@@ -140,20 +298,19 @@
       const head = `
         <thead>
           <tr>
-            <th>項目 / 尺寸</th>
-            <th>名目</th>
-            <th>下限公差</th>
-            <th>上限公差</th>
-            <th>樣品/實測1</th>
-            <th>樣品/實測2</th>
-            <th>樣品/實測3</th>
-            <th>樣品/實測4</th>
-            <th>樣品/實測5</th>
-            <th>判定</th>
+            <th>${t('col_item')}</th>
+            <th>${t('col_nominal')}</th>
+            <th>${t('col_tol_minus')}</th>
+            <th>${t('col_tol_plus')}</th>
+            <th>${t('col_m1')}</th>
+            <th>${t('col_m2')}</th>
+            <th>${t('col_m3')}</th>
+            <th>${t('col_m4')}</th>
+            <th>${t('col_m5')}</th>
+            <th>${t('col_judgement')}</th>
           </tr>
         </thead>`;
 
-      // 外觀第1列（有資料才顯示）
       const appMap = {};
       if (Array.isArray(app)) {
         for (const a of app) {
@@ -167,7 +324,7 @@
       const pass = hasApp && Object.values(appMap).every(v => v === 'OK');
       const rowApp = hasApp ? `
         <tr>
-          <td><strong>外觀</strong></td>
+          <td><strong>${(getLang()==='en')?'Appearance':'外觀'}</strong></td>
           <td></td><td></td><td></td>
           <td>${cells[0]}</td>
           <td>${cells[1]}</td>
@@ -177,7 +334,6 @@
           <td>${pass ? 'PASS' : 'FAIL'}</td>
         </tr>` : '';
 
-      // 尺寸列
       const rows = (Array.isArray(list) ? list : []).map(m=>{
         const arr = Array.isArray(m.measured) ? m.measured
                     : ((typeof m.measured==='number' || (typeof m.measured==='string'&&m.measured!=='')) ? [m.measured] : []);
@@ -201,10 +357,12 @@
     }
 
     async function load() {
-      tip.textContent = '載入中...';
+      tip.textContent = 'Loading... / 載入中... / 载入中...';
       const ok = await ensureAuth();
-      if (!ok.ok) { tip.textContent = '❌ 沒有權限或登入失敗'; return; }
-      if (!ID) { tip.textContent = '❌ 缺少 id 參數'; return; }
+      if (!ok.ok) { tip.textContent = '❌ No permission / 沒有權限'; return; }
+      await chooseLanguageIfNeeded();
+
+      if (!ID) { tip.textContent = '❌ Missing id'; return; }
 
       const user = localStorage.getItem('qci_user') || '';
       const pass = localStorage.getItem('qci_pass') || '';
@@ -214,7 +372,9 @@
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const list = listFromJson(data);
         const r = list.find(x => x && String(x.id) === String(ID));
-        if (!r) { tip.textContent = '❌ 查無此報告編號'; return; }
+        if (!r) { tip.textContent = '❌ Not found'; return; }
+
+        curr = r;
 
         document.getElementById('f-id').textContent = r.id || '';
         document.getElementById('f-time').textContent = fmtTime(r.timestamp);
@@ -230,11 +390,13 @@
         document.getElementById('f-notes').textContent = r.notes || '';
 
         document.getElementById('unified').innerHTML = buildUnifiedTable(r.appearance || [], r.measurements || []);
-        tip.textContent = '提示：按上方「列印 / 下載 PDF」可輸出此單筆報告。';
-      } catch (e) { tip.textContent = '❌ 載入失敗：' + e.message; }
+        tip.textContent = '';
+        applyI18n();
+      } catch (e) { tip.textContent = '❌ ' + e.message; }
     }
 
-    load();
+    document.getElementById('btnPrint').addEventListener('click', () => window.print());
+    chooseLanguageIfNeeded().then(load);
   </script>
 </body>
 </html>
