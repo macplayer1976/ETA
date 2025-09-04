@@ -28,6 +28,7 @@
     .sign { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-top:12px; }
     .sign .cell { border:1px solid var(--line); border-radius:10px; padding:10px; height:80px; }
     .cell small { color:var(--gray); display:block; margin-bottom:6px; }
+    .cell .who { font-size: 16px; font-weight: 600; }
     @media print { .noprint { display:none; } .wrap { padding: 12px 0 0; } }
 
     /* 語言選擇視窗 */
@@ -43,7 +44,7 @@
 <body>
   <div class="wrap">
     <header>
-      <div class="brand">安拓實業有限公司</div>
+      <div class="brand" id="brandName">安拓實業有限公司</div>
       <div class="title" data-i18n="title_print_inner">品檢報告 Inspection Report</div>
     </header>
 
@@ -65,7 +66,7 @@
       </div>
     </div>
 
-    <!-- 料件資訊 -->
+    <!-- 料件資訊（新增：製程） -->
     <div class="block" style="margin-top:10px">
       <h3 data-i18n="section_part">料件資訊</h3>
       <div class="row">
@@ -73,28 +74,32 @@
         <div><strong data-i18n="f_partno">料號 Part No.：</strong><span id="f-part"></span></div>
         <div><strong data-i18n="f_drawing">圖號 Drawing No.：</strong><span id="f-draw"></span></div>
         <div><strong data-i18n="f_revision">版次 Revision：</strong><span id="f-rev"></span></div>
+        <div><strong data-i18n="f_process">製程 Process：</strong><span id="f-proc"></span></div>
       </div>
       <div style="margin-top:8px"><strong data-i18n="f_notes">備註：</strong><span id="f-notes"></span></div>
     </div>
 
-    <!-- 外觀與量測明細（合併；外觀有資料才顯示） -->
+    <!-- 外觀與量測明細 -->
     <div class="block" style="margin-top:10px">
       <h3 data-i18n="section_unified">外觀與量測明細</h3>
       <div id="unified"></div>
     </div>
 
-    <!-- 簽核區 -->
+    <!-- 簽核區（檢驗人員自動帶入） -->
     <div class="block" style="margin-top:10px">
       <h3 data-i18n="section_sign">簽核</h3>
       <div class="sign">
-        <div class="cell"><small data-i18n="sign_inspector">檢驗人員</small></div>
+        <div class="cell">
+          <small data-i18n="sign_inspector">檢驗人員</small>
+          <div class="who" id="sign-inspector"></div>
+        </div>
         <div class="cell"><small data-i18n="sign_qc">品保主管</small></div>
         <div class="cell"><small data-i18n="sign_approve">核准</small></div>
       </div>
     </div>
   </div>
 
-  <!-- 語言選擇視窗（預設隱藏；未選過才顯示） -->
+  <!-- 語言選擇視窗 -->
   <div id="langModal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="panel">
       <h3 data-i18n="lang_title">選擇語言</h3>
@@ -108,7 +113,7 @@
   </div>
 
   <script>
-    /* ---- I18N ---- */
+    /* ---- I18N（修正公司英文名、加入製程字串） ---- */
     const I18N = {
       "zh-Hant": {
         title_print: "安拓實業有限公司｜品檢報告（單筆）",
@@ -131,6 +136,7 @@
         f_partno: "料號 Part No.：",
         f_drawing: "圖號 Drawing No.：",
         f_revision: "版次 Revision：",
+        f_process: "製程 Process：",
         f_notes: "備註：",
 
         col_item: "項目 / 尺寸",
@@ -144,9 +150,11 @@
         col_m5: "樣品/實測5",
         col_judgement: "判定",
 
-        appearance: "外觀",        /* ← 補上這個 key */
+        appearance: "外觀",
         lang_title: "選擇語言",
-        lang_tip: "請選擇顯示語言（之後可再更改）："
+        lang_tip: "請選擇顯示語言（之後可再更改）：",
+        brand_zh: "安拓實業有限公司",
+        brand_en: "ANCHOR FASTENERS INDUSTRIAL CO., LTD."
       },
       "zh-Hans": {
         title_print: "安拓实业有限公司｜品检报告（单笔）",
@@ -169,6 +177,7 @@
         f_partno: "料号 Part No.：",
         f_drawing: "图号 Drawing No.：",
         f_revision: "版次 Revision：",
+        f_process: "制程 Process：",
         f_notes: "备注：",
 
         col_item: "项目 / 尺寸",
@@ -184,10 +193,12 @@
 
         appearance: "外观",
         lang_title: "选择语言",
-        lang_tip: "请选择显示语言（之后可再更改）："
+        lang_tip: "请选择显示语言（之后可再更改）：",
+        brand_zh: "安拓实业有限公司",
+        brand_en: "ANCHOR FASTENERS INDUSTRIAL CO., LTD."
       },
       "en": {
-        title_print: "Antor Co., Ltd. | Inspection Report (Single)",
+        title_print: "ANCHOR FASTENERS INDUSTRIAL CO., LTD. | Inspection Report (Single)",
         title_print_inner: "Inspection Report",
         btn_print: "Print / Download PDF",
         btn_back: "Back to list",
@@ -207,6 +218,7 @@
         f_partno: "Part No.: ",
         f_drawing: "Drawing No.: ",
         f_revision: "Revision: ",
+        f_process: "Process: ",
         f_notes: "Notes: ",
 
         col_item: "Item / Dim.",
@@ -222,56 +234,41 @@
 
         appearance: "Appearance",
         lang_title: "Choose language",
-        lang_tip: "Pick a display language (you can change it later):"
+        lang_tip: "Pick a display language (you can change it later):",
+        brand_zh: "ANCHOR FASTENERS INDUSTRIAL CO., LTD.", /* 英文模式下品牌顯示英文名 */
+        brand_en: "ANCHOR FASTENERS INDUSTRIAL CO., LTD."
       }
     };
 
-    // 將 index/report 存的 qci_lang 做相容轉換
-    function normalizeLang(s){
-      if (s === 'zh-TW') return 'zh-Hant';
-      if (s === 'zh-CN') return 'zh-Hans';
-      return s;
-    }
-    function getLang(){
-      const raw = localStorage.getItem('qci_lang');
-      const n = normalizeLang(raw);
-      return ['zh-Hant','zh-Hans','en'].includes(n) ? n : null;
-    }
+    function normalizeLang(s){ if (s === 'zh-TW') return 'zh-Hant'; if (s === 'zh-CN') return 'zh-Hans'; return s; }
+    function getLang(){ const raw=localStorage.getItem('qci_lang'); const n=normalizeLang(raw); return ['zh-Hant','zh-Hans','en'].includes(n)?n:null; }
     function setLang(x){ localStorage.setItem('qci_lang', x); applyI18n(); }
-    function t(key){
-      const lang = getLang() || 'zh-Hant';
-      const d = I18N[lang] || I18N['zh-Hant'];
-      return d[key] || I18N['zh-Hant'][key] || key;
-    }
+    function t(key){ const lang=getLang()||'zh-Hant'; const d=I18N[lang]||I18N['zh-Hant']; return d[key]||I18N['zh-Hant'][key]||key; }
     function applyI18n(){
       document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
-      const titleEl = document.querySelector('title[data-i18n="title_print"]');
-      if (titleEl) titleEl.textContent = t('title_print');
-      // 設定後若已有資料，重建明細表（讓表頭跟著語言變更）
-      if (curr) document.getElementById('unified').innerHTML = buildUnifiedTable(curr.appearance || [], curr.measurements || []);
+      const titleEl = document.querySelector('title[data-i18n="title_print"]'); if (titleEl) titleEl.textContent = t('title_print');
+      // 品牌名稱依語言切換：繁/簡顯示中文，英文顯示英文公司名
+      const lang = getLang() || 'zh-Hant';
+      document.getElementById('brandName').textContent = (lang==='en') ? t('brand_en') : t('brand_zh');
+      if (curr) document.getElementById('unified').innerHTML = buildUnifiedTable(curr.appearance||[], curr.measurements||[]);
     }
 
-    // 語言視窗控制
     const langModal = document.getElementById('langModal');
     function showLangModal(){ langModal.classList.remove('hidden'); }
     function hideLangModal(){ langModal.classList.add('hidden'); }
     document.getElementById('btnLang')?.addEventListener('click', showLangModal);
-    langModal.querySelectorAll('.lang-btn').forEach(b=>{
-      b.addEventListener('click', ()=>{ setLang(b.getAttribute('data-lang')); hideLangModal(); });
-    });
+    langModal.querySelectorAll('.lang-btn').forEach(b=>{ b.addEventListener('click', ()=>{ setLang(b.getAttribute('data-lang')); hideLangModal(); }); });
     langModal.addEventListener('click', (e)=>{ if (e.target === langModal) hideLangModal(); });
     window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') hideLangModal(); });
-
     function chooseLanguageIfNeeded(){
       if (getLang()) { applyI18n(); return Promise.resolve(); }
-      applyI18n(); showLangModal(); // 第一次沒選過 → 開窗
+      applyI18n(); showLangModal();
       return new Promise(resolve=>{
         const onChange = () => { if (getLang()) { langModal.removeEventListener('click', onChange); resolve(); } };
         langModal.addEventListener('click', onChange);
       });
     }
 
-    /* ---- 單筆頁原本邏輯（保留） ---- */
     const tip = document.getElementById('tip');
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
     const params = new URLSearchParams(location.search);
@@ -280,20 +277,14 @@
 
     function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
     function fmtNum(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
-    function fmtTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
-    function fmtOkNg(v){
-      const L = getLang() || 'zh-Hant';
-      if (String(v).toUpperCase() === 'OK') return (L==='en') ? 'OK' : 'O.K';
-      if (String(v).toUpperCase() === 'NG') return 'NG';
-      return '';
-    }
+    function fmtOkNg(v){ const L=getLang()||'zh-Hant'; if (String(v).toUpperCase()==='OK') return (L==='en')?'OK':'O.K'; if (String(v).toUpperCase()==='NG') return 'NG'; return ''; }
 
     async function ensureAuth() {
       let user = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
       let pass = localStorage.getItem('qci_pass') || localStorage.getItem('qci_passcode') || '';
       if (!user || !pass) {
-        user = prompt('請輸入帳號（檢驗人員）') || '';
-        pass = prompt('請輸入密碼（通關碼/密碼）') || '';
+        user = prompt('Account / 帳號 / 账号') || '';
+        pass = prompt('Password / 密碼 / 密码') || '';
         if (!user || !pass) return { ok:false };
         localStorage.setItem('qci_user', user);
         localStorage.setItem('qci_pass', pass);
@@ -305,7 +296,7 @@
         const t = await res.text(); let j={}; try{ j=JSON.parse(t);}catch{}
         if (!res.ok || !j.ok) return { ok:false };
         const role = (j.role||'').toLowerCase();
-        if (!['admin','viewer'].includes(role)) return { ok:false, msg:'此帳號沒有檢視權限' };
+        if (!['admin','viewer'].includes(role)) return { ok:false };
         return { ok:true };
       } catch { return { ok:false }; }
     }
@@ -316,113 +307,116 @@
       if (x && typeof x === 'object') {
         if (x.record !== undefined) return listFromJson(x.record);
         if (x.records !== undefined) return listFromJson(x.records);
-        // 也接受單筆物件
         if (x.id && x.timestamp && Array.isArray(x.measurements)) return [x];
       }
       return [];
     }
+    function isValidRecord(r){ return r && (r.id || r.timestamp || r.inspector || r.supplier || r.partNo); }
 
-    function buildUnifiedTable(app, list){
-      const head = `
-        <thead>
-          <tr>
-            <th>${t('col_item')}</th>
-            <th>${t('col_nominal')}</th>
-            <th>${t('col_tol_minus')}</th>
-            <th>${t('col_tol_plus')}</th>
-            <th>${t('col_m1')}</th>
-            <th>${t('col_m2')}</th>
-            <th>${t('col_m3')}</th>
-            <th>${t('col_m4')}</th>
-            <th>${t('col_m5')}</th>
-            <th>${t('col_judgement')}</th>
-          </tr>
-        </thead>`;
-
-      /* 1) 外觀列：把物件陣列轉成「樣品序號 → 結果字串」 */
-      const appMap = {};
-      if (Array.isArray(app)) {
-        for (const a of app) {
-          const m = String(a.sample || '').match(/(\d+)/);  // 樣品1 → 1
-          const idx = m ? Number(m[1]) : null;
-          if (idx && idx >= 1 && idx <= 5) appMap[idx] = fmtOkNg(a.result || '');
+    function buildUnifiedTable(appearance, measurements){
+      const hasAp = Array.isArray(appearance) && appearance.some(x => (x && (x.result||'').trim()!=='' ));
+      const apMap = {};
+      if (hasAp) {
+        for (const a of appearance) {
+          const m = String(a.sample || '').match(/(\d+)/); const idx = m ? Number(m[1]) : null;
+          if (idx && idx>=1 && idx<=5) apMap[idx] = fmtOkNg(a.result||'');
         }
       }
-      const hasApp = Object.keys(appMap).length > 0;
-      const cells = [1,2,3,4,5].map(i => escapeHtml(appMap[i] || ''));
-      const passApp = hasApp && Object.values(appMap).every(v => (v==='OK' || v==='O.K')); // 中文顯示 O.K 也算 OK
-
-      const rowApp = hasApp ? `
+      const apRow = hasAp ? `
         <tr>
-          <td><strong>${t('appearance')}</strong></td>
-          <td></td><td></td><td></td>
-          <td>${cells[0]}</td>
-          <td>${cells[1]}</td>
-          <td>${cells[2]}</td>
-          <td>${cells[3]}</td>
-          <td>${cells[4]}</td>
-          <td>${passApp ? 'PASS' : 'FAIL'}</td>
+          <th>${t('appearance')}</th>
+          <td colspan="3"></td>
+          <td>${escapeHtml(apMap[1]||'')}</td>
+          <td>${escapeHtml(apMap[2]||'')}</td>
+          <td>${escapeHtml(apMap[3]||'')}</td>
+          <td>${escapeHtml(apMap[4]||'')}</td>
+          <td>${escapeHtml(apMap[5]||'')}</td>
+          <td>${Object.values(apMap).every(v=>v==='OK'||v==='O.K') ? 'PASS':'FAIL'}</td>
         </tr>` : '';
 
-      /* 2) 尺寸列 */
-      const rows = (Array.isArray(list) ? list : []).map(m=>{
+      const rows = (Array.isArray(measurements)?measurements:[]).map(m=>{
         const arr =
           Array.isArray(m.measured) ? m.measured :
           ((typeof m.measured==='number' || (typeof m.measured==='string'&&m.measured!=='')) ? [m.measured] : []);
-        const cs = [0,1,2,3,4].map(i=>fmtNum(arr[i]));
+        const cs = [0,1,2,3,4].map(i=> (arr[i]===0||arr[i]) ? Number(arr[i]).toFixed(3) : '');
         const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : escapeHtml(String(m.decision||''));
         return `
           <tr>
             <td>${escapeHtml(m.name||'')}</td>
-            <td>${fmtNum(m.nominal)}</td>
-            <td>${fmtNum(m.tolMinus)}</td>
-            <td>${fmtNum(m.tolPlus)}</td>
-            <td>${cs[0]}</td>
-            <td>${cs[1]}</td>
-            <td>${cs[2]}</td>
-            <td>${cs[3]}</td>
-            <td>${cs[4]}</td>
+            <td>${m.nominal===0||m.nominal?Number(m.nominal).toFixed(3):''}</td>
+            <td>${m.tolMinus===0||m.tolMinus?Number(m.tolMinus).toFixed(3):''}</td>
+            <td>${m.tolPlus===0||m.tolPlus?Number(m.tolPlus).toFixed(3):''}</td>
+            <td>${cs[0]}</td><td>${cs[1]}</td><td>${cs[2]}</td><td>${cs[3]}</td><td>${cs[4]}</td>
             <td>${dec}</td>
           </tr>`;
       }).join('');
 
-      if (!hasApp && !rows) return '<div class="muted">（無明細）</div>';
+      if (!hasAp && !rows) return '<div class="muted">（無明細）</div>';
 
-      return `<table class="mini">${head}<tbody>${rowApp}${rows}</tbody></table>`;
+      return `
+        <table class="mini">
+          <thead>
+            <tr>
+              <th>${t('col_item')}</th>
+              <th>${t('col_nominal')}</th>
+              <th>${t('col_tol_minus')}</th>
+              <th>${t('col_tol_plus')}</th>
+              <th>${t('col_m1')}</th>
+              <th>${t('col_m2')}</th>
+              <th>${t('col_m3')}</th>
+              <th>${t('col_m4')}</th>
+              <th>${t('col_m5')}</th>
+              <th>${t('col_judgement')}</th>
+            </tr>
+          </thead>
+          <tbody>${apRow}${rows}</tbody>
+        </table>`;
     }
 
     async function loadRecord(){
-      tip.textContent = '';
       const user = localStorage.getItem('qci_user') || '';
       const pass = localStorage.getItem('qci_pass') || '';
       const res = await fetch('/api/inspections', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
-      const text = await res.text(); let data={}; try{ data=JSON.parse(text);}catch{ data = {}; }
-      if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
-      const list = listFromJson(data);
-      const rec = list.find(r => r.id === ID);
-      if (!rec) { tip.textContent = '找不到這筆資料'; return; }
+      const text = await res.text(); if (!res.ok) throw new Error(text||('HTTP '+res.status));
+      let data={}; try{ data=JSON.parse(text);}catch{ data=text; }
+      const list = listFromJson(data).filter(isValidRecord);
+      const r = list.find(x => String(x.id||'') === String(ID));
+      if (!r) throw new Error('Record not found');
+      curr = r;
 
-      curr = rec; // 給 applyI18n 重建表格用
+      // 基本資訊
+      setText('f-id', r.id);
+      setText('f-time', (r.timestamp||'').replace('T',' ').replace('Z',''));
+      setText('f-inspector', r.inspector);
+      const ov = String(r.overallResult||'').toUpperCase();
+      const ovEl = document.getElementById('f-overall');
+      ovEl.textContent = ov || '';
+      ovEl.className = 'result ' + (ov === 'PASS' ? 'pass' : (ov === 'FAIL' ? 'fail' : ''));
 
-      document.getElementById('f-id').textContent = rec.id || '';
-      document.getElementById('f-time').textContent = rec.timestamp ? (new Date(rec.timestamp)).toLocaleString() : '';
-      document.getElementById('f-inspector').textContent = rec.inspector || '';
-      document.getElementById('f-overall').textContent = (rec.overallResult || rec.overall || '');
-      document.getElementById('f-supplier').textContent = rec.supplier || '';
-      document.getElementById('f-part').textContent = rec.partNo || '';
-      document.getElementById('f-draw').textContent = rec.drawingNo || '';
-      document.getElementById('f-rev').textContent = rec.revision || '';
-      document.getElementById('f-notes').textContent = rec.notes || '';
+      // 料件資訊（含製程）
+      const supplierLine = r.supplier ? (r.supplierEn ? `${r.supplier} (${r.supplierEn})` : r.supplier) : '';
+      setText('f-supplier', supplierLine);
+      setText('f-part', r.partNo);
+      setText('f-draw', r.drawingNo);
+      setText('f-rev', r.revision);
+      const procLine = r.process ? (r.processEn ? `${r.process} (${r.processEn})` : r.process) : '';
+      setText('f-proc', procLine);
+      setText('f-notes', r.notes);
 
-      document.getElementById('unified').innerHTML = buildUnifiedTable(rec.appearance || [], rec.measurements || []);
+      // 簽核區帶入檢驗人員
+      document.getElementById('sign-inspector').textContent = r.inspector || '';
+
+      // 明細
+      document.getElementById('unified').innerHTML = buildUnifiedTable(r.appearance||[], r.measurements||[]);
     }
 
-    // 啟動流程
+    function setText(id, v){ const el=document.getElementById(id); if (el) el.textContent = v || ''; }
+
     (async () => {
       applyI18n();
       await ensureAuth();
-      await chooseLanguageIfNeeded();   // 第一次沒選過才會出現
-      try { await loadRecord(); } catch(e) { document.getElementById('tip').textContent = '載入失敗：' + e.message; }
+      await chooseLanguageIfNeeded();
+      try { await loadRecord(); } catch(e) { document.getElementById('tip').textContent = '❌ ' + (e.message||e); }
     })();
   </script>
 </body>
