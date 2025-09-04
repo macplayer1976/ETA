@@ -66,7 +66,8 @@
       <div class="row">
         <div>
           <label data-i18n="labelSupplier">供應商</label>
-          <input id="supplier" />
+          <select id="supplier"></select>
+        <div class="muted" id="supplierEn"></div>
         </div>
         <div>
           <label data-i18n="labelPartNo">料號 (Part No.)</label>
@@ -582,5 +583,41 @@
     applyI18n();
     let _afterPick = null;
   </script>
+<script>
+// === Supplier dropdown init (Anchor/AKF) ===
+    (function(){
+      if (window.__SUP_INIT__) return; window.__SUP_INIT__ = true;
+      const SUPPLIERS = [
+        { id: "安拓", label: "安拓 (Anchor)", en: "Anchor" },
+        { id: "安可", label: "安可 (AKF)",    en: "AKF" }
+      ];
+      const sel = document.getElementById('supplier');
+      const hint = document.getElementById('supplierEn');
+      function fill(){
+        if (!sel) return;
+        sel.innerHTML = SUPPLIERS.map(s=>`<option value="${s.id}">${s.label}</option>`).join('');
+        // set previous value if any
+        const prev = (sel.getAttribute('data-prev')||'').trim();
+        if (prev) sel.value = prev;
+        updateHint();
+      }
+      function updateHint(){
+        if (!sel || !hint) return;
+        const v = sel.value;
+        const item = SUPPLIERS.find(s=>s.id===v);
+        hint.textContent = item ? `English: ${item.en}` : '';
+      }
+      if (sel){
+        sel.addEventListener('change', updateHint);
+        // If there was an input before, try to migrate its value from localStorage (optional)
+      }
+      // Run after DOM ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fill);
+      } else { fill(); }
+      // expose helper to other scripts if needed
+      window.__SUPPLIERS__ = SUPPLIERS;
+    })();
+</script>
 </body>
 </html>
