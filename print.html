@@ -30,14 +30,14 @@
     .cell small { color:var(--gray); display:block; margin-bottom:6px; }
     @media print { .noprint { display:none; } .wrap { padding: 12px 0 0; } }
 
-    /* ✅ 語言選擇視窗（修正：補上 .hidden、修正遮罩透明度小數點） */
+    /* 語言選擇視窗 */
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 50; }
     .modal .panel { background: #fff; border-radius: 14px; padding: 16px; width: 360px; box-shadow: 0 10px 25px rgba(0,0,0,.15); }
     .modal h3 { margin: 0 0 8px 0; }
     .lang-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
     .lang-btn { padding: 10px; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; background:#f9fafb; }
     .lang-btn:hover { background:#eef2ff; }
-    .hidden { display: none !important; } /* ← 這行是關鍵，讓 hideLangModal() 生效 */
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
@@ -144,6 +144,7 @@
         col_m5: "樣品/實測5",
         col_judgement: "判定",
 
+        appearance: "外觀",        /* ← 補上這個 key */
         lang_title: "選擇語言",
         lang_tip: "請選擇顯示語言（之後可再更改）："
       },
@@ -181,6 +182,7 @@
         col_m5: "样品/实测5",
         col_judgement: "判定",
 
+        appearance: "外观",
         lang_title: "选择语言",
         lang_tip: "请选择显示语言（之后可再更改）："
       },
@@ -218,18 +220,34 @@
         col_m5: "Sample/Meas.5",
         col_judgement: "Judgement",
 
+        appearance: "Appearance",
         lang_title: "Choose language",
         lang_tip: "Pick a display language (you can change it later):"
       }
     };
 
-    function getLang(){ const s = localStorage.getItem('qci_lang'); return ['zh-Hant','zh-Hans','en'].includes(s) ? s : null; }
+    // 將 index/report 存的 qci_lang 做相容轉換
+    function normalizeLang(s){
+      if (s === 'zh-TW') return 'zh-Hant';
+      if (s === 'zh-CN') return 'zh-Hans';
+      return s;
+    }
+    function getLang(){
+      const raw = localStorage.getItem('qci_lang');
+      const n = normalizeLang(raw);
+      return ['zh-Hant','zh-Hans','en'].includes(n) ? n : null;
+    }
     function setLang(x){ localStorage.setItem('qci_lang', x); applyI18n(); }
-    function t(key){ const lang = getLang() || 'zh-Hant'; const d = I18N[lang] || I18N['zh-Hant']; return d[key] || I18N['zh-Hant'][key] || key; }
+    function t(key){
+      const lang = getLang() || 'zh-Hant';
+      const d = I18N[lang] || I18N['zh-Hant'];
+      return d[key] || I18N['zh-Hant'][key] || key;
+    }
     function applyI18n(){
       document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
-      const titleEl = document.querySelector('title[data-i18n="title_print"]'); if (titleEl) titleEl.textContent = t('title_print');
-      // 依最新語言重建明細表（curr 在載入後會有值）
+      const titleEl = document.querySelector('title[data-i18n="title_print"]');
+      if (titleEl) titleEl.textContent = t('title_print');
+      // 設定後若已有資料，重建明細表（讓表頭跟著語言變更）
       if (curr) document.getElementById('unified').innerHTML = buildUnifiedTable(curr.appearance || [], curr.measurements || []);
     }
 
@@ -239,15 +257,9 @@
     function hideLangModal(){ langModal.classList.add('hidden'); }
     document.getElementById('btnLang')?.addEventListener('click', showLangModal);
     langModal.querySelectorAll('.lang-btn').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        const lang = b.getAttribute('data-lang');
-        setLang(lang);
-        hideLangModal();           // ✅ 選擇後立刻關閉
-      });
+      b.addEventListener('click', ()=>{ setLang(b.getAttribute('data-lang')); hideLangModal(); });
     });
-    // 點背景關閉（點內層 panel 不關閉）
     langModal.addEventListener('click', (e)=>{ if (e.target === langModal) hideLangModal(); });
-    // Esc 關閉
     window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') hideLangModal(); });
 
     function chooseLanguageIfNeeded(){
@@ -267,13 +279,21 @@
     let curr = null;
 
     function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+    function fmtNum(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
+    function fmtTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
+    function fmtOkNg(v){
+      const L = getLang() || 'zh-Hant';
+      if (String(v).toUpperCase() === 'OK') return (L==='en') ? 'OK' : 'O.K';
+      if (String(v).toUpperCase() === 'NG') return 'NG';
+      return '';
+    }
 
     async function ensureAuth() {
       let user = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
       let pass = localStorage.getItem('qci_pass') || localStorage.getItem('qci_passcode') || '';
       if (!user || !pass) {
-        user = prompt('Account / 帳號 / 账号') || '';
-        pass = prompt('Password / 密碼 / 密码') || '';
+        user = prompt('請輸入帳號（檢驗人員）') || '';
+        pass = prompt('請輸入密碼（通關碼/密碼）') || '';
         if (!user || !pass) return { ok:false };
         localStorage.setItem('qci_user', user);
         localStorage.setItem('qci_pass', pass);
@@ -285,128 +305,124 @@
         const t = await res.text(); let j={}; try{ j=JSON.parse(t);}catch{}
         if (!res.ok || !j.ok) return { ok:false };
         const role = (j.role||'').toLowerCase();
-        if (!['admin','viewer'].includes(role)) return { ok:false };
+        if (!['admin','viewer'].includes(role)) return { ok:false, msg:'此帳號沒有檢視權限' };
         return { ok:true };
       } catch { return { ok:false }; }
     }
 
-    async function loadRecord(){
-      const user = localStorage.getItem('qci_user') || '';
-      const pass = localStorage.getItem('qci_pass') || '';
-      const res = await fetch('/api/inspections', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
-      const text = await res.text(); if (!res.ok) throw new Error(text||('HTTP '+res.status));
-      let data={}; try{ data=JSON.parse(text);}catch{ data=text; }
-      const list = listFromJson(data).filter(isValidRecord);
-      const r = list.find(x => String(x.id||'') === String(ID));
-      if (!r) throw new Error('Record not found');
-      curr = r;
-
-      // 基本資訊
-      setText('f-id', r.id);
-      setText('f-time', (r.timestamp||'').replace('T',' ').replace('Z',''));
-      setText('f-inspector', r.inspector);
-      const ov = String(r.overallResult||'').toUpperCase();
-      const ovEl = document.getElementById('f-overall');
-      ovEl.textContent = ov || '';
-      ovEl.className = 'result ' + (ov === 'PASS' ? 'pass' : (ov === 'FAIL' ? 'fail' : ''));
-
-      // 料件
-      setText('f-supplier', r.supplier);
-      setText('f-part', r.partNo);
-      setText('f-draw', r.drawingNo);
-      setText('f-rev', r.revision);
-      setText('f-notes', r.notes);
-
-      // 明細表
-      document.getElementById('unified').innerHTML = buildUnifiedTable(r.appearance||[], r.measurements||[]);
-    }
-
-    function setText(id, v){ const el=document.getElementById(id); if (el) el.textContent = v || ''; }
-
-    // 與 report.html 相同的 JSONBin 結構處理（精簡版）
-    function listFromJson(data){
-      // 可能是 {record:[...]} 或 [{record:{record:[...]}, metadata:{...}}] 等包裝
-      if (Array.isArray(data)) {
-        // 找到最深一層的 list
-        if (data.length && data[0] && data[0].record && data[0].record.record) return data[0].record.record;
-        return data;
+    function listFromJson(x) {
+      if (!x) return [];
+      if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
+      if (x && typeof x === 'object') {
+        if (x.record !== undefined) return listFromJson(x.record);
+        if (x.records !== undefined) return listFromJson(x.records);
+        // 也接受單筆物件
+        if (x.id && x.timestamp && Array.isArray(x.measurements)) return [x];
       }
-      if (data && data.record && Array.isArray(data.record)) return data.record;
       return [];
     }
-    function isValidRecord(r){ return r && (r.id || r.timestamp || r.inspector || r.supplier || r.partNo); }
 
-    function buildUnifiedTable(appearance, measurements){
-      // appearance 是陣列（長度 5 以內），元素可能為 '', 'O.K', 'NG'
-      const hasAp = Array.isArray(appearance) && appearance.some(x => String(x||'').trim() !== '');
-      const apRow = hasAp ? `
+    function buildUnifiedTable(app, list){
+      const head = `
+        <thead>
+          <tr>
+            <th>${t('col_item')}</th>
+            <th>${t('col_nominal')}</th>
+            <th>${t('col_tol_minus')}</th>
+            <th>${t('col_tol_plus')}</th>
+            <th>${t('col_m1')}</th>
+            <th>${t('col_m2')}</th>
+            <th>${t('col_m3')}</th>
+            <th>${t('col_m4')}</th>
+            <th>${t('col_m5')}</th>
+            <th>${t('col_judgement')}</th>
+          </tr>
+        </thead>`;
+
+      /* 1) 外觀列：把物件陣列轉成「樣品序號 → 結果字串」 */
+      const appMap = {};
+      if (Array.isArray(app)) {
+        for (const a of app) {
+          const m = String(a.sample || '').match(/(\d+)/);  // 樣品1 → 1
+          const idx = m ? Number(m[1]) : null;
+          if (idx && idx >= 1 && idx <= 5) appMap[idx] = fmtOkNg(a.result || '');
+        }
+      }
+      const hasApp = Object.keys(appMap).length > 0;
+      const cells = [1,2,3,4,5].map(i => escapeHtml(appMap[i] || ''));
+      const passApp = hasApp && Object.values(appMap).every(v => (v==='OK' || v==='O.K')); // 中文顯示 O.K 也算 OK
+
+      const rowApp = hasApp ? `
         <tr>
-          <th>${t('appearance') || '外觀'}</th>
-          <td colspan="3"></td>
-          ${[0,1,2,3,4].map(i => `<td>${escapeHtml(appearance[i]||'')}</td>`).join('')}
-          <td></td>
+          <td><strong>${t('appearance')}</strong></td>
+          <td></td><td></td><td></td>
+          <td>${cells[0]}</td>
+          <td>${cells[1]}</td>
+          <td>${cells[2]}</td>
+          <td>${cells[3]}</td>
+          <td>${cells[4]}</td>
+          <td>${passApp ? 'PASS' : 'FAIL'}</td>
         </tr>` : '';
 
-      const rows = (Array.isArray(measurements)?measurements:[]).map(m=>{
-        const name = m.name || '';
-        const nom  = (m.nominal!=null? m.nominal : '');
-        const lo   = (m.tolMinus!=null? m.tolMinus : '');
-        const hi   = (m.tolPlus!=null? m.tolPlus : '');
-        const m1=m.m1??m.measured1??m.measured?.[0]??'', m2=m.m2??m.measured2??m.measured?.[1]??'';
-        const m3=m.m3??m.measured3??m.measured?.[2]??'', m4=m.m4??m.measured4??m.measured?.[3]??'';
-        const m5=m.m5??m.measured5??m.measured?.[4]??'';
-        const dec = m.decision || m.pass;
-        const decTxt = typeof dec==='boolean' ? (dec?'PASS':'FAIL') : (dec||'');
+      /* 2) 尺寸列 */
+      const rows = (Array.isArray(list) ? list : []).map(m=>{
+        const arr =
+          Array.isArray(m.measured) ? m.measured :
+          ((typeof m.measured==='number' || (typeof m.measured==='string'&&m.measured!=='')) ? [m.measured] : []);
+        const cs = [0,1,2,3,4].map(i=>fmtNum(arr[i]));
+        const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : escapeHtml(String(m.decision||''));
         return `
           <tr>
-            <td>${escapeHtml(name)}</td>
-            <td>${nom}</td>
-            <td>${lo}</td>
-            <td>${hi}</td>
-            <td>${m1}</td>
-            <td>${m2}</td>
-            <td>${m3}</td>
-            <td>${m4}</td>
-            <td>${m5}</td>
-            <td>${escapeHtml(decTxt)}</td>
+            <td>${escapeHtml(m.name||'')}</td>
+            <td>${fmtNum(m.nominal)}</td>
+            <td>${fmtNum(m.tolMinus)}</td>
+            <td>${fmtNum(m.tolPlus)}</td>
+            <td>${cs[0]}</td>
+            <td>${cs[1]}</td>
+            <td>${cs[2]}</td>
+            <td>${cs[3]}</td>
+            <td>${cs[4]}</td>
+            <td>${dec}</td>
           </tr>`;
       }).join('');
 
-      if (!hasAp && !rows) return '<div class="muted">（無明細）</div>';
+      if (!hasApp && !rows) return '<div class="muted">（無明細）</div>';
 
-      return `
-        <table class="mini">
-          <thead>
-            <tr>
-              <th>${t('col_item')}</th>
-              <th>${t('col_nominal')}</th>
-              <th>${t('col_tol_minus')}</th>
-              <th>${t('col_tol_plus')}</th>
-              <th>${t('col_m1')}</th>
-              <th>${t('col_m2')}</th>
-              <th>${t('col_m3')}</th>
-              <th>${t('col_m4')}</th>
-              <th>${t('col_m5')}</th>
-              <th>${t('col_judgement')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${apRow}
-            ${rows}
-          </tbody>
-        </table>`;
+      return `<table class="mini">${head}<tbody>${rowApp}${rows}</tbody></table>`;
+    }
+
+    async function loadRecord(){
+      tip.textContent = '';
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      const res = await fetch('/api/inspections', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+      const text = await res.text(); let data={}; try{ data=JSON.parse(text);}catch{ data = {}; }
+      if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
+      const list = listFromJson(data);
+      const rec = list.find(r => r.id === ID);
+      if (!rec) { tip.textContent = '找不到這筆資料'; return; }
+
+      curr = rec; // 給 applyI18n 重建表格用
+
+      document.getElementById('f-id').textContent = rec.id || '';
+      document.getElementById('f-time').textContent = rec.timestamp ? (new Date(rec.timestamp)).toLocaleString() : '';
+      document.getElementById('f-inspector').textContent = rec.inspector || '';
+      document.getElementById('f-overall').textContent = (rec.overallResult || rec.overall || '');
+      document.getElementById('f-supplier').textContent = rec.supplier || '';
+      document.getElementById('f-part').textContent = rec.partNo || '';
+      document.getElementById('f-draw').textContent = rec.drawingNo || '';
+      document.getElementById('f-rev').textContent = rec.revision || '';
+      document.getElementById('f-notes').textContent = rec.notes || '';
+
+      document.getElementById('unified').innerHTML = buildUnifiedTable(rec.appearance || [], rec.measurements || []);
     }
 
     // 啟動流程
     (async () => {
       applyI18n();
       await ensureAuth();
-      await chooseLanguageIfNeeded(); // 若未選過語言，先選語言再載資料
-      try {
-        await loadRecord();
-      } catch(e) {
-        document.getElementById('tip').textContent = '❌ ' + (e.message||e);
-      }
+      await chooseLanguageIfNeeded();   // 第一次沒選過才會出現
+      try { await loadRecord(); } catch(e) { document.getElementById('tip').textContent = '載入失敗：' + e.message; }
     })();
   </script>
 </body>
