@@ -227,7 +227,6 @@
     }
 
     function buildUnifiedTable(appearance, measurements) {
-      // 產生「樣品/實測1～5」欄位
       const head = `
         <thead>
           <tr>
@@ -244,7 +243,7 @@
           </tr>
         </thead>`;
 
-      // 外觀第1列
+      // 外觀第1列（只有有資料才顯示）
       const appMap = {};
       if (Array.isArray(appearance)) {
         for (const a of appearance) {
@@ -253,9 +252,10 @@
           if (idx && idx >= 1 && idx <= 5) appMap[idx] = String(a.result || '').toUpperCase();
         }
       }
+      const hasApp = Object.keys(appMap).length > 0;
       const appCells = [1,2,3,4,5].map(i => escapeHtml(appMap[i] || ''));
-      const appPass = (Object.keys(appMap).length > 0) && Object.values(appMap).every(v => v === 'OK');
-      const rowAppearance = `
+      const appPass = hasApp && Object.values(appMap).every(v => v === 'OK');
+      const rowAppearance = hasApp ? `
         <tr>
           <td><strong>外觀</strong></td>
           <td></td><td></td><td></td>
@@ -264,8 +264,8 @@
           <td>${appCells[2]}</td>
           <td>${appCells[3]}</td>
           <td>${appCells[4]}</td>
-          <td>${Object.keys(appMap).length ? (appPass ? 'PASS' : 'FAIL') : '—'}</td>
-        </tr>`;
+          <td>${appPass ? 'PASS' : 'FAIL'}</td>
+        </tr>` : '';
 
       // 尺寸列（第2列起）
       const rowsMeasure = (Array.isArray(measurements) ? measurements : []).map(m => {

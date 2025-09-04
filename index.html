@@ -82,9 +82,9 @@
         <textarea id="notes" rows="2" placeholder="例如：現場尺寸穩定/外觀無瑕疵"></textarea>
       </div>
 
-      <!-- 整合表：第1列＝外觀；第2列起＝尺寸 -->
+      <!-- 整合表：第1列＝外觀（可略過）；第2列起＝尺寸 -->
       <h3 style="margin-top:20px">尺寸與外觀檢驗</h3>
-      <p class="hint">第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（請於「實測1～5」各自選 O.K / NG；至少選一個）。從第 <strong>2</strong> 列開始為尺寸量測。</p>
+      <p class="hint">第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。</p>
 
       <table id="tbl">
         <thead>
@@ -164,7 +164,7 @@
           localStorage.setItem('qci_role', info.role);
           showByRole(info.role);
           if (info.role !== 'viewer') {
-            ensureAppearanceRow();                  // 外觀列
+            ensureAppearanceRow();                  // 外觀列（可留空）
             if (countMeasureRows() === 0) ensureMeasureRows(2); // 預設兩列尺寸
           }
           loginMsg.textContent = '';
@@ -222,7 +222,7 @@
       } catch { return null; }
     }
 
-    /* ======== 外觀（第1列） + 尺寸（第2列起） ======== */
+    /* ======== 外觀（第1列，可留空） + 尺寸（第2列起） ======== */
 
     function ensureAppearanceRow() {
       if (tbody.querySelector('tr[data-type="appearance"]')) return;
@@ -370,13 +370,13 @@
 
       const rows = [...tbody.querySelectorAll('tr')];
 
-      // 1) 外觀列（實測1～5 各自可 O.K / NG）
+      // 1) 外觀列（可完全留空）
       const apRow = rows.find(tr => tr.dataset.type === 'appearance');
       const sels = apRow ? [...apRow.querySelectorAll('select.ap')] : [];
       const apValues = sels.map((s, i) => ({ i: i+1, v: (s.value || '').toUpperCase() })).filter(x => x.v);
-      if (apValues.length === 0) { alert('請至少在外觀選擇一個實測結果（O.K / NG）'); return null; }
       const appearance = apValues.map(x => ({ sample: `樣品${x.i}`, result: x.v, note: '' }));
-      const appearancePass = appearance.every(x => x.result === 'OK');
+      const hasAppearance = appearance.length > 0;
+      const appearancePass = !hasAppearance || appearance.every(x => x.result === 'OK'); // 空白=不影響
 
       // 2) 尺寸列
       const measureRows = rows.filter(tr => tr.dataset.type !== 'appearance');
@@ -404,7 +404,7 @@
       }
       if (measurements.length === 0) { alert('至少需要一筆尺寸資料'); return null; }
 
-      // 總結果：外觀 + 尺寸
+      // 總結果：外觀（若有填才計入）＋ 尺寸
       const overall = (allDimPass && appearancePass) ? 'PASS' : 'FAIL';
 
       const now = new Date();
@@ -414,7 +414,7 @@
         id, timestamp: isoLocal, inspector: inspectorName,
         supplier, partNo, drawingNo, revision, notes,
         measurements,
-        appearance,                  // ← 外觀「實測1～5」已轉為陣列
+        appearance,                  // 可能是 []（外觀留空）
         overallResult: overall
       };
     }

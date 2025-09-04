@@ -70,7 +70,7 @@
       <div style="margin-top:8px"><strong>備註：</strong><span id="f-notes"></span></div>
     </div>
 
-    <!-- 外觀與量測明細（合併） -->
+    <!-- 外觀與量測明細（合併；外觀有資料才顯示） -->
     <div class="block" style="margin-top:10px">
       <h3>外觀與量測明細</h3>
       <div id="unified"></div>
@@ -153,7 +153,7 @@
           </tr>
         </thead>`;
 
-      // 外觀第1列
+      // 外觀第1列（有資料才顯示）
       const appMap = {};
       if (Array.isArray(app)) {
         for (const a of app) {
@@ -162,9 +162,10 @@
           if (idx && idx >= 1 && idx <= 5) appMap[idx] = String(a.result || '').toUpperCase();
         }
       }
+      const hasApp = Object.keys(appMap).length > 0;
       const cells = [1,2,3,4,5].map(i => esc(appMap[i] || ''));
-      const pass = (Object.keys(appMap).length > 0) && Object.values(appMap).every(v => v === 'OK');
-      const rowApp = `
+      const pass = hasApp && Object.values(appMap).every(v => v === 'OK');
+      const rowApp = hasApp ? `
         <tr>
           <td><strong>外觀</strong></td>
           <td></td><td></td><td></td>
@@ -173,8 +174,8 @@
           <td>${cells[2]}</td>
           <td>${cells[3]}</td>
           <td>${cells[4]}</td>
-          <td>${Object.keys(appMap).length ? (pass ? 'PASS' : 'FAIL') : '—'}</td>
-        </tr>`;
+          <td>${pass ? 'PASS' : 'FAIL'}</td>
+        </tr>` : '';
 
       // 尺寸列
       const rows = (Array.isArray(list) ? list : []).map(m=>{
