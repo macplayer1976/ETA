@@ -320,7 +320,7 @@
         localStorage.setItem('qci_passcode', pass);
       }
       try {
-        const res = await fetch('/api/inspections?diag=1', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+        const res = await fetch('/api/inspections?auth=1', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
         const t = await res.text(); let j={}; try{ j=JSON.parse(t);}catch{}
         if (!res.ok || !j.ok) return { ok:false };
         const role = (j.role||'').toLowerCase();
