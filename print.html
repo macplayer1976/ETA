@@ -88,7 +88,7 @@
     <div class="block" style="margin-top:10px">
       <h3 data-i18n="section_sign">簽核</h3>
       <div class="sign">
-        <div class="cell"><small data-i18n="sign_inspector">檢驗人員</small><div id="sign-inspector-name" style="margin-top:4px"></div></div>
+        <div class="cell"><small data-i18n="sign_inspector">檢驗人員</small></div>
         <div class="cell"><small data-i18n="sign_qc">品保主管</small></div>
         <div class="cell"><small data-i18n="sign_approve">核准</small></div>
       </div>
@@ -258,10 +258,10 @@
     function mapProcess(code){
       const p = PROCESSES.find(x => x.code === String(code||'').toUpperCase());
       if (!p) return '';
-      const lang = getLang() || 'zh-Hant';
+      const lang = getLang ? (getLang() || 'zh-Hant') : 'zh-Hant';
       return (lang==='en') ? p.en : `${p.zh} (${p.en})`;
     }
-
+    
     function applyI18n(){
       document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
       const titleEl = document.querySelector('title[data-i18n="title_print"]');
@@ -432,8 +432,7 @@
       document.getElementById('f-draw').textContent = rec.drawingNo || '';
       document.getElementById('f-rev').textContent = rec.revision || '';
       document.getElementById('f-notes').textContent = rec.notes || '';
-      document.getElementById('f-process').textContent = mapProcess(rec.process);
-      const signName = document.getElementById('sign-inspector-name'); if (signName) signName.textContent = rec.inspector || '';
+      const fp = document.getElementById('f-process'); if (fp) fp.textContent = mapProcess(rec.process);
 
       document.getElementById('unified').innerHTML = buildUnifiedTable(rec.appearance || [], rec.measurements || []);
     }
