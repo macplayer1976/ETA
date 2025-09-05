@@ -71,7 +71,10 @@
       <div class="row">
         <div><strong data-i18n="f_supplier">供應商：</strong><span id="f-supplier"></span></div>
         <div><strong data-i18n="f_partno">料號 Part No.：</strong><span id="f-part"></span></div>
-        <div><strong data-i18n="f_drawing">圖號 Drawing No.：</strong><span id="f-draw"></span></div></div>
+        <div><strong data-i18n="f_drawing">圖號 Drawing No.：</strong><span id="f-draw"></span></div>
+        <div><strong data-i18n="f_revision">版次 Revision：</strong><span id="f-rev"></span></div>
+        <div><strong data-i18n="f_process">製程 Process：</strong><span id="f-process"></span></div>
+      </div>
       <div style="margin-top:8px"><strong data-i18n="f_notes">備註：</strong><span id="f-notes"></span></div>
     </div>
 
@@ -107,6 +110,33 @@
 
   <script>
     /* ---- I18N ---- */
+
+    const PROCESSES = [
+      { code:'WIRE',     zh:'線材',   cn:'线材',   en:'WIRE' },
+      { code:'FORMING',  zh:'成形',   cn:'成形',   en:'FORMING' },
+      { code:'TAPING',   zh:'攻牙',   cn:'攻牙',   en:'TAPING' },
+      { code:'CUTTING',  zh:'割溝',   cn:'割沟',   en:'CUTTING' },
+      { code:'PLATING',  zh:'電鍍',   cn:'电镀',   en:'PLATING' },
+      { code:'FINISHED', zh:'成品',   cn:'成品',   en:'FINISHED' },
+      { code:'ASSEMBLY', zh:'組立',   cn:'组立',   en:'ASSEMBLY' },
+      { code:'FINAL',    zh:'最終成品', cn:'最终成品', en:'FINAL FINISHED' }
+    ];
+    function normalizeLang(s){
+      if (s === 'zh-TW') return 'zh-Hant';
+      if (s === 'zh-CN') return 'zh-Hans';
+      return s;
+    }
+    function getLang(){ const raw = localStorage.getItem('qci_lang'); const n = normalizeLang(raw); return n || 'zh-Hant'; }
+    function mapProcess(code){
+      if (!code) return '';
+      const p = PROCESSES.find(x => x.code === String(code).toUpperCase());
+      const lang = getLang();
+      if (!p) return code;
+      if (lang==='en') return p.en;
+      if (lang==='zh-Hans') return `${p.cn} (${p.en})`;
+      return `${p.zh} (${p.en})`;
+    }
+    
     const I18N = {
       "zh-Hant": {
         title_print: "安拓實業有限公司｜品檢報告（單筆）",
@@ -128,7 +158,8 @@
         f_supplier: "供應商：",
         f_partno: "料號 Part No.：",
         f_drawing: "圖號 Drawing No.：",
-f_notes: "備註：",
+        f_revision: "版次 Revision：",
+        f_notes: "備註：",
 
         col_item: "項目 / 尺寸",
         col_nominal: "名目",
@@ -165,7 +196,8 @@ f_notes: "備註：",
         f_supplier: "供应商：",
         f_partno: "料号 Part No.：",
         f_drawing: "图号 Drawing No.：",
-f_notes: "备注：",
+        f_revision: "版次 Revision：",
+        f_notes: "备注：",
 
         col_item: "项目 / 尺寸",
         col_nominal: "名义",
@@ -183,7 +215,7 @@ f_notes: "备注：",
         lang_tip: "请选择显示语言（之后可再更改）："
       },
       "en": {
-        title_print: "Antor Co., Ltd. | Inspection Report (Single)",
+        title_print: "Anchor Co., Ltd. | Inspection Report (Single)",
         title_print_inner: "Inspection Report",
         btn_print: "Print / Download PDF",
         btn_back: "Back to list",
@@ -202,7 +234,8 @@ f_notes: "备注：",
         f_supplier: "Supplier: ",
         f_partno: "Part No.: ",
         f_drawing: "Drawing No.: ",
-f_notes: "Notes: ",
+        f_revision: "Revision: ",
+        f_notes: "Notes: ",
 
         col_item: "Item / Dim.",
         col_nominal: "Nominal",
@@ -408,6 +441,7 @@ f_notes: "Notes: ",
       document.getElementById('f-draw').textContent = rec.drawingNo || '';
       document.getElementById('f-rev').textContent = rec.revision || '';
       document.getElementById('f-notes').textContent = rec.notes || '';
+      const fp = document.getElementById('f-process'); if (fp) fp.textContent = mapProcess(rec.process);
 
       document.getElementById('unified').innerHTML = buildUnifiedTable(rec.appearance || [], rec.measurements || []);
     }
