@@ -1,5 +1,5 @@
 // netlify/functions/inspections.js
-// 在不破壞原功能前提下，加入「input/viewer 可改帳號名、但密碼固定」的帳號擴充機制。
+// 擴充帳號模式 + 舊通關碼相容；GET 列表、POST 新增、DELETE 刪除（boss+admin）。
 exports.handler = async (event) => {
   const ENV = process.env || {};
   const API_KEY   = ENV.JSONBIN_API_KEY;
@@ -9,7 +9,7 @@ exports.handler = async (event) => {
   // 解析 ACCOUNTS_JSON（舊機制）
   const BASE_ACCOUNTS = parseAccounts(ENV.ACCOUNTS_JSON);
 
-  // 依環境變數擴充 input/viewer（新機制）；若沒設定，則回退到原本 BASE_ACCOUNTS
+  // 依環境變數擴充 input/viewer（新機制）
   const ACCOUNTS = buildAccounts(BASE_ACCOUNTS, {
     INPUT_USERS_CSV:   ENV.INPUT_USERS_CSV || '',
     INPUT_FIXED_PWD:   ENV.INPUT_FIXED_PWD || '',
@@ -31,83 +31,71 @@ exports.handler = async (event) => {
     return json(500, { error: 'Missing env: JSONBIN_API_KEY / JSONBIN_BIN_ID' });
   }
 
-  // --- 驗證（帳號模式 或 舊通關碼模式） ---
+  // --- 驗證 ---
   const auth = authenticate(ACCOUNTS, PASSCODE, event.headers);
-  if (!auth.ok) return json(auth.status || 401, { error: auth.error || 'Unauthorized' });
+  if (!auth.ok) return json(auth.status || 401, { ok:false, error: auth.error || 'Unauthorized' });
 
-  // 只回傳目前身分（前端登入檢查用）
+  // 回傳身份（前端登入檢查用）
   if (event.httpMethod === 'GET' && (qs.auth === '1' || qs.auth === 'true')) {
     return json(200, { ok: true, mode: auth.mode, role: auth.role, user: auth.user || '' });
   }
 
-  // --- 路由與授權 ---
-  // 診斷：admin / viewer
+  // 診斷資料（admin/viewer）
   if (event.httpMethod === 'GET' && (qs.diag === '1' || qs.diag === 'true')) {
-    if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { error: 'Forbidden' });
+    if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error: 'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
-    if (!g.ok) return json(g.status || 500, { error: 'JSONBIN GET failed', detail: g.text });
+    if (!g.ok) return json(g.status || 500, { ok:false, error: 'JSONBIN GET failed', detail: g.text });
     const list = listFromJson(g.json);
-    const last = list.length ? list[list.length - 1] : null;
-    return json(200, {
-      ok: true,
-      count: list.length,
-      last: last ? {
-        id: last.id, timestamp: last.timestamp, supplier: last.supplier,
-        partNo: last.partNo, inspector: last.inspector,
-        hasMeasurements: Array.isArray(last.measurements)
-      } : null
-    });
+    const last = list.length ? list[list.length-1] : null;
+    return json(200, { ok:true, count:list.length, last: last ? { id:last.id, timestamp:last.timestamp, inspector:last.inspector, hasMeasurements: Array.isArray(last.measurements) } : null });
   }
 
-  // 修復：僅 admin
+  // 修復（admin）
   if (event.httpMethod === 'GET' && (qs.repair === '1' || qs.repair === 'true')) {
-    if (!allow(auth.role, ['admin'])) return json(403, { error: 'Forbidden' });
+    if (!allow(auth.role, ['admin'])) return json(403, { ok:false, error:'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
-    if (!g.ok) return json(g.status || 500, { error: 'JSONBIN GET failed', detail: g.text });
+    if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
     let list = listFromJson(g.json);
     list = dedupById(list);
     const p = await jsonbinPut(BIN_ID, API_KEY, list);
-    if (!p.ok) return json(p.status || 500, { error: 'JSONBIN PUT failed', detail: p.text });
-    return json(200, { ok: true, repaired: list.length });
+    if (!p.ok) return json(p.status || 500, { ok:false, error:'JSONBIN PUT failed', detail:p.text });
+    return json(200, { ok:true, repaired:list.length });
   }
 
-  // 讀取清單：admin / viewer
+  // 讀清單（admin/viewer）
   if (event.httpMethod === 'GET') {
-    if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { error: 'Forbidden' });
+    if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error:'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
-    if (!g.ok) return json(g.status || 500, { error: 'JSONBIN GET failed', detail: g.text });
+    if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
     return json(200, listFromJson(g.json));
   }
 
-  // 新增一筆：admin / input
+  // 新增（admin/input）
   if (event.httpMethod === 'POST') {
-    if (!allow(auth.role, ['admin', 'input'])) return json(403, { error: 'Forbidden' });
-    let body = {};
-    try { body = JSON.parse(event.body || '{}'); } catch (e) { body = {}; }
-    if (!body || !body.record) return json(400, { error: 'Missing record' });
+    if (!allow(auth.role, ['admin', 'input'])) return json(403, { ok:false, error:'Forbidden' });
+    let body = {}; try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
+    if (!body || !body.record) return json(400, { ok:false, error:'Missing record' });
 
-    const result = await saveWithRetry(BIN_ID, API_KEY, body.record, 5);
-    if (!result.ok) return json(500, { error: 'Failed to save after retries', lastStatus: result.lastStatus, lastText: result.lastText });
-    return json(200, { ok: true });
+    const rec = sanitizeRecord(body.record, auth.user);
+    const result = await saveWithRetry(BIN_ID, API_KEY, rec, 5);
+    if (!result.ok) return json(500, { ok:false, error: 'Failed to save after retries', lastStatus: result.lastStatus, lastText: result.lastText });
+    return json(200, { ok:true, id: rec.id });
   }
 
-  // 刪除一筆：僅 boss（且是 admin）
+  // 刪除（boss+admin）
   if (event.httpMethod === 'DELETE') {
     const id = (qs.id || '').trim();
-    if (!id) return json(400, { error: 'Missing id' });
+    if (!id) return json(400, { ok:false, error:'Missing id' });
 
     const isBoss = (String(auth.user || '').toLowerCase() === 'boss') && allow(auth.role, ['admin']);
-    if (!isBoss) return json(403, { error: 'Forbidden' });
+    if (!isBoss) return json(403, { ok:false, error:'Forbidden' });
 
     const result = await deleteWithRetry(BIN_ID, API_KEY, id, 5);
-    if (!result.ok) {
-      const status = result.lastStatus || 500;
-      return json(status, { error: 'Failed to delete', lastStatus: result.lastStatus, lastText: result.lastText });
-    }
-    return json(200, { ok: true, deleted: result.deleted ? 1 : 0, id });
+    if (!result.ok) return json(result.lastStatus || 500, { ok:false, error:'Failed to delete', lastStatus: result.lastStatus, lastText: result.lastText });
+    return json(200, { ok:true, deleted: result.deleted ? 1 : 0, id });
   }
 
-  return json(405, { error: 'Method Not Allowed' });
+  return json(405, { ok:false, error:'Method Not Allowed' });
 
   // ---- 小工具 ----
   function headers() {
@@ -121,33 +109,23 @@ exports.handler = async (event) => {
   function text(code, s)    { return { statusCode: code, headers: headers(), body: s }; }
 };
 
-/* ======= 帳號擴充（保留 admin，input/viewer 走固定密碼 + 可改帳號名） ======= */
+/* ======= 帳號擴充 ======= */
 function buildAccounts(baseAccounts, env) {
   const base = Array.isArray(baseAccounts) ? baseAccounts : [];
-  const admins = base.filter(a => (a.role || '').toLowerCase() === 'admin'); // admin 維持原樣
-
-  // 解析 CSV → 陣列（允許中英文、空白會自動修剪）
-  const parseCsv = (s) => String(s || '')
-    .split(/[,，\n]/).map(x => x.trim()).filter(Boolean);
-
+  const admins = base.filter(a => (a.role || '').toLowerCase() === 'admin');
+  const parseCsv = (s) => String(s || '').split(/[,，\n]/).map(x => x.trim()).filter(Boolean);
   const inputUsers  = parseCsv(env.INPUT_USERS_CSV);
   const viewerUsers = parseCsv(env.VIEWER_USERS_CSV);
   const inputPwd    = String(env.INPUT_FIXED_PWD || '');
   const viewerPwd   = String(env.VIEWER_FIXED_PWD || '');
-
-  // 若有設定新的 CSV + 固定密碼 → 以新機制擴充（搭配 admin）
   if ((inputUsers.length && inputPwd) || (viewerUsers.length && viewerPwd)) {
     const out = [...admins];
     for (const u of inputUsers)  out.push({ user: u, pwd: inputPwd,  role: 'input'  });
     for (const u of viewerUsers) out.push({ user: u, pwd: viewerPwd, role: 'viewer' });
-    // 去重（同帳號+角色只保留一筆；admin 不受影響）
-    const key = (a) => `${(a.role||'').toLowerCase()}::${String(a.user||'')}`;
     const seen = new Set(); const uniq = [];
-    for (const a of out) { const k = key(a); if (!seen.has(k)) { seen.add(k); uniq.push(a); } }
+    for (const a of out){ const k = (a.role||'').toLowerCase()+'::'+String(a.user||''); if (!seen.has(k)){ seen.add(k); uniq.push(a); } }
     return uniq;
   }
-
-  // 沒設定新機制 → 完全沿用原本 ACCOUNTS_JSON
   return base;
 }
 
@@ -167,18 +145,16 @@ function authenticate(accounts, passcodeEnv, headers) {
   const pass = (h['x-pass'] || h['X-Pass'] || '').trim();
   const team = (h['x-passcode'] || h['X-Passcode'] || '').trim();
 
-  // 有帳號清單 → 帳號模式
   if (accounts && accounts.length) {
     const found = accounts.find(a => String(a.user) === user && String(a.pwd) === pass);
-    if (!found) return { ok: false, status: 401, error: 'Unauthorized' };
+    if (!found) return { ok:false, status:401, error:'Unauthorized' };
     const role = (found.role || 'input').toLowerCase();
-    return { ok: true, mode: 'accounts', role, user };
+    return { ok:true, mode:'accounts', role, user };
   }
-  // 否則退回舊通關碼模式（相容舊版）
   if (!passcodeEnv || team !== passcodeEnv) {
-    return { ok: false, status: 401, error: 'Unauthorized' };
+    return { ok:false, status:401, error:'Unauthorized' };
   }
-  return { ok: true, mode: 'passcode', role: 'admin', user: user || '' }; // 舊模式視為 admin
+  return { ok:true, mode:'passcode', role:'admin', user:user || '' };
 }
 function allow(role, list) { return list.includes((role || '').toLowerCase()); }
 
@@ -198,74 +174,80 @@ async function jsonbinGet(binId, apiKey) {
 async function jsonbinPut(binId, apiKey, list) {
   try {
     const r = await fetch('https://api.jsonbin.io/v3/b/' + binId, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey },
-      body: JSON.stringify({ record: list }),
+      method:'PUT', headers:{ 'Content-Type':'application/json', 'X-Master-Key': apiKey },
+      body: JSON.stringify({ record: list })
     });
     const text = await r.text();
-    return { ok: r.ok, status: r.status, text };
+    return { ok:r.ok, status:r.status, text };
   } catch (e) {
-    return { ok: false, status: 0, text: String(e) };
+    return { ok:false, status:0, text:String(e) };
   }
 }
 
-/* ======= 攤平 + 去重 ＆ 儲存/刪除 重試 ======= */
-function looksLikeRecord(o) {
-  return o && typeof o === 'object'
-    && typeof o.id === 'string'
-    && typeof o.timestamp === 'string'
-    && Array.isArray(o.measurements);
-}
-function listFromJson(x) {
-  if (!x) return [];
-  if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
-  if (looksLikeRecord(x)) return [x];
-  if (x && typeof x === 'object') {
-    if (x.record !== undefined) return listFromJson(x.record);
-    if (x.records !== undefined) return listFromJson(x.records);
-  }
+/* ======= 資料處理 ======= */
+function listFromJson(data){
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (data.record) return listFromJson(data.record);
+  if (data.records) return listFromJson(data.records);
+  if (data.id && data.timestamp) return [data];
   return [];
 }
-function dedupById(list) {
+function dedupById(arr){
   const seen = new Set(); const out = [];
-  for (const item of list) {
-    const id = item && item.id ? String(item.id) : '';
-    if (!id) continue;
-    if (!seen.has(id)) { seen.add(id); out.push(item); }
+  for (const x of arr){
+    const id = String(x && x.id || '');
+    if (!id || seen.has(id)) continue;
+    seen.add(id); out.push(x);
   }
   return out;
 }
-async function saveWithRetry(binId, apiKey, newRecord, maxTry) {
-  let lastStatus = 0, lastText = '';
-  for (let i = 0; i < maxTry; i++) {
-    const g = await jsonbinGet(binId, apiKey);
-    if (!g.ok) { lastStatus = g.status; lastText = g.text; await sleep(120 * (i + 1)); continue; }
-    const latest = listFromJson(g.json);
-    const merged = dedupById([...latest, newRecord]);
-    const p = await jsonbinPut(binId, apiKey, merged);
-    if (p.ok) return { ok: true };
-    lastStatus = p.status; lastText = p.text;
-    await sleep(150 * (i + 1));
-  }
-  return { ok: false, lastStatus, lastText };
+function sanitizeRecord(r, who){
+  try{
+    const now = new Date().toISOString();
+    const id = r.id && String(r.id) || `INS-${now.replace(/\D/g,'').slice(0,14)}-${Math.floor(100+Math.random()*900)}`;
+    return {
+      id, timestamp: r.timestamp || now,
+      inspector: r.inspector || who || '',
+      supplier: r.supplier || '', supplierEn: r.supplierEn || '', supplierCode: r.supplierCode || '',
+      partNo: r.partNo || '', drawingNo: r.drawingNo || '',
+      revision: r.revision || '',
+      process: r.process || r.processCode || '',
+      notes: r.notes || '',
+      appearance: Array.isArray(r.appearance) ? r.appearance : [],
+      measurements: Array.isArray(r.measurements) ? r.measurements : [],
+      overallResult: r.overallResult || ''
+    };
+  }catch{ return r; }
 }
-async function deleteWithRetry(binId, apiKey, id, maxTry) {
-  let lastStatus = 0, lastText = '';
-  for (let i = 0; i < maxTry; i++) {
+
+/* ======= 儲存/刪除（重試） ======= */
+async function saveWithRetry(binId, apiKey, record, maxTry){
+  let tries=0, lastStatus=0, lastText='';
+  while (tries < (maxTry||3)){
+    tries++;
     const g = await jsonbinGet(binId, apiKey);
-    if (!g.ok) { lastStatus = g.status; lastText = g.text; await sleep(120 * (i + 1)); continue; }
-
-    const latest = listFromJson(g.json);
-    const exists = latest.some(it => it && String(it.id) === String(id));
-    if (!exists) return { ok: true, deleted: 0 }; // 已不存在，視為成功
-
-    const kept = latest.filter(it => it && String(it.id) !== String(id));
-    const p = await jsonbinPut(binId, apiKey, kept);
-    if (p.ok) return { ok: true, deleted: 1 };
-
+    if (!g.ok){ lastStatus=g.status; lastText=g.text; continue; }
+    const list = listFromJson(g.json);
+    list.push(record);
+    const p = await jsonbinPut(binId, apiKey, list);
+    if (p.ok) return { ok:true };
     lastStatus = p.status; lastText = p.text;
-    await sleep(150 * (i + 1));
+    await new Promise(r => setTimeout(r, 250*tries));
   }
-  return { ok: false, lastStatus, lastText };
+  return { ok:false, lastStatus, lastText };
 }
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+async function deleteWithRetry(binId, apiKey, id, maxTry){
+  let tries=0, lastStatus=0, lastText='';
+  while (tries < (maxTry||3)){
+    tries++;
+    const g = await jsonbinGet(binId, apiKey);
+    if (!g.ok){ lastStatus=g.status; lastText=g.text; continue; }
+    const list = listFromJson(g.json).filter(x => x && x.id !== id);
+    const p = await jsonbinPut(binId, apiKey, list);
+    if (p.ok) return { ok:true, deleted:true };
+    lastStatus = p.status; lastText = p.text;
+    await new Promise(r => setTimeout(r, 250*tries));
+  }
+  return { ok:false, lastStatus, lastText };
+}
