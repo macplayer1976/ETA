@@ -1,167 +1,131 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>單筆品檢報告｜QC</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>單筆列印</title>
   <style>
-    @media print {.noprint{display:none !important} }
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,'Noto Sans',sans-serif;background:#fff;margin:0}
-    header{padding:12px 16px;border-bottom:2px solid #0f172a}
-    .title{font-size:20px;font-weight:700;margin-top:6px}
-    .wrap{max-width:900px;margin:12px auto;padding:0 12px}
-    .row{display:flex;gap:8px;flex-wrap:wrap}
-    .row>div{flex:1 1 220px}
-    table{width:100%;border-collapse:collapse;margin-top:8px}
-    th,td{border:1px solid #e5e7eb;padding:6px 8px;text-align:center}
-    th{background:#f8fafc}
-    .result{font-weight:700}
-    .pass{color:#16a34a}.fail{color:#dc2626}
-    .sign{margin-top:14px;border:1px solid #e5e7eb;border-radius:8px;padding:8px}
-    .btn{background:#0ea5e9;color:#fff;border:none;border-radius:8px;padding:8px 12px;cursor:pointer}
-    .btn.outline{background:#fff;color:#0ea5e9;border:1px solid #0ea5e9}
-    .muted{color:#64748b}
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding:18px; }
+    .card { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border:1px solid #ddd; padding:8px; vertical-align: top; }
+    th { background:#f7f7f7; }
+    .noprint { display:block; }
+    @media print { .noprint { display:none; } body { padding:0; } }
   </style>
 </head>
 <body>
-  <header>
-    <div><strong>ANCHOR FASTENERS INDUSTRIAL CO., LTD.</strong></div>
-    <div class="title">品檢報告 Inspection Report</div>
-    <div class="noprint" style="margin-top:8px">
-      <button class="btn" onclick="window.print()">列印 / 下載 PDF</button>
-      <a class="btn outline" href="report.html">返回列表</a>
-      <span class="muted" id="tip"></span>
+  <div class="card">
+    <div class="noprint" style="text-align:right">
+      <button onclick="window.print()">列印</button>
+      <a href="report.html">返回列表</a>
     </div>
-  </header>
-  <div class="wrap">
-    <div class="row">
-      <div><strong>報告編號：</strong><span id="f-id"></span></div>
-      <div><strong>檢驗時間：</strong><span id="f-time"></span></div>
-      <div><strong>檢驗人員：</strong><span id="f-inspector"></span></div>
-      <div><strong>檢驗結果：</strong><span id="f-overall" class="result"></span></div>
-    </div>
+    <h1>安拓實業有限公司（ANCHOR FASTENERS INDUSTRIAL CO., LTD.）</h1>
+    <h2 style="margin:4px 0 8px">品檢報告</h2>
 
-    <div class="row" style="margin-top:6px">
-      <div><strong>供應商：</strong><span id="f-supplier"></span></div>
-      <div><strong>料號：</strong><span id="f-part"></span></div>
-      <div><strong>圖號：</strong><span id="f-draw"></span></div>
-      <div><strong>製程：</strong><span id="f-proc"></span></div>
-    </div>
-    <div style="margin-top:6px"><strong>備註：</strong><span id="f-notes"></span></div>
+    <table>
+      <tbody id="basic"></tbody>
+    </table>
 
-    <h3 style="margin-top:12px">外觀與量測明細</h3>
-    <div id="unified"></div>
+    <div id="appearance"></div>
+    <div id="measures"></div>
 
-    <div class="sign">
-      <div class="row">
-        <div><strong>檢驗人員</strong><div id="sign-inspector" style="height:42px"></div></div>
-        <div><strong>品保主管</strong><div style="height:42px"></div></div>
-        <div><strong>核准</strong><div style="height:42px"></div></div>
-      </div>
-    </div>
+    <table>
+      <thead><tr><th>簽核</th><th>姓名</th><th>備註</th></tr></thead>
+      <tbody>
+        <tr><td>檢驗人員</td><td id="sign-inspector"></td><td></td></tr>
+        <tr><td>組長</td><td></td><td></td></tr>
+        <tr><td>主管</td><td></td><td></td></tr>
+      </tbody>
+    </table>
   </div>
 
   <script>
-    const qs = new URLSearchParams(location.search);
-    const ID = qs.get('id')||'';
-    const tip = document.getElementById('tip');
+    const id = new URLSearchParams(location.search).get('id') || '';
+    if (!id){ document.body.innerHTML = '<p>缺少 id</p>'; }
 
-    function looksLikeRecord(o){ return o && typeof o==='object' && ('id'in o) && Array.isArray(o.measurements); }
-    function listFromJson(data){
-      if (Array.isArray(data)){
-        return data.flatMap(x=>{
-          if (looksLikeRecord(x)) return [x];
-          if (x && typeof x==='object'){
-            if (looksLikeRecord(x.record)) return [x.record];
-            if (x.record && Array.isArray(x.record)) return x.record.filter(looksLikeRecord);
-            if (Array.isArray(x.records)) return x.records.filter(looksLikeRecord);
-          }
-          return [];
-        });
+    function esc(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+    function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
+
+    async function load(){
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      const r = await fetch('/api/inspections', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+      const t = await r.text(); let data={}; try{ data=JSON.parse(t);}catch{ data=t; }
+      const list = listFromJson(data);
+      const rec = list.find(x => x.id===id);
+      if (!rec){ document.body.innerHTML = '<p>找不到資料</p>'; return; }
+
+      document.getElementById('sign-inspector').textContent = rec.inspector || '';
+
+      // 基本
+      document.getElementById('basic').innerHTML = `
+        <tr><th style="width:22%">ID</th><td>${esc(rec.id||'')}</td></tr>
+        <tr><th>時間</th><td>${esc(formatTime(rec.timestamp))}</td></tr>
+        <tr><th>檢驗人員</th><td>${esc(rec.inspector||'')}</td></tr>
+        <tr><th>供應商</th><td>${esc(rec.supplier||'')}</td></tr>
+        <tr><th>製程</th><td>${esc(rec.processLabel || rec.process || '')}</td></tr>
+        <tr><th>料號</th><td>${esc(rec.partNo||'')}</td></tr>
+        <tr><th>圖號</th><td>${esc(rec.drawingNo||'')}</td></tr>
+        <tr><th>備註</th><td>${esc(rec.notes||'')}</td></tr>
+        <tr><th>總判定</th><td><strong>${rec.overallResult==='PASS'?'✅ PASS':'❌ FAIL'}</strong></td></tr>
+      `;
+
+      // 外觀（如果有）
+      const ap = Array.isArray(rec.appearance) ? rec.appearance : [];
+      if (ap.length){
+        const rows = ap.map(a => \`<tr><td>\${esc(a.sample||'')}</td><td>\${esc(a.result||'')}</td></tr>\`).join('');
+        document.getElementById('appearance').innerHTML = \`
+          <table><thead><tr><th>外觀樣品</th><th>結果</th></tr></thead>
+          <tbody>\${rows}</tbody></table>\`;
       }
-      if (data && typeof data==='object'){
-        if (looksLikeRecord(data)) return [data];
-        if (data.record && Array.isArray(data.record)) return data.record.filter(looksLikeRecord);
-        if (Array.isArray(data.records)) return data.records.filter(looksLikeRecord);
+
+      // 尺寸
+      const rows = (rec.measurements||[]).map(m => {
+        const arr = Array.isArray(m.measured) ? m.measured
+                 : ((typeof m.measured === 'number') || (typeof m.measured === 'string' && m.measured!=='')) ? [m.measured] : [];
+        const cells = [0,1,2,3,4].map(i => num(arr[i]));
+        const judge = (m.pass===''? '' : (m.pass ? 'PASS' : 'FAIL'));
+        return \`
+          <tr>
+            <td>\${esc(m.name||'')}</td><td>\${num(m.nominal)}</td><td>\${num(m.tolMinus)}</td><td>\${num(m.tolPlus)}</td>
+            <td>\${cells[0]}</td><td>\${cells[1]}</td><td>\${cells[2]}</td><td>\${cells[3]}</td><td>\${cells[4]}</td>
+            <td>\${judge}</td>
+          </tr>\`;
+      }).join('');
+      document.getElementById('measures').innerHTML = \`
+        <table>
+          <thead>
+            <tr>
+              <th>尺寸</th><th>名目</th><th>下限公差</th><th>上限公差</th>
+              <th>實測1</th><th>實測2</th><th>實測3</th><th>實測4</th><th>實測5</th><th>判定</th>
+            </tr>
+          </thead>
+          <tbody>\${rows}</tbody>
+        </table>\`;
+    }
+
+    function listFromJson(x){
+      if (!x) return [];
+      if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
+      if (looksLikeRecord(x)) return [x];
+      if (typeof x === 'object'){
+        if (x.data) return listFromJson(x.data);
+        if (x.record !== undefined) return listFromJson(x.record);
+        if (x.records !== undefined) return listFromJson(x.records);
       }
       return [];
     }
-    function rowJudgement(m){
-      const nom=Number(m.nominal),lo=Number(m.tolMinus),hi=Number(m.tolPlus);
-      if (isNaN(nom)||isNaN(lo)||isNaN(hi)) return '';
-      const min=nom+lo,max=nom+hi;
-      const vals=(m.measured||[]).filter(v=>v===0||v).map(Number);
-      if (vals.length===0) return '';
-      return vals.every(v=>v>=min&&v<=max)?'PASS':'FAIL';
+    function looksLikeRecord(o){
+      return o && typeof o==='object'
+        && typeof o.id==='string'
+        && typeof o.timestamp==='string'
+        && Array.isArray(o.measurements);
     }
-    function renderUnified(rec){
-      const hasAp = Array.isArray(rec.appearance) && rec.appearance.some(a => a && (a.result||a.sample));
-      let html = '<table><thead><tr><th>項目 / 尺寸</th><th>名目</th><th>下限公差</th><th>上限公差</th><th>樣品/實測1</th><th>樣品/實測2</th><th>樣品/實測3</th><th>樣品/實測4</th><th>樣品/實測5</th><th>判定</th></tr></thead><tbody>';
-      if (hasAp){
-        const ap = rec.appearance||[];
-        html += '<tr><td style="text-align:left">外觀</td><td></td><td></td><td></td>' +
-          [0,1,2,3,4].map(i=>`<td>${ap[i]?(ap[i].result||''):''}</td>`).join('') +
-          `<td>${ap.length?(ap.every(a=>String(a.result||'').toUpperCase()==='OK')?'PASS':'FAIL'):''}</td></tr>`;
-      }
-      (rec.measurements||[]).forEach(m=>{
-        const vals = Array.isArray(m.measured)?m.measured:[];
-        html += `<tr><td style="text-align:left">${m.name||''}</td>
-          <td>${m.nominal??''}</td><td>${m.tolMinus??''}</td><td>${m.tolPlus??''}</td>
-          ${[0,1,2,3,4].map(i=>`<td>${vals[i]??''}</td>`).join('')}
-          <td>${rowJudgement(m)}</td></tr>`;
-      });
-      html += '</tbody></table>';
-      document.getElementById('unified').innerHTML = html;
-    }
+    function formatTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
 
-    async function ensureAuth(){
-      let u=localStorage.getItem('qci_user')||'', p=localStorage.getItem('qci_pass')||'';
-      if (!u || !p){
-        u = prompt('帳號：')||''; p = prompt('密碼：')||'';
-        if(!u||!p) return false;
-        localStorage.setItem('qci_user',u); localStorage.setItem('qci_pass',p);
-      }
-      try{
-        const r = await fetch('/api/inspections?auth=1',{headers:{'x-user':u,'x-pass':p,'x-passcode':p}});
-        const t = await r.text(); let j={}; try{ j=JSON.parse(t);}catch{}
-        return r.ok && j && j.ok !== false && ['admin','viewer'].includes((j.role||'').toLowerCase());
-      }catch{ return false; }
-    }
-
-    async function load(){
-      tip.textContent = '讀取中...';
-      try{
-        const u = localStorage.getItem('qci_user')||'', p = localStorage.getItem('qci_pass')||'';
-        const r = await fetch('/api/inspections', { headers:{'x-user':u,'x-pass':p,'x-passcode':p} });
-        const text = await r.text();
-        if (!r.ok) throw new Error(text||('HTTP '+r.status));
-        let data={}; try{ data=JSON.parse(text);}catch{ data=[]; }
-        const list = listFromJson(data);
-        const rec = list.find(x => String(x.id||'')===ID);
-        if (!rec){ tip.textContent='找不到資料'; return; }
-        document.getElementById('f-id').textContent = rec.id||'';
-        document.getElementById('f-time').textContent = rec.timestamp?new Date(rec.timestamp).toLocaleString():'';
-        document.getElementById('f-inspector').textContent = rec.inspector||'';
-        document.getElementById('f-overall').textContent = rec.overallResult||'';
-        document.getElementById('f-overall').className = 'result ' + ((rec.overallResult||'')==='PASS'?'pass':'fail');
-        document.getElementById('f-supplier').textContent = rec.supplier||'';
-        document.getElementById('f-part').textContent = rec.partNo||'';
-        document.getElementById('f-draw').textContent = rec.drawingNo||'';
-        document.getElementById('f-proc').textContent = rec.process || rec.processLabel || '';
-        document.getElementById('f-notes').textContent = rec.notes||'';
-        document.getElementById('sign-inspector').textContent = rec.inspector||'';
-        renderUnified(rec);
-        tip.textContent = '';
-      }catch(e){
-        tip.textContent = '❌ 載入失敗：' + (e.message||e);
-      }
-    }
-
-    (async () => {
-      const ok = await ensureAuth();
-      if (!ok){ alert('未授權或登入失敗'); location.href='report.html'; return; }
-      await load();
-    })();
+    load();
   </script>
 </body>
 </html>

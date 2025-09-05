@@ -1,291 +1,263 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>現場輸入｜QC</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>現場輸入 - 安拓品檢</title>
   <style>
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,'Noto Sans',sans-serif;line-height:1.6;background:#f8fafc;margin:0}
-    header{background:#0f172a;color:#fff;padding:10px 16px}
-    .wrap{max-width:1000px;margin:16px auto;padding:0 12px}
-    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.06);padding:16px;margin-bottom:16px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .row>label{flex:1 1 220px;display:flex;flex-direction:column;font-size:14px}
-    input,select,button,textarea{font-size:14px;padding:8px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}
-    textarea{min-height:70px}
-    table{width:100%;border-collapse:collapse}
-    th,td{border:1px solid #e5e7eb;padding:6px 8px;text-align:center}
-    th{background:#f1f5f9}
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-    .btn{background:#0ea5e9;color:#fff;border:none;border-radius:8px;padding:8px 12px;cursor:pointer}
-    .btn.outline{background:#fff;color:#0ea5e9;border:1px solid #0ea5e9}
-    .muted{color:#64748b}
-    .hidden{display:none}
-    #loginMask{position:fixed;inset:0;background:rgba(2,6,23,.6);display:flex;align-items:center;justify-content:center;z-index:20}
-    #loginPanel{width:min(480px,92vw);background:#fff;border-radius:12px;padding:16px}
-    #loginPanel h2{margin:0 0 8px}
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin:0; padding:0; background:#f6f7fb; }
+    .wrap { max-width: 1120px; margin: 24px auto; padding: 0 16px; }
+    h1 { font-size: 22px; margin: 8px 0 16px; }
+    .row { display: grid; grid-template-columns: 160px 1fr; gap: 10px; align-items: center; margin: 8px 0; }
+    .controls { display:flex; gap:8px; flex-wrap: wrap; margin: 8px 0; }
+    input, select, textarea { width: 100%; padding: 8px 10px; border:1px solid #d0d5dd; border-radius:10px; background:#fff; }
+    textarea { min-height: 70px; }
+    table { width:100%; border-collapse: collapse; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
+    th, td { border-bottom:1px solid #eee; padding:8px; text-align:left; }
+    th { background:#f2f4f7; }
+    .btn { padding: 10px 14px; border:none; border-radius:10px; cursor:pointer; background:#2563eb; color:#fff; }
+    .btn.gray { background:#111827; }
+    .btn.light { background:#e5e7eb; color:#111827; }
+    .right { text-align:right; }
+    .muted { color:#667085; font-size:13px; }
+    .tag { padding:2px 8px; border-radius:999px; background:#e5e7eb; font-size:12px; display:inline-block; }
+    .tag.pass { background:#dcfce7; color:#166534; }
+    .tag.fail { background:#fee2e2; color:#991b1b; }
+    .hidden { display:none; }
+    .card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:14px; }
+    .overlay { position: fixed; inset:0; background: rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; }
+    .dialog { width: 380px; background:#fff; border-radius:14px; padding:16px; box-shadow: 0 20px 50px rgba(0,0,0,.2); }
+    @media (max-width:700px){ .row { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
-  <header>安拓實業有限公司｜QC 現場輸入</header>
-  <div class="wrap">
-    <div class="toolbar">
-      <a class="btn outline" href="report.html">查看/列印報告</a>
-      <button class="btn outline" id="btnReset">清除本機登入</button>
-      <span class="muted" id="msg"></span>
-    </div>
-
-    <div class="card">
-      <div class="row">
-        <label>供應商
-          <select id="supplier">
-            <option value="">— 請選擇 —</option>
-            <option value="ANCHOR" data-zh="安拓" data-en="Anchor">安拓 (Anchor)</option>
-            <option value="AKF" data-zh="安可" data-en="AKF">安可 (AKF)</option>
-          </select>
-        </label>
-        <label>料號 Part No.
-          <input id="partNo" placeholder="例：ABC1234">
-        </label>
-        <label>圖號 Drawing No.
-          <input id="drawingNo" placeholder="例：D-5678">
-        </label>
+  <!-- 登入視窗 -->
+  <div id="loginOverlay" class="overlay">
+    <div class="dialog">
+      <h2 style="margin:0 0 12px">登入</h2>
+      <div class="row"><label>帳號</label><input id="inspector" placeholder="檢驗人員帳號" /></div>
+      <div class="row"><label>密碼</label><input id="passcode" placeholder="通關碼 / 密碼" type="password" /></div>
+      <div class="controls" style="justify-content:flex-end">
+        <button id="btnLogin" class="btn">登入</button>
       </div>
-      <div class="row">
-        <label style="flex:1 1 100%;">備註
-          <textarea id="notes" placeholder="可留空"></textarea>
-        </label>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>外觀與尺寸檢驗</h3>
-      <div class="toolbar">
-        <button class="btn" id="btnAddRow">＋新增尺寸列</button>
-        <button class="btn outline" id="btnDelRow">－刪除最後一列</button>
-      </div>
-      <table id="tbl">
-        <thead>
-          <tr>
-            <th style="width:160px">項目 / 尺寸（第一列為外觀）</th>
-            <th style="width:80px">名目</th>
-            <th style="width:90px">下限公差</th>
-            <th style="width:90px">上限公差</th>
-            <th>樣品/實測1</th>
-            <th>樣品/實測2</th>
-            <th>樣品/實測3</th>
-            <th>樣品/實測4</th>
-            <th>樣品/實測5</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-
-    <div class="toolbar">
-      <button class="btn" id="btnSave">儲存到雲端</button>
-      <span class="muted" id="saveMsg"></span>
+      <div id="loginMsg" class="muted"></div>
     </div>
   </div>
 
-  <!-- 登入遮罩 -->
-  <div id="loginMask" class="hidden">
-    <div id="loginPanel">
-      <h2>登入</h2>
-      <p class="muted" id="loginTip">請輸入帳號、密碼（與 report 頁相同）。</p>
-      <div class="row" style="margin-top:6px">
-        <label>帳號 <input id="user" placeholder="例如：admin/input/viewer 或自訂帳號"></label>
-        <label>密碼 <input id="pwd" type="password" placeholder="******"></label>
+  <div class="wrap">
+    <h1>現場輸入</h1>
+
+    <div class="card">
+      <div class="row"><label>供應商</label>
+        <select id="supplier">
+          <option value="">— 請選擇 —</option>
+          <option value="ANCHOR" data-zh="安拓" data-en="Anchor">安拓 (Anchor)</option>
+          <option value="AKF" data-zh="安可" data-en="AKF">安可 (AKF)</option>
+        </select>
       </div>
-      <div class="toolbar">
-        <button class="btn" id="btnLogin">登入</button>
+      <div class="row"><label>檢驗製程</label>
+        <select id="process">
+          <option value="">— 請選擇 —</option>
+          <option value="WIRE" data-zh="線材" data-en="WIRE">線材 (WIRE)</option>
+          <option value="FORMING" data-zh="成形" data-en="FORMING">成形 (FORMING)</option>
+          <option value="TAPING" data-zh="攻牙" data-en="TAPING">攻牙 (TAPING)</option>
+          <option value="CUTTING" data-zh="割溝" data-en="CUTTING">割溝 (CUTTING)</option>
+          <option value="PLATING" data-zh="電鍍" data-en="PLATING">電鍍 (PLATING)</option>
+          <option value="FINISHED" data-zh="成品" data-en="FINISHED">成品 (FINISHED)</option>
+          <option value="ASSEMBLY" data-zh="組立" data-en="ASSEMBLY">組立 (ASSEMBLY)</option>
+          <option value="FINAL" data-zh="最終成品" data-en="FINAL FINISHED">最終成品 (FINAL FINISHED)</option>
+        </select>
       </div>
-      <div class="muted" id="loginMsg"></div>
+      <div class="row"><label>料號</label><input id="partNo" /></div>
+      <div class="row"><label>圖號</label><input id="drawingNo" /></div>
+      <div class="row"><label>備註</label><textarea id="notes"></textarea></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="controls" style="justify-content:space-between">
+        <div>
+          <button id="btnAdd" class="btn light">+ 新增尺寸列</button>
+          <button id="btnDel" class="btn light">- 刪除最後一列</button>
+        </div>
+        <div>
+          <button id="btnSave" class="btn">儲存到雲端</button>
+          <a class="btn gray" href="report.html">前往報告</a>
+        </div>
+      </div>
+
+      <table id="grid">
+        <thead>
+          <tr>
+            <th>尺寸名稱</th><th>名目</th><th>下限公差</th><th>上限公差</th>
+            <th>實測1</th><th>實測2</th><th>實測3</th><th>實測4</th><th>實測5</th>
+            <th>判定</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <!-- 外觀列 -->
+          <tr data-type="appearance">
+            <td>外觀檢查</td><td colspan="3" class="muted">可留空（不影響總判定）</td>
+            <td><select class="ap"><option value=""></option><option>OK</option><option>NG</option></select></td>
+            <td><select class="ap"><option value=""></option><option>OK</option><option>NG</option></select></td>
+            <td><select class="ap"><option value=""></option><option>OK</option><option>NG</option></select></td>
+            <td><select class="ap"><option value=""></option><option>OK</option><option>NG</option></select></td>
+            <td><select class="ap"><option value=""></option><option>OK</option><option>NG</option></select></td>
+            <td><span class="tag">—</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="msg" class="muted" style="margin-top:6px"></div>
     </div>
   </div>
 
   <script>
     const tbody = document.getElementById('tbody');
-    const msg = document.getElementById('msg');
-    const saveMsg = document.getElementById('saveMsg');
 
-    function showLogin(show, text){
-      document.getElementById('loginMask').classList.toggle('hidden', !show);
-      if (text) document.getElementById('loginMsg').textContent = text;
-    }
-
-    async function authCheck(u,p){
+    // ===== 登入 =====
+    async function onLogin(){
+      const u = document.getElementById('inspector').value.trim();
+      const p = document.getElementById('passcode').value.trim();
+      if (!u || !p){ document.getElementById('loginMsg').textContent = '請輸入帳號與密碼'; return; }
+      // 簡單驗證：呼叫 /api/inspections?auth=1（由後端回覆 ok/role）
       try{
-        const r = await fetch('/api/inspections?auth=1', { headers:{'x-user':u,'x-pass':p,'x-passcode':p} });
+        const r = await fetch('/api/inspections?auth=1', { headers: { 'x-user':u, 'x-pass':p, 'x-passcode':p }});
         const t = await r.text(); let j={}; try{ j=JSON.parse(t);}catch{}
-        return r.ok && j && j.ok !== false ? { ok:true, role: (j.role||'').toLowerCase() } : { ok:false };
-      }catch{ return { ok:false };}
-    }
-
-    async function ensureLogin(){
-      const u = localStorage.getItem('qci_user')||'';
-      const p = localStorage.getItem('qci_pass')||'';
-      if (!u || !p){
-        showLogin(true);
-        return false;
+        if (!r.ok || !j.ok){ document.getElementById('loginMsg').textContent='帳號或密碼錯誤'; return; }
+        localStorage.setItem('qci_user', u);
+        localStorage.setItem('qci_pass', p);
+        localStorage.setItem('qci_role', (j.role||'').toLowerCase());
+        document.getElementById('loginOverlay').classList.add('hidden');
+      }catch(e){
+        document.getElementById('loginMsg').textContent='登入失敗：' + (e.message||e);
       }
-      const info = await authCheck(u,p);
-      if (!info.ok){
-        showLogin(true,'登入失敗，請重新輸入。');
-        return false;
-      }
-      showLogin(false);
-      localStorage.setItem('qci_role', info.role||'');
-      return true;
     }
+    document.getElementById('btnLogin').addEventListener('click', onLogin);
 
-    document.getElementById('btnLogin').addEventListener('click', async () => {
-      const u = document.getElementById('user').value.trim();
-      const p = document.getElementById('pwd').value.trim();
-      if (!u || !p){ document.getElementById('loginMsg').textContent='請輸入帳密'; return; }
-      const ok = await authCheck(u,p);
-      if (!ok.ok){ document.getElementById('loginMsg').textContent='帳號或密碼錯誤'; return; }
-      localStorage.setItem('qci_user', u);
-      localStorage.setItem('qci_pass', p);
-      localStorage.setItem('qci_role', ok.role||'');
-      showLogin(false);
-    });
-
-    document.getElementById('btnReset').addEventListener('click', ()=>{
-      ['qci_user','qci_pass','qci_role'].forEach(k=>localStorage.removeItem(k));
-      alert('已清除本機登入，下次會再要求登入。');
-      showLogin(true);
-    });
-
-    function makeAppearanceRow(){
-      const tr = document.createElement('tr');
-      tr.dataset.type = 'appearance';
-      tr.innerHTML = `
-        <td style="text-align:left">外觀</td>
-        <td></td><td></td><td></td>
-        ${[1,2,3,4,5].map(i=>`
-          <td>
-            <select class="ap">
-              <option value=""></option>
-              <option value="OK">O.K</option>
-              <option value="NG">NG</option>
-            </select>
-          </td>`).join('')}
-      `;
-      return tr;
-    }
-
-    function makeMeasureRow(){
+    // ===== 表格：尺寸列 =====
+    function addMeasureRow(){
       const tr = document.createElement('tr');
       tr.dataset.type = 'measure';
       tr.innerHTML = `
         <td><input class="name" placeholder="尺寸名稱"></td>
-        <td><input class="nom" type="number" step="0.001" placeholder="名目"></td>
-        <td><input class="lo"  type="number" step="0.001" placeholder="下限公差"></td>
-        <td><input class="hi"  type="number" step="0.001" placeholder="上限公差"></td>
-        ${[1,2,3,4,5].map(i=>`<td><input class="m${i}" type="number" step="0.001"></td>`).join('')}
+        <td><input class="nom" type="number" inputmode="decimal" step="0.001" placeholder="名目"></td>
+        <td><input class="lo"  type="number" inputmode="decimal" step="0.001" placeholder="下限公差"></td>
+        <td><input class="hi"  type="number" inputmode="decimal" step="0.001" placeholder="上限公差"></td>
+        <td><input class="m1"  type="number" inputmode="decimal" step="0.001"></td>
+        <td><input class="m2"  type="number" inputmode="decimal" step="0.001"></td>
+        <td><input class="m3"  type="number" inputmode="decimal" step="0.001"></td>
+        <td><input class="m4"  type="number" inputmode="decimal" step="0.001"></td>
+        <td><input class="m5"  type="number" inputmode="decimal" step="0.001"></td>
+        <td><span class="tag">—</span></td>
       `;
-      return tr;
+      tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => updateRowTag(tr)));
+      tbody.appendChild(tr);
     }
-
-    function ensureInitial(){
-      if (!tbody.querySelector('tr[data-type="appearance"]')) tbody.appendChild(makeAppearanceRow());
-      if (tbody.querySelectorAll('tr[data-type="measure"]').length===0) tbody.appendChild(makeMeasureRow());
+    function removeLastRow(){
+      const rows = [...tbody.querySelectorAll('tr')].filter(tr => tr.dataset.type === 'measure');
+      const last = rows.pop(); if (last) last.remove();
     }
+    function ensureRows(n=2){
+      const have = [...tbody.querySelectorAll('tr')].filter(tr => tr.dataset.type === 'measure').length;
+      for (let i=have;i<n;i++) addMeasureRow();
+    }
+    function updateRowTag(tr){
+      const tag = tr.querySelector('.tag');
+      const nom = tr.querySelector('.nom').value;
+      const lo = tr.querySelector('.lo').value;
+      const hi = tr.querySelector('.hi').value;
+      const m = [1,2,3,4,5].map(i => tr.querySelector('.m'+i).value).filter(s => s !== '');
+      if (nom === '' || lo === '' || hi === '' || m.length===0){ tag.textContent='—'; tag.className='tag'; return; }
+      const n = parseFloat(nom), loN=parseFloat(lo), hiN=parseFloat(hi);
+      const ok = m.map(Number).every(v => (v-n)>=loN && (v-n)<=hiN);
+      tag.textContent = ok ? 'PASS' : 'FAIL';
+      tag.className = 'tag ' + (ok ? 'pass' : 'fail');
+    }
+    document.getElementById('btnAdd').addEventListener('click', addMeasureRow);
+    document.getElementById('btnDel').addEventListener('click', removeLastRow);
+    ensureRows(2);
 
-    document.getElementById('btnAddRow').addEventListener('click', ()=>{
-      tbody.appendChild(makeMeasureRow());
-    });
-    document.getElementById('btnDelRow').addEventListener('click', ()=>{
-      const m = tbody.querySelectorAll('tr[data-type="measure"]');
-      if (m.length>0) m[m.length-1].remove();
-    });
+    // ===== 收集資料 + 上傳 =====
+    function buildRecord(){
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      if (!user || !pass){ document.getElementById('loginOverlay').classList.remove('hidden'); return null; }
 
-    function collectRecord(){
-      const u = localStorage.getItem('qci_user')||'';
-      const p = localStorage.getItem('qci_pass')||'';
-      if (!u || !p){ showLogin(true,'請先登入'); return null; }
-
-      const selS = document.getElementById('supplier');
-      const sOpt = selS.options[selS.selectedIndex];
+      const sSel = document.getElementById('supplier'); const sOpt = sSel.options[sSel.selectedIndex];
+      const pSel = document.getElementById('process');  const pOpt = pSel.options[pSel.selectedIndex];
       const partNo = document.getElementById('partNo').value.trim();
       const drawingNo = document.getElementById('drawingNo').value.trim();
       const notes = document.getElementById('notes').value.trim();
+      if (!sOpt || !sOpt.value || !partNo){ alert('請選擇供應商並填入料號'); return null; }
 
-      if (!sOpt || !partNo){ alert('請選擇供應商並輸入料號'); return null; }
+      // 外觀：可全空
+      const apSels = [...tbody.querySelectorAll('tr[data-type="appearance"] select.ap')];
+      const appearance = apSels.map((s, i) => (s.value ? { sample:'樣品'+(i+1), result:String(s.value).toUpperCase(), note:'' } : null)).filter(Boolean);
+      const apPass = appearance.length===0 || appearance.every(a => a.result==='OK');
 
-      // appearance
-      const ap = Array.from(tbody.querySelectorAll('tr[data-type="appearance"] select.ap'));
-      const apHas = ap.some(s => s.value);
-      const appearance = apHas ? ap.map((s,i)=>({ sample:'樣品'+(i+1), result:(s.value||'').toUpperCase() })) : [];
-
-      // measurements
-      const ms = Array.from(tbody.querySelectorAll('tr[data-type="measure"]')).map(tr=>{
+      // 尺寸
+      const ms = [...tbody.querySelectorAll('tr[data-type="measure"]')].map(tr => {
         const name = tr.querySelector('.name').value.trim();
-        const nom  = tr.querySelector('.nom').value;
-        const lo   = tr.querySelector('.lo').value;
-        const hi   = tr.querySelector('.hi').value;
-        const arr  = [1,2,3,4,5].map(i=>{
+        const nom = tr.querySelector('.nom').value;
+        const lo  = tr.querySelector('.lo').value;
+        const hi  = tr.querySelector('.hi').value;
+        const arr = [1,2,3,4,5].map(i => {
           const v = tr.querySelector('.m'+i).value;
           return v==='' ? null : Number(v);
         });
+        const hasAny = arr.some(v => v===0 || v);
+        const passRow = hasAny && nom!=='' && lo!=='' && hi!=='' ? arr.filter(v => v===0 || v).every(v => (v-Number(nom))>=Number(lo) && (v-Number(nom))<=Number(hi)) : '';
         return {
-          name, nominal: nom===''?null:Number(nom),
+          name,
+          nominal: nom===''?null:Number(nom),
           tolMinus: lo===''?null:Number(lo),
           tolPlus: hi===''?null:Number(hi),
-          measured: arr
+          measured: arr,
+          pass: passRow!=='' ? !!passRow : ''
         };
-      });
+      }).filter(m => m.name || (m.measured||[]).some(v => v===0 || v));
 
-      function overall(){
-        const apOK = !appearance.length || appearance.every(a => a.result==='OK');
-        const msOK = !ms.length || ms.every(m => {
-          const nom = Number(m.nominal), lo=Number(m.tolMinus), hi=Number(m.tolPlus);
-          if (isNaN(nom) || isNaN(lo) || isNaN(hi)) return true;
-          const min = nom + lo, max = nom + hi;
-          const vals = (m.measured||[]).filter(v=>v===0 || v).map(Number);
-          return vals.length===0 || vals.every(v => v>=min && v<=max);
-        });
-        return (apOK && msOK) ? 'PASS' : 'FAIL';
-      }
+      if (ms.length===0 && appearance.length===0){ alert('請至少填一列外觀或尺寸資料'); return null; }
+      const dimPass = ms.length===0 || ms.every(m => m.pass!=='' ? !!m.pass : true);
+      const overall = (apPass && dimPass) ? 'PASS' : 'FAIL';
 
       const now = new Date();
-      const id = 'INS-' + now.toISOString().replace(/[-:T]/g,'').slice(0,14) + '-' + Math.floor(100+Math.random()*900);
-
+      const id = `INS-${now.toISOString().replace(/[-:T]/g,'').slice(0,14)}-${Math.floor(100+Math.random()*900)}`;
       return {
-        id, timestamp: now.toISOString(),
-        inspector: u,
+        id,
+        timestamp: new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString(),
+        inspector: user,
         supplier: sOpt.dataset.zh, supplierEn: sOpt.dataset.en, supplierCode: sOpt.value,
+        process: pOpt && pOpt.value ? pOpt.value : '', processLabel: pOpt && pOpt.value ? (pOpt.dataset.zh+' ('+pOpt.dataset.en+')') : '',
         partNo, drawingNo, notes,
-        measurements: ms, appearance,
-        overallResult: overall()
+        appearance,
+        measurements: ms,
+        overallResult: overall
       };
     }
 
-    document.getElementById('btnSave').addEventListener('click', async () => {
-      const rec = collectRecord();
-      if (!rec) return;
-      saveMsg.textContent = '上傳中...';
-      const u = localStorage.getItem('qci_user')||'';
-      const p = localStorage.getItem('qci_pass')||'';
+    async function save(){
+      const msg = document.getElementById('msg');
+      const btn = document.getElementById('btnSave');
+      const rec = buildRecord(); if (!rec) return;
+      btn.disabled = true; msg.textContent = '儲存中...';
+      const u = localStorage.getItem('qci_user') || '';
+      const p = localStorage.getItem('qci_pass') || '';
       try{
-        const r = await fetch('/api/inspections', {
-          method:'POST',
-          headers:{'Content-Type':'application/json','x-user':u,'x-pass':p,'x-passcode':p},
-          body: JSON.stringify({ record: rec })
-        });
+        const r = await fetch('/api/inspections', { method:'POST', headers:{ 'Content-Type':'application/json', 'x-user':u, 'x-pass':p, 'x-passcode':p }, body: JSON.stringify({ record: rec })});
         const t = await r.text(); let j={}; try{ j=JSON.parse(t);}catch{}
-        if (!r.ok || (j && j.ok===false)) throw new Error(t||('HTTP '+r.status));
-        saveMsg.textContent = '✅ 已儲存，可至報告頁查看/列印';
+        if (!r.ok || j.error){ throw new Error(j.error || ('HTTP '+r.status)); }
+        msg.textContent = '✅ 已儲存（可到報告頁查看/列印）';
+        // 重建尺寸列，外觀清空
+        document.querySelectorAll('tr[data-type="appearance"] select.ap').forEach(s => s.value='');
+        [...tbody.querySelectorAll('tr[data-type="measure"]')].forEach(tr => tr.remove());
+        ensureRows(2);
       }catch(e){
-        saveMsg.textContent = '❌ 儲存失敗：' + (e.message||e);
+        msg.textContent = '❌ 儲存失敗：' + (e.message||e);
+      }finally{
+        btn.disabled = false;
       }
-    });
-
-    (async () => {
-      ensureInitial();
-      await ensureLogin();
-    })();
+    }
+    document.getElementById('btnSave').addEventListener('click', save);
   </script>
 </body>
 </html>

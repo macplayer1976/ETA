@@ -1,227 +1,242 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>品檢報告｜QC</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>品檢報告</title>
   <style>
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,'Noto Sans',sans-serif;background:#f8fafc;margin:0}
-    header{background:#0f172a;color:#fff;padding:10px 16px}
-    .wrap{max-width:1100px;margin:16px auto;padding:0 12px}
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-    .btn{background:#0ea5e9;color:#fff;border:none;border-radius:8px;padding:8px 12px;cursor:pointer}
-    .btn.outline{background:#fff;color:#0ea5e9;border:1px solid #0ea5e9}
-    .muted{color:#64748b}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
-    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.06);padding:12px}
-    .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-    table{width:100%;border-collapse:collapse;margin-top:6px}
-    th,td{border:1px solid #e5e7eb;padding:4px 6px;text-align:center}
-    th{background:#f1f5f9}
-    .result{font-weight:700}
-    .pass{color:#16a34a}.fail{color:#dc2626}
-    #loginMask{position:fixed;inset:0;background:rgba(2,6,23,.6);display:flex;align-items:center;justify-content:center;z-index:20}
-    #loginPanel{width:min(480px,92vw);background:#fff;border-radius:12px;padding:16px}
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 16px; }
+    .card { max-width: 1120px; margin: 0 auto; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; vertical-align: top; }
+    th { background: #f7f7f7; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    input { padding: 8px; border: 1px solid #ccc; border-radius: 8px; }
+    .btn { padding: 10px 14px; border: none; border-radius: 10px; background: #2563eb; color: #fff; cursor: pointer; }
+    .btn-outline { background: #f3f4f6; color:#111827; }
+    .btn-danger { background:#dc2626; color:#fff; }
+    .btn-gray { background:#111827; color:#fff; }
+    .muted { color: #666; font-size: 13px; }
+    a.btn { text-decoration: none; display: inline-block; }
+    @media print { .noprint { display: none; } body { padding: 0; } }
+    pre { background:#f7f7f7; padding:12px; border-radius:8px; overflow:auto; }
   </style>
 </head>
 <body>
-  <header>安拓實業有限公司｜品檢報告</header>
-  <div class="wrap">
-    <div class="toolbar">
-      <button class="btn" id="btnReload">重新讀取</button>
-      <a class="btn outline" href="index.html">回現場輸入</a>
-      <input id="kw" placeholder="關鍵字（供應商/料號/圖號/人員）" style="flex:1 1 280px;padding:8px;border:1px solid #cbd5e1;border-radius:8px">
-      <span class="muted" id="tip"></span>
+  <div class="card">
+    <h2>品檢報告</h2>
+    <div class="noprint row">
+      <input id="filterText" placeholder="關鍵字（供應商/料號/圖號/檢驗人員）" style="flex:1" />
+      <button class="btn" id="btnReload">重新載入</button>
+      <button class="btn btn-outline" id="btnClear">清除關鍵字</button>
+      <button class="btn btn-outline" id="btnReset">重設帳號</button>
+      <button class="btn btn-outline" id="btnDiag">診斷資料</button>
+      <button class="btn" id="btnPrint">列印 / 存成 PDF</button>
+      <a class="btn" href="index.html">回現場輸入</a>
     </div>
-    <div class="grid" id="list"></div>
-  </div>
+    <p class="muted noprint">提示：網址加上 <code>?debug=1</code> 可顯示伺服器原始回應；網址加 <code>#resetpass</code> 可清除通關碼。</p>
 
-  <!-- 登入遮罩 -->
-  <div id="loginMask" class="hidden">
-    <div id="loginPanel">
-      <h3>登入</h3>
-      <div class="row" style="display:flex;gap:8px;margin-top:6px">
-        <input id="user" placeholder="帳號" style="flex:1 1 160px;padding:8px;border:1px solid #cbd5e1;border-radius:8px">
-        <input id="pwd" type="password" placeholder="密碼" style="flex:1 1 160px;padding:8px;border:1px solid #cbd5e1;border-radius:8px">
-        <button class="btn" id="btnLogin">登入</button>
-      </div>
-      <div class="muted" id="loginMsg"></div>
-    </div>
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th style="width:18%">基本資訊</th>
+          <th style="width:22%">料件資訊</th>
+          <th style="width:48%">外觀與量測明細</th>
+          <th style="width:12%">結果</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <p id="msg" class="muted"></p>
+    <pre id="raw" class="noprint" style="display:none"></pre>
   </div>
 
   <script>
-    const listEl = document.getElementById('list');
-    const tip = document.getElementById('tip');
-    const kw = document.getElementById('kw');
+    const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
+    const tbody = document.getElementById('tbody');
+    const filterText = document.getElementById('filterText');
+    const msg = document.getElementById('msg');
+    const raw = document.getElementById('raw');
 
-    function showLogin(show, text){
-      document.getElementById('loginMask').classList.toggle('hidden', !show);
-      if (text) document.getElementById('loginMsg').textContent = text;
-    }
-
-    async function authCheck(u,p){
-      try{
-        const r = await fetch('/api/inspections?auth=1', { headers:{'x-user':u,'x-pass':p,'x-passcode':p} });
-        const t = await r.text(); let j={}; try{ j=JSON.parse(t);}catch{}
-        return r.ok && j && j.ok !== false ? { ok:true, role: (j.role||'').toLowerCase() } : { ok:false };
-      }catch{ return { ok:false };}
-    }
-
-    async function ensureLogin(){
-      const u = localStorage.getItem('qci_user')||'';
-      const p = localStorage.getItem('qci_pass')||'';
-      if (!u || !p){ showLogin(true); return false; }
-      const info = await authCheck(u,p);
-      if (!info.ok){ showLogin(true,'登入失敗，請重試'); return false; }
-      localStorage.setItem('qci_role', info.role||'');
-      showLogin(false);
-      return true;
-    }
-
-    document.getElementById('btnLogin').addEventListener('click', async () => {
-      const u = document.getElementById('user').value.trim();
-      const p = document.getElementById('pwd').value.trim();
-      if (!u || !p){ document.getElementById('loginMsg').textContent='請輸入帳密'; return; }
-      const ok = await authCheck(u,p);
-      if (!ok.ok){ document.getElementById('loginMsg').textContent='帳號或密碼錯誤'; return; }
-      localStorage.setItem('qci_user', u);
-      localStorage.setItem('qci_pass', p);
-      localStorage.setItem('qci_role', ok.role||'');
-      showLogin(false);
-      load();
+    document.getElementById('btnPrint').addEventListener('click', () => window.print());
+    document.getElementById('btnReload').addEventListener('click', load);
+    document.getElementById('btnClear').addEventListener('click', () => { filterText.value = ''; render(); });
+    document.getElementById('btnReset').addEventListener('click', () => {
+      ['qci_user','qci_pass','qci_role','qci_passcode','qci_inspector'].forEach(k => localStorage.removeItem(k));
+      alert('本機登入資訊已清除。請重新整理頁面登入。');
     });
+    document.getElementById('btnDiag').addEventListener('click', diag);
+    filterText.addEventListener('input', render);
 
-    function looksLikeRecord(o){
-      return o && typeof o==='object' && ('id'in o) && Array.isArray(o.measurements);
+    if (location.hash === '#resetpass') {
+      ['qci_user','qci_pass','qci_role','qci_passcode','qci_inspector'].forEach(k => localStorage.removeItem(k));
+      history.replaceState(null, '', location.pathname + location.search);
     }
-    function listFromJson(data){
-      // 平展各種 JSONBin 回傳格式
-      if (Array.isArray(data)){
-        // 可能是乾淨陣列或每筆包 record/metadata
-        return data.flatMap(x => {
-          if (looksLikeRecord(x)) return [x];
-          if (x && typeof x==='object'){
-            if (looksLikeRecord(x.record)) return [x.record];
-            if (x.record && Array.isArray(x.record)) return x.record.filter(looksLikeRecord);
-            if (Array.isArray(x.records)) return x.records.filter(looksLikeRecord);
-          }
-          return [];
-        });
+
+    let records = [];
+
+    async function ensureAuth() {
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      if (!user || !pass) {
+        const u = prompt('請輸入帳號（檢驗人員）') || '';
+        const p = prompt('請輸入密碼（通關碼/密碼）') || '';
+        if (!u || !p) return { ok:false };
+        localStorage.setItem('qci_user', u);
+        localStorage.setItem('qci_pass', p);
       }
-      if (data && typeof data==='object'){
-        if (looksLikeRecord(data)) return [data];
-        if (data.record && Array.isArray(data.record)) return data.record.filter(looksLikeRecord);
-        if (Array.isArray(data.records)) return data.records.filter(looksLikeRecord);
-      }
-      return [];
-    }
-    function dedupById(list){
-      const map = new Map();
-      for (const r of list){ if (r && r.id) map.set(String(r.id), r); }
-      return Array.from(map.values());
-    }
-
-    function rowJudgement(m){
-      const nom = Number(m.nominal), lo=Number(m.tolMinus), hi=Number(m.tolPlus);
-      if (isNaN(nom)||isNaN(lo)||isNaN(hi)) return '';
-      const min = nom+lo, max=nom+hi;
-      const vals = (m.measured||[]).filter(v=>v===0||v).map(Number);
-      if (vals.length===0) return '';
-      return vals.every(v=>v>=min && v<=max) ? 'PASS' : 'FAIL';
-    }
-
-    function buildCard(r, role){
-      const head = document.createElement('div');
-      head.className='head';
-      const left = document.createElement('div');
-      left.innerHTML = `<strong>${r.supplier||''}</strong>｜${r.partNo||''}｜${r.drawingNo||''}<br>
-        <small>ID：${r.id||''} ｜ 檢驗：${r.inspector||''} ｜ 時間：${r.timestamp?new Date(r.timestamp).toLocaleString():''} ｜ 總結果：<span class="result ${r.overallResult==='PASS'?'pass':'fail'}">${r.overallResult||''}</span></small>`;
-      head.appendChild(left);
-      const right = document.createElement('div');
-      right.innerHTML = `<a class="btn outline" href="print.html?id=${encodeURIComponent(r.id)}">單筆列印</a>`;
-      head.appendChild(right);
-
-      const part = document.createElement('div');
-      part.innerHTML = `<div class="muted" style="margin-bottom:6px">備註：${(r.notes||'')}</div>`;
-
-      const tbl = document.createElement('table');
-      const hasAp = Array.isArray(r.appearance) && r.appearance.some(a => a && (a.result||a.sample));
-      const thead = document.createElement('thead');
-      thead.innerHTML = `<tr>
-        <th>項目 / 尺寸</th><th>名目</th><th>下限公差</th><th>上限公差</th>
-        <th>樣品/實測1</th><th>樣品/實測2</th><th>樣品/實測3</th><th>樣品/實測4</th><th>樣品/實測5</th><th>判定</th>
-      </tr>`;
-      const tbody = document.createElement('tbody');
-      if (hasAp){
-        const ap = r.appearance||[];
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td style="text-align:left">外觀</td>
-          <td></td><td></td><td></td>
-          ${[0,1,2,3,4].map(i=>`<td>${ap[i]?(ap[i].result||''):''}</td>`).join('')}
-          <td>${ap.length? (ap.every(a=>String(a.result||'').toUpperCase()==='OK')?'PASS':'FAIL') : ''}</td>`;
-        tbody.appendChild(tr);
-      }
-      (r.measurements||[]).forEach(m=>{
-        const vals = Array.isArray(m.measured)?m.measured:[];
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td style="text-align:left">${m.name||''}</td>
-          <td>${m.nominal??''}</td><td>${m.tolMinus??''}</td><td>${m.tolPlus??''}</td>
-          ${[0,1,2,3,4].map(i=>`<td>${vals[i]??''}</td>`).join('')}
-          <td>${rowJudgement(m)}</td>`;
-        tbody.appendChild(tr);
-      });
-      tbl.appendChild(thead); tbl.appendChild(tbody);
-
-      const card = document.createElement('div');
-      card.className='card';
-      card.appendChild(head);
-      card.appendChild(part);
-      card.appendChild(tbl);
-      return card;
+      try {
+        const u2 = localStorage.getItem('qci_user') || '';
+        const p2 = localStorage.getItem('qci_pass') || '';
+        const res = await fetch('/api/inspections?auth=1', { headers: { 'x-user': u2, 'x-pass': p2, 'x-passcode': p2 } });
+        const t = await res.text(); let j={}; try{ j=JSON.parse(t);}catch{}
+        if (!res.ok || !j.ok) return { ok:false };
+        const role = (j.role||'').toLowerCase();
+        if (!['admin','viewer'].includes(role)) return { ok:false, msg:'您的帳號沒有檢視報告的權限（input）' };
+        return { ok:true };
+      } catch { return { ok:false }; }
     }
 
     async function load(){
-      tip.textContent='讀取中...';
-      listEl.innerHTML='';
+      msg.textContent = '驗證中...';
+      const auth = await ensureAuth();
+      if (!auth.ok){ msg.textContent = auth.msg || '❌ 請重新登入（帳號/密碼）'; return; }
+
+      msg.textContent = '載入中...';
+      raw.style.display = 'none'; raw.textContent = '';
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
       try{
-        const u = localStorage.getItem('qci_user')||'';
-        const p = localStorage.getItem('qci_pass')||'';
-        const r = await fetch('/api/inspections', { headers:{'x-user':u,'x-pass':p,'x-passcode':p} });
-        const text = await r.text();
-        if (!r.ok) throw new Error(text||('HTTP '+r.status));
-        let data = {}; try{ data = JSON.parse(text);}catch{ data = []; }
-        let list = listFromJson(data);
-        list = dedupById(list);
-        // 依時間排序新→舊
-        list.sort((a,b)=> String(b.timestamp||'').localeCompare(String(a.timestamp||'')));
-        const role = (localStorage.getItem('qci_role')||'').toLowerCase();
+        const res = await fetch('/api/inspections', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+        const text = await res.text();
+        if (DEBUG){ raw.style.display='block'; raw.textContent = '原始回應（前 1000 字）：\n' + (text||'').slice(0,1000); }
+        if (!res.ok) throw new Error(`HTTP ${res.status}：${text || '（無訊息）'}`);
 
-        const key = (kw.value||'').trim().toLowerCase();
-        if (key){
-          list = list.filter(r => (r.supplier||'').toLowerCase().includes(key) ||
-                                  (r.partNo||'').toLowerCase().includes(key) ||
-                                  (r.drawingNo||'').toLowerCase().includes(key) ||
-                                  (r.inspector||'').toLowerCase().includes(key));
-        }
-
-        if (!list.length){ tip.textContent='（沒有資料）'; return; }
-
-        const frag = document.createDocumentFragment();
-        list.forEach(rec => frag.appendChild(buildCard(rec, role)));
-        listEl.appendChild(frag);
-        tip.textContent = `共 ${list.length} 筆`;
+        let data={}; try{ data = JSON.parse(text);}catch{ data = text; }
+        let list = listFromJson(data).filter(isValidRecord);
+        // 最新在上
+        list.sort((a,b) => String(b.timestamp||'').localeCompare(String(a.timestamp||'')));
+        records = list;
+        render();
+        msg.textContent = records.length ? `共 ${records.length} 筆。` : '目前沒有可顯示的資料。';
       }catch(e){
-        tip.textContent = '❌ 載入失敗：' + (e.message||e);
+        msg.textContent = '❌ 載入失敗：' + (e.message||e);
       }
     }
 
-    document.getElementById('btnReload').addEventListener('click', load);
-    kw.addEventListener('input', load);
+    function render(){
+      const kw = (filterText.value || '').toLowerCase();
+      const filtered = records.filter(r => {
+        const text = [ r.inspector, r.supplier, r.partNo, r.drawingNo, r.notes, r.processLabel ].filter(Boolean).join(' ').toLowerCase();
+        return text.includes(kw);
+      });
+      tbody.innerHTML = '';
+      for (const r of filtered){
+        const apBlock = buildAppearance(r.appearance || []);
+        const msBlock = buildMeasurements(r.measurements || []);
+        const details = apBlock ? (apBlock + '<div style="height:6px"></div>' + msBlock) : msBlock;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <div><strong>ID：</strong>${escapeHtml(r.id||'')}</div>
+            <div><strong>時間：</strong>${escapeHtml(formatTime(r.timestamp))}</div>
+            <div><strong>人員：</strong>${escapeHtml(r.inspector||'')}</div>
+            <div><strong>供應商：</strong>${escapeHtml(r.supplier||'')}</div>
+          </td>
+          <td>
+            <div><strong>料號：</strong>${escapeHtml(r.partNo||'')}</div>
+            <div><strong>圖號：</strong>${escapeHtml(r.drawingNo||'')}</div>
+            <div><strong>製程：</strong>${escapeHtml(r.processLabel || r.process || '')}</div>
+            <div><strong>備註：</strong>${escapeHtml(r.notes||'')}</div>
+          </td>
+          <td>${details}</td>
+          <td>
+            <div><strong>${r.overallResult==='PASS' ? '✅ PASS' : '❌ FAIL'}</strong></div>
+            <div class="noprint" style="margin-top:6px">
+              <a class="btn btn-gray" target="_blank" href="print.html?id=${encodeURIComponent(r.id)}">單筆列印</a>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
 
-    (async () => {
-      const ok = await ensureLogin();
-      if (ok) load();
-    })();
+    // ----- blocks -----
+    function buildAppearance(list){
+      if (!Array.isArray(list) || list.length===0) return '';
+      const rows = list.map(a => \`<tr><td>\${escapeHtml(a.sample||'')}</td><td>\${escapeHtml(a.result||'')}</td></tr>\`).join('');
+      return \`
+        <table>
+          <thead><tr><th>外觀樣品</th><th>結果</th></tr></thead>
+          <tbody>\${rows}</tbody>
+        </table>\`;
+    }
+    function buildMeasurements(list){
+      if (!list.length) return '(無尺寸資料)';
+      const rows = list.map(m => {
+        const arr = Array.isArray(m.measured) ? m.measured
+                 : ((typeof m.measured === 'number') || (typeof m.measured === 'string' && m.measured!=='')) ? [m.measured] : [];
+        const cells = [0,1,2,3,4].map(i => num(arr[i]));
+        const judge = (m.pass===''? '' : (m.pass ? 'PASS' : 'FAIL'));
+        return \`
+          <tr>
+            <td>\${escapeHtml(m.name||'')}</td>
+            <td>\${num(m.nominal)}</td>
+            <td>\${num(m.tolMinus)}</td>
+            <td>\${num(m.tolPlus)}</td>
+            <td>\${cells[0]}</td>
+            <td>\${cells[1]}</td>
+            <td>\${cells[2]}</td>
+            <td>\${cells[3]}</td>
+            <td>\${cells[4]}</td>
+            <td>\${judge}</td>
+          </tr>\`;
+      }).join('');
+      return \`
+        <table>
+          <thead>
+            <tr>
+              <th>尺寸</th><th>名目</th><th>下限公差</th><th>上限公差</th>
+              <th>實測1</th><th>實測2</th><th>實測3</th><th>實測4</th><th>實測5</th>
+              <th>判定</th>
+            </tr>
+          </thead>
+          <tbody>\${rows}</tbody>
+        </table>\`;
+    }
+
+    // ----- helpers -----
+    function listFromJson(x){
+      if (!x) return [];
+      if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
+      if (looksLikeRecord(x)) return [x];
+      if (typeof x === 'object'){
+        if (x.data) return listFromJson(x.data);
+        if (x.record !== undefined) return listFromJson(x.record);
+        if (x.records !== undefined) return listFromJson(x.records);
+      }
+      return [];
+    }
+    function looksLikeRecord(o){
+      return o && typeof o==='object'
+        && typeof o.id==='string'
+        && typeof o.timestamp==='string'
+        && Array.isArray(o.measurements);
+    }
+    function isValidRecord(r){ return looksLikeRecord(r) && !!(r.supplier || r.partNo || r.drawingNo || r.inspector); }
+    function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+    function formatTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
+
+    async function diag(){
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      const r = await fetch('/api/inspections?diag=1', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+      const t = await r.text();
+      raw.style.display='block'; raw.textContent = '診斷結果：\n' + t;
+    }
+
+    load();
   </script>
 </body>
 </html>
