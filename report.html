@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>品檢報告</title>
+  <title data-i18n="reportTitle">品檢報告（安拓）</title>
   <style>
     body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 16px; }
     .card { max-width: 1120px; margin: 0 auto; }
@@ -20,29 +20,38 @@
     a.btn { text-decoration: none; display: inline-block; }
     @media print { .noprint { display: none; } body { padding: 0; } }
     pre { background:#f7f7f7; padding:12px; border-radius:8px; overflow:auto; }
+    .mini { font-size: 13px; color:#333; margin-top:6px; }
+    .mini table th, .mini table td { font-size: 12px; padding:6px; }
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; z-index:9999; }
+    .modal { background:#fff; border-radius:12px; padding:16px; width: min(92vw, 420px); box-shadow:0 10px 30px rgba(0,0,0,.18); }
+    .modal h3 { margin:0 0 8px 0; }
+    .modal .grid { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; margin-top:8px; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h2>品檢報告</h2>
+    <h2 data-i18n="reportTitle">品檢報告（安拓）</h2>
+<p class="muted" style="margin:6px 0 12px 0">安拓實業有限公司｜<strong>ANCHOR FASTENERS INDUSTRIAL CO.,LTD.</strong></p>
     <div class="noprint row">
-      <input id="filterText" placeholder="關鍵字（供應商/料號/圖號/檢驗人員）" style="flex:1" />
-      <button class="btn" id="btnReload">重新載入</button>
-      <button class="btn btn-outline" id="btnClear">清除關鍵字</button>
-      <button class="btn btn-outline" id="btnReset">重設帳號</button>
-      <button class="btn btn-outline" id="btnDiag">診斷資料</button>
-      <button class="btn" id="btnPrint">列印 / 存成 PDF</button>
-      <a class="btn" href="index.html">回現場輸入</a>
+      <input id="filterText" style="flex:1" />
+      <button class="btn" id="btnReload" data-i18n="btnReload">重新載入</button>
+      <button class="btn btn-outline" id="btnClear" data-i18n="btnClear">清除關鍵字</button>
+      <button class="btn btn-outline" id="btnReset" data-i18n="btnReset">重設帳號</button>
+      <button class="btn btn-outline" id="btnDiag" data-i18n="btnDiag">診斷資料</button>
+      <button class="btn btn-outline" id="btnRepair" style="display:none" data-i18n="btnRepair">一鍵修復</button>
+      <button class="btn" id="btnPrint" data-i18n="btnPrint">列印 / 存成 PDF</button>
+      <a class="btn" href="index.html" id="btnBack" data-i18n="btnBackToInput">回現場輸入</a>
+      <button class="btn btn-outline" id="btnLang">🌐 語言</button>
     </div>
-    <p class="muted noprint">提示：網址加上 <code>?debug=1</code> 可顯示伺服器原始回應；網址加 <code>#resetpass</code> 可清除通關碼。</p>
+    <p class="muted noprint" id="tipDebug"></p>
 
     <table id="tbl">
       <thead>
         <tr>
-          <th style="width:18%">基本資訊</th>
-          <th style="width:22%">料件資訊</th>
-          <th style="width:48%">外觀與量測明細</th>
-          <th style="width:12%">結果</th>
+          <th style="width:20%" data-i18n="thBasic">基本資訊</th>
+          <th style="width:22%" data-i18n="thPart">料件資訊</th>
+          <th style="width:42%" data-i18n="thUnified">外觀與量測明細</th>
+          <th style="width:16%" data-i18n="thResultOps">結果 / 操作</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -51,21 +60,122 @@
     <pre id="raw" class="noprint" style="display:none"></pre>
   </div>
 
+  <!-- 語言選擇彈窗 -->
+  <div class="modal-backdrop" id="langModal">
+    <div class="modal">
+      <h3 data-i18n="langTitle">選擇語言 / Language</h3>
+      <p class="muted" data-i18n="langHint">請選擇介面語言：</p>
+      <div class="grid">
+        <button class="btn btn-ghost" onclick="selectLang('zh-TW')">繁體中文</button>
+        <button class="btn btn-ghost" onclick="selectLang('zh-CN')">简体中文</button>
+        <button class="btn btn-ghost" onclick="selectLang('en')">English</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    /* ===== I18N ===== */
+    const I18N = {
+      'zh-TW': {
+        reportTitle:'品檢報告（安拓）',
+        filterPh:'關鍵字（供應商/料號/圖號/檢驗人員）',
+        btnReload:'重新載入', btnClear:'清除關鍵字', btnReset:'重設帳號', btnDiag:'診斷資料', btnRepair:'一鍵修復',
+        btnPrint:'列印 / 存成 PDF', btnBackToInput:'回現場輸入', langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：',
+        debugTip:'提示：網址加上 ?debug=1 可顯示伺服器原始回應；網址加 #resetpass 可清除通關碼。',
+        thBasic:'基本資訊', thPart:'料件資訊', thUnified:'外觀與量測明細', thResultOps:'結果 / 操作',
+        labelID:'ID：', labelTime:'時間：', labelInspector:'人員：', labelSupplier:'供應商：',
+        labelPartNo:'料號：', labelDrawingNo:'圖號：', labelRevision:'版次：', labelProcess:'檢驗製程：', labelNotes:'備註：',
+        labelOverall:'整體結果：', btnPrintOne:'單筆列印', btnDelete:'刪除此筆',
+        msgNoPerm:'您的帳號沒有檢視報告的權限（input）。', msgVerify:'驗證中...', msgLoading:'載入中...',
+        msgLoadFail:'❌ 載入失敗：', msgEmpty:'目前沒有可顯示的資料。', msgCount:'共 {n} 筆。可用關鍵字快速過濾。',
+        msgDeleting:'刪除中...', msgDeleted:'✅ 已刪除 1 筆。', msgDeleteFail:'❌ 刪除失敗：', msgReLogin:'❌ 登入已過期，請重新登入再試。',
+        theadItem:'項目 / 尺寸', theadNom:'名目', theadLo:'下限公差', theadHi:'上限公差',
+        theadM1:'樣品/實測1', theadM2:'樣品/實測2', theadM3:'樣品/實測3', theadM4:'樣品/實測4', theadM5:'樣品/實測5', theadDecision:'判定',
+        appearance:'外觀'
+      },
+      'zh-CN': {
+        reportTitle:'品检报告（安拓）',
+        filterPh:'关键字（供应商/料号/图号/检验人员）',
+        btnReload:'重新载入', btnClear:'清除关键字', btnReset:'重设帐号', btnDiag:'诊断资料', btnRepair:'一键修复',
+        btnPrint:'打印 / 存成 PDF', btnBackToInput:'回现场输入', langTitle:'选择语言 / Language', langHint:'请选择界面语言：',
+        debugTip:'提示：网址加上 ?debug=1 可显示服务器原始回应；网址加 #resetpass 可清除通关码。',
+        thBasic:'基本资讯', thPart:'料件资讯', thUnified:'外观与量测明细', thResultOps:'结果 / 操作',
+        labelID:'ID：', labelTime:'时间：', labelInspector:'人员：', labelSupplier:'供应商：',
+        labelPartNo:'料号：', labelDrawingNo:'图号：', labelRevision:'版次：', labelProcess:'检验制程：', labelNotes:'备注：',
+        labelOverall:'整体结果：', btnPrintOne:'单笔打印', btnDelete:'删除此笔',
+        msgNoPerm:'您的账号没有检视报告的权限（input）。', msgVerify:'验证中...', msgLoading:'载入中...',
+        msgLoadFail:'❌ 载入失败：', msgEmpty:'目前没有可显示的资料。', msgCount:'共 {n} 笔。可用关键字快速过滤。',
+        msgDeleting:'删除中...', msgDeleted:'✅ 已删除 1 笔。', msgDeleteFail:'❌ 删除失败：', msgReLogin:'❌ 登录已过期，请重新登录再试。',
+        theadItem:'项目 / 尺寸', theadNom:'名义', theadLo:'下限公差', theadHi:'上限公差',
+        theadM1:'样品/实测1', theadM2:'样品/实测2', theadM3:'样品/实测3', theadM4:'样品/实测4', theadM5:'样品/实测5', theadDecision:'判定',
+        appearance:'外观'
+      },
+      'en': {
+        reportTitle:'QC Reports (Antor)',
+        filterPh:'Keyword (supplier/part/drawing/inspector)',
+        btnReload:'Reload', btnClear:'Clear', btnReset:'Reset account', btnDiag:'Diagnose', btnRepair:'Repair',
+        btnPrint:'Print / Save as PDF', btnBackToInput:'Back to Input', langTitle:'Choose language', langHint:'Select UI language:',
+        debugTip:'Tip: add ?debug=1 to show raw response; add #resetpass to clear pass.',
+        thBasic:'Basic Info', thPart:'Part Info', thUnified:'Appearance & Measurements', thResultOps:'Result / Actions',
+        labelID:'ID: ', labelTime:'Time: ', labelInspector:'Inspector: ', labelSupplier:'Supplier: ',
+        labelPartNo:'Part No.: ', labelDrawingNo:'Drawing No.: ', labelRevision:'Revision: ', labelProcess:'Process: ', labelNotes:'Notes: ',
+        labelOverall:'Overall: ', btnPrintOne:'Print single', btnDelete:'Delete',
+        msgNoPerm:'Your account has no view permission (input).', msgVerify:'Verifying...', msgLoading:'Loading...',
+        msgLoadFail:'❌ Load failed: ', msgEmpty:'No data to display.', msgCount:'Total {n}. Use keyword to filter.',
+        msgDeleting:'Deleting...', msgDeleted:'✅ Deleted.', msgDeleteFail:'❌ Delete failed: ', msgReLogin:'❌ Session expired. Please sign in again.',
+        theadItem:'Item / Dimension', theadNom:'Nominal', theadLo:'Lower Tol.', theadHi:'Upper Tol.',
+        theadM1:'Sample1', theadM2:'Sample2', theadM3:'Sample3', theadM4:'Sample4', theadM5:'Sample5', theadDecision:'Decision',
+        appearance:'Appearance'
+      }
+    };
+    function getLang(){ return localStorage.getItem('qci_lang') || ''; }
+    function setLang(lang){ localStorage.setItem('qci_lang', lang); applyI18n(); }
+    function selectLang(lang){ setLang(lang); closeLangModal(); render(); }
+    function openLangModal(){ document.getElementById('langModal').style.display='flex'; }
+    function closeLangModal(){ document.getElementById('langModal').style.display='none'; }
+    function t(key){ const lang=getLang()||'zh-TW'; const d=I18N[lang]||I18N['zh-TW']; return d[key]??(I18N['zh-TW'][key]??key); }
+
+    function applyI18n(){
+      document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); el.innerHTML = t(k); });
+      const filter = document.getElementById('filterText'); if (filter) filter.placeholder = t('filterPh');
+      const titleEl = document.querySelector('title[data-i18n="reportTitle"]'); if (titleEl) titleEl.textContent = t('reportTitle');
+      document.getElementById('tipDebug').textContent = t('debugTip');
+    }
+
+    
+    const PROCESSES = [
+      { code:'WIRE',     zh:'線材',   en:'WIRE' },
+      { code:'FORMING',  zh:'成形',   en:'FORMING' },
+      { code:'TAPING',   zh:'攻牙',   en:'TAPING' },
+      { code:'CUTTING',  zh:'割溝',   en:'CUTTING' },
+      { code:'PLATING',  zh:'電鍍',   en:'PLATING' },
+      { code:'FINISHED', zh:'成品',   en:'FINISHED' },
+      { code:'ASSEMBLY', zh:'組立',   en:'ASSEMBLY' },
+      { code:'FINAL',    zh:'最終成品', en:'FINAL FINISHED' }
+    ];
+    function mapProcess(code){
+      const p = PROCESSES.find(x => x.code === String(code||'').toUpperCase());
+      if (!p) return '';
+      const lang = getLang() || 'zh-TW';
+      return (lang==='en') ? p.en : `${p.zh} (${p.en})`;
+    }
+    
     const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
     const tbody = document.getElementById('tbody');
     const filterText = document.getElementById('filterText');
     const msg = document.getElementById('msg');
     const raw = document.getElementById('raw');
-
+    const btnRepair = document.getElementById('btnRepair');
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
     document.getElementById('btnReload').addEventListener('click', load);
     document.getElementById('btnClear').addEventListener('click', () => { filterText.value = ''; render(); });
     document.getElementById('btnReset').addEventListener('click', () => {
       ['qci_user','qci_pass','qci_role','qci_passcode','qci_inspector'].forEach(k => localStorage.removeItem(k));
-      alert('本機登入資訊已清除。請重新整理頁面登入。');
+      alert('Cleared. / 已清除。');
     });
     document.getElementById('btnDiag').addEventListener('click', diag);
+    document.getElementById('btnRepair').addEventListener('click', repair);
+    document.getElementById('btnLang').addEventListener('click', ()=> openLangModal());
     filterText.addEventListener('input', render);
 
     if (location.hash === '#resetpass') {
@@ -73,87 +183,101 @@
       history.replaceState(null, '', location.pathname + location.search);
     }
 
+    let role = '';
+    let currentUser = '';
+    let canDelete = false;
     let records = [];
 
+    tbody.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-delete');
+      if (btn) { onDelete(btn.getAttribute('data-id')); return; }
+    });
+
     async function ensureAuth() {
-      const user = localStorage.getItem('qci_user') || '';
-      const pass = localStorage.getItem('qci_pass') || '';
+      const user = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
+      const pass = localStorage.getItem('qci_pass') || localStorage.getItem('qci_passcode') || '';
       if (!user || !pass) {
-        const u = prompt('請輸入帳號（檢驗人員）') || '';
-        const p = prompt('請輸入密碼（通關碼/密碼）') || '';
-        if (!u || !p) return { ok:false };
+        const u = prompt('Account / 帳號') || '';
+        const p = prompt('Password / 密碼') || '';
+        if (!u || !p) return { ok: false };
         localStorage.setItem('qci_user', u);
         localStorage.setItem('qci_pass', p);
+        localStorage.setItem('qci_inspector', u);
+        localStorage.setItem('qci_passcode', p);
       }
+      const u2 = localStorage.getItem('qci_user') || '';
+      const p2 = localStorage.getItem('qci_pass') || '';
       try {
-        const u2 = localStorage.getItem('qci_user') || '';
-        const p2 = localStorage.getItem('qci_pass') || '';
-        const res = await fetch('/api/inspections?auth=1', { headers: { 'x-user': u2, 'x-pass': p2, 'x-passcode': p2 } });
+        const res = await fetch('/api/inspections?diag=1', { headers: { 'x-user': u2, 'x-pass': p2, 'x-passcode': p2 } });
         const t = await res.text(); let j={}; try{ j=JSON.parse(t);}catch{}
         if (!res.ok || !j.ok) return { ok:false };
-        const role = (j.role||'').toLowerCase();
-        if (!['admin','viewer'].includes(role)) return { ok:false, msg:'您的帳號沒有檢視報告的權限（input）' };
+        role = (j.role || '').toLowerCase();
+        currentUser = (j.user || '');
+        canDelete = (role === 'admin' && String(currentUser).toLowerCase() === 'boss');
+        btnRepair.style.display = role === 'admin' ? '' : 'none';
         return { ok:true };
       } catch { return { ok:false }; }
     }
 
-    async function load(){
-      msg.textContent = '驗證中...';
-      const auth = await ensureAuth();
-      if (!auth.ok){ msg.textContent = auth.msg || '❌ 請重新登入（帳號/密碼）'; return; }
+    async function load() {
+      applyI18n();
+      msg.textContent = t('msgVerify');
+      const ok = await ensureAuth();
+      if (!ok.ok) { msg.textContent = '❌ Unauthorized'; return; }
+      if (!['admin','viewer'].includes(role)) { msg.textContent = t('msgNoPerm'); return; }
 
-      msg.textContent = '載入中...';
+      msg.textContent = t('msgLoading');
       raw.style.display = 'none'; raw.textContent = '';
       const user = localStorage.getItem('qci_user') || '';
       const pass = localStorage.getItem('qci_pass') || '';
-      try{
-        const res = await fetch('/api/inspections', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+      try {
+        const res = await fetch('/api/inspections', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass } });
         const text = await res.text();
-        if (DEBUG){ raw.style.display='block'; raw.textContent = '原始回應（前 1000 字）：\n' + (text||'').slice(0,1000); }
-        if (!res.ok) throw new Error(`HTTP ${res.status}：${text || '（無訊息）'}`);
+        if (DEBUG) { raw.style.display = 'block'; raw.textContent = 'RAW:\n' + (text || '').slice(0, 1000); }
+        if (!res.ok) throw new Error(`HTTP ${res.status}：${text || ''}`);
 
-        let data={}; try{ data = JSON.parse(text);}catch{ data = text; }
+        let data = {}; try { data = JSON.parse(text); } catch { data = text; }
         let list = listFromJson(data).filter(isValidRecord);
-        // 最新在上
-        list.sort((a,b) => String(b.timestamp||'').localeCompare(String(a.timestamp||'')));
+        list.sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
         records = list;
         render();
-        msg.textContent = records.length ? `共 ${records.length} 筆。` : '目前沒有可顯示的資料。';
-      }catch(e){
-        msg.textContent = '❌ 載入失敗：' + (e.message||e);
-      }
+        msg.textContent = records.length ? t('msgCount').replace('{n}', records.length) : t('msgEmpty');
+        if (!getLang()) openLangModal();
+      } catch (e) { msg.textContent = t('msgLoadFail') + e.message; }
     }
 
-    function render(){
+    function render() {
+      applyI18n();
       const kw = (filterText.value || '').toLowerCase();
       const filtered = records.filter(r => {
-        const text = [ r.inspector, r.supplier, r.partNo, r.drawingNo, r.notes, r.processLabel ].filter(Boolean).join(' ').toLowerCase();
+        const text = [ r.inspector, r.supplier, r.partNo, r.drawingNo, r.revision, r.notes ]
+          .filter(Boolean)+ ' ' + (r.process||'')).join(' ').toLowerCase();
         return text.includes(kw);
       });
+
       tbody.innerHTML = '';
-      for (const r of filtered){
-        const apBlock = buildAppearance(r.appearance || []);
-        const msBlock = buildMeasurements(r.measurements || []);
-        const details = apBlock ? (apBlock + '<div style="height:6px"></div>' + msBlock) : msBlock;
+      for (const r of filtered) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>
-            <div><strong>ID：</strong>${escapeHtml(r.id||'')}</div>
-            <div><strong>時間：</strong>${escapeHtml(formatTime(r.timestamp))}</div>
-            <div><strong>人員：</strong>${escapeHtml(r.inspector||'')}</div>
-            <div><strong>供應商：</strong>${escapeHtml(r.supplier||'')}</div>
+            <div><strong>${t('labelID')}</strong>${escapeHtml(r.id || '')}</div>
+            <div><strong>${t('labelTime')}</strong>${escapeHtml(formatTime(r.timestamp))}</div>
+            <div><strong>${t('labelInspector')}</strong>${escapeHtml(r.inspector || '')}</div>
+            <div><strong>${t('labelSupplier')}</strong>${escapeHtml(r.supplier || '')}</div>
           </td>
           <td>
-            <div><strong>料號：</strong>${escapeHtml(r.partNo||'')}</div>
-            <div><strong>圖號：</strong>${escapeHtml(r.drawingNo||'')}</div>
-            <div><strong>製程：</strong>${escapeHtml(r.processLabel || r.process || '')}</div>
-            <div><strong>備註：</strong>${escapeHtml(r.notes||'')}</div>
+            <div><strong>${t('labelPartNo')}</strong>${escapeHtml(r.partNo || '')}</div>
+            <div><strong>${t('labelDrawingNo')}</strong>${escapeHtml(r.drawingNo || '')}</div>
+            <div><strong>${t('labelRevision')}</strong>${escapeHtml(r.revision || '')}</div>
+            <div><strong>${t('labelProcess')}</strong>${escapeHtml(mapProcess(r.process))}</div>
+            <div><strong>${t('labelNotes')}</strong>${escapeHtml(r.notes || '')}</div>
           </td>
-          <td>${details}</td>
+          <td>${buildUnifiedTable(r.appearance || [], r.measurements || [])}</td>
           <td>
-            <div><strong>${r.overallResult==='PASS' ? '✅ PASS' : '❌ FAIL'}</strong></div>
-            <div class="noprint" style="margin-top:6px">
-              <a class="btn btn-gray" target="_blank" href="print.html?id=${encodeURIComponent(r.id)}">單筆列印</a>
+            <div><strong>${t('labelOverall')}</strong>${r.overallResult === 'PASS' ? '✅ PASS' : '❌ FAIL'}</div>
+            <div class="noprint" style="margin-top:8px; display:flex; flex-direction:column; gap:6px">
+              <a class="btn btn-gray" target="_blank" href="print.html?id=${encodeURIComponent(r.id)}">${t('btnPrintOne')}</a>
+              ${canDelete ? `<button class="btn btn-danger btn-delete" data-id="${escapeAttr(r.id)}">${t('btnDelete')}</button>` : ``}
             </div>
           </td>
         `;
@@ -161,81 +285,148 @@
       }
     }
 
-    // ----- blocks -----
-    function buildAppearance(list){
-      if (!Array.isArray(list) || list.length===0) return '';
-      const rows = list.map(a => \`<tr><td>\${escapeHtml(a.sample||'')}</td><td>\${escapeHtml(a.result||'')}</td></tr>\`).join('');
-      return \`
-        <table>
-          <thead><tr><th>外觀樣品</th><th>結果</th></tr></thead>
-          <tbody>\${rows}</tbody>
-        </table>\`;
-    }
-    function buildMeasurements(list){
-      if (!list.length) return '(無尺寸資料)';
-      const rows = list.map(m => {
-        const arr = Array.isArray(m.measured) ? m.measured
-                 : ((typeof m.measured === 'number') || (typeof m.measured === 'string' && m.measured!=='')) ? [m.measured] : [];
-        const cells = [0,1,2,3,4].map(i => num(arr[i]));
-        const judge = (m.pass===''? '' : (m.pass ? 'PASS' : 'FAIL'));
-        return \`
-          <tr>
-            <td>\${escapeHtml(m.name||'')}</td>
-            <td>\${num(m.nominal)}</td>
-            <td>\${num(m.tolMinus)}</td>
-            <td>\${num(m.tolPlus)}</td>
-            <td>\${cells[0]}</td>
-            <td>\${cells[1]}</td>
-            <td>\${cells[2]}</td>
-            <td>\${cells[3]}</td>
-            <td>\${cells[4]}</td>
-            <td>\${judge}</td>
-          </tr>\`;
-      }).join('');
-      return \`
-        <table>
-          <thead>
-            <tr>
-              <th>尺寸</th><th>名目</th><th>下限公差</th><th>上限公差</th>
-              <th>實測1</th><th>實測2</th><th>實測3</th><th>實測4</th><th>實測5</th>
-              <th>判定</th>
-            </tr>
-          </thead>
-          <tbody>\${rows}</tbody>
-        </table>\`;
+    async function onDelete(id) {
+      if (!id) return;
+      if (!canDelete) { alert('Only boss/admin can delete.'); return; }
+      const ok = confirm(`Delete?\nID：${id}`);
+      if (!ok) return;
+
+      msg.textContent = t('msgDeleting');
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      try {
+        const res = await fetch('/api/inspections?id=' + encodeURIComponent(id), {
+          method: 'DELETE',
+          headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }
+        });
+        const text = await res.text();
+        if (!res.ok) {
+          if (res.status === 401) {
+            ['qci_user','qci_pass','qci_role','qci_passcode','qci_inspector'].forEach(k => localStorage.removeItem(k));
+            msg.textContent = t('msgReLogin');
+            return;
+          }
+          throw new Error(`HTTP ${res.status}：${text || ''}`);
+        }
+        records = records.filter(r => r.id !== id);
+        render();
+        msg.textContent = t('msgDeleted');
+      } catch (e) { msg.textContent = t('msgDeleteFail') + e.message; }
     }
 
-    // ----- helpers -----
-    function listFromJson(x){
+    /* --------- 小工具（相容舊/新資料） ---------- */
+    function listFromJson(x) {
       if (!x) return [];
       if (Array.isArray(x)) return x.flatMap(listFromJson).filter(Boolean);
       if (looksLikeRecord(x)) return [x];
-      if (typeof x === 'object'){
-        if (x.data) return listFromJson(x.data);
+      if (x && typeof x === 'object') {
         if (x.record !== undefined) return listFromJson(x.record);
         if (x.records !== undefined) return listFromJson(x.records);
       }
       return [];
     }
-    function looksLikeRecord(o){
-      return o && typeof o==='object'
-        && typeof o.id==='string'
-        && typeof o.timestamp==='string'
+    function looksLikeRecord(o) {
+      return o && typeof o === 'object'
+        && typeof o.id === 'string'
+        && typeof o.timestamp === 'string'
         && Array.isArray(o.measurements);
     }
-    function isValidRecord(r){ return looksLikeRecord(r) && !!(r.supplier || r.partNo || r.drawingNo || r.inspector); }
+    function isValidRecord(r) {
+      return looksLikeRecord(r) && !!(r.supplier || r.partNo || r.drawingNo || r.inspector);
+    }
+
+    function buildUnifiedTable(appearance, measurements) {
+      const head = `
+        <thead>
+          <tr>
+            <th>${t('theadItem')}</th>
+            <th>${t('theadNom')}</th>
+            <th>${t('theadLo')}</th>
+            <th>${t('theadHi')}</th>
+            <th>${t('theadM1')}</th>
+            <th>${t('theadM2')}</th>
+            <th>${t('theadM3')}</th>
+            <th>${t('theadM4')}</th>
+            <th>${t('theadM5')}</th>
+            <th>${t('theadDecision')}</th>
+          </tr>
+        </thead>`;
+
+      // 外觀第1列（只有有資料才顯示）
+      const appMap = {};
+      if (Array.isArray(appearance)) {
+        for (const a of appearance) {
+          const m = String(a.sample || '').match(/(\d+)/);
+          const idx = m ? Number(m[1]) : null;
+          if (idx && idx >= 1 && idx <= 5) appMap[idx] = String(a.result || '').toUpperCase();
+        }
+      }
+      const hasApp = Object.keys(appMap).length > 0;
+      const appCells = [1,2,3,4,5].map(i => escapeHtml(appMap[i] || ''));
+      const appPass = hasApp && Object.values(appMap).every(v => v === 'OK');
+      const rowAppearance = hasApp ? `
+        <tr>
+          <td><strong>${t('appearance')}</strong></td>
+          <td></td><td></td><td></td>
+          <td>${appCells[0]}</td>
+          <td>${appCells[1]}</td>
+          <td>${appCells[2]}</td>
+          <td>${appCells[3]}</td>
+          <td>${appCells[4]}</td>
+          <td>${appPass ? 'PASS' : 'FAIL'}</td>
+        </tr>` : '';
+
+      // 尺寸列（第2列起）
+      const rowsMeasure = (Array.isArray(measurements) ? measurements : []).map(m => {
+        const arr =
+          Array.isArray(m.measured) ? m.measured :
+          (typeof m.measured === 'number' || (typeof m.measured === 'string' && m.measured !== ''))
+            ? [m.measured] : [];
+        const cells = [0,1,2,3,4].map(i => num(arr[i]));
+        return `
+          <tr>
+            <td>${escapeHtml(m.name)}</td>
+            <td>${num(m.nominal)}</td>
+            <td>${num(m.tolMinus)}</td>
+            <td>${num(m.tolPlus)}</td>
+            <td>${cells[0]}</td>
+            <td>${cells[1]}</td>
+            <td>${cells[2]}</td>
+            <td>${cells[3]}</td>
+            <td>${cells[4]}</td>
+            <td>${m.pass ? 'PASS' : 'FAIL'}</td>
+          </tr>`;
+      }).join('');
+
+      return `<table>${head}<tbody>${rowAppearance}${rowsMeasure}</tbody></table>`;
+    }
+
     function num(v){ return (v===0 || v) ? Number(v).toFixed(3) : ''; }
-    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+    function escapeAttr(s){ return String(s||'').replace(/"/g, '&quot;'); }
     function formatTime(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleString(); }catch{ return iso; } }
 
-    async function diag(){
+    async function diag() {
       const user = localStorage.getItem('qci_user') || '';
       const pass = localStorage.getItem('qci_pass') || '';
       const r = await fetch('/api/inspections?diag=1', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
       const t = await r.text();
-      raw.style.display='block'; raw.textContent = '診斷結果：\n' + t;
+      raw.style.display = 'block'; raw.textContent = '診斷結果：\n' + t;
+    }
+    async function repair() {
+      if (role !== 'admin') { alert('Only admin.'); return; }
+      const ok = confirm('Repair & flatten JSON?');
+      if (!ok) return;
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      const r = await fetch('/api/inspections?repair=1', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+      const t = await r.text();
+      raw.style.display = 'block'; raw.textContent = 'REPAIR:\n' + t;
+      await load();
     }
 
+    // 初始載入
+    applyI18n();
     load();
   </script>
 </body>
