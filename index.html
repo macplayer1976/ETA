@@ -84,14 +84,6 @@
           <input id="revision" />
         </div>
       </div>
-      
-      <div class="row">
-        <div>
-          <label data-i18n="labelProcess">檢驗製程</label>
-          <select id="process"></select>
-        </div>
-      </div>
-    
       <div style="margin-top:12px">
         <label data-i18n="labelNotes">備註</label>
         <textarea id="notes" rows="2"></textarea>
@@ -161,7 +153,7 @@
         loginPrompt:'請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。',
         labelAccount:'帳號（檢驗人員）', labelPassword:'密碼（通關碼/密碼）',
         btnLogin:'登入', btnReset:'清除本機記錄', btnHealth:'健康檢查',
-        labelSupplier:'供應商', labelPartNo:'料號 (Part No.)', labelDrawingNo:'圖號 (Drawing No.)', labelRevision:'版次 (Revision)', labelProcess:'檢驗製程', labelNotes:'備註',
+        labelSupplier:'供應商', labelPartNo:'料號 (Part No.)', labelDrawingNo:'圖號 (Drawing No.)', labelRevision:'版次 (Revision)', labelNotes:'備註',
         sectionTitle:'尺寸與外觀檢驗',
         hintAppearance:'第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。',
         thItem:'項目 / 尺寸名稱', thNominal:'名目值', thTolMinus:'下限公差', thTolPlus:'上限公差',
@@ -184,7 +176,7 @@
         loginPrompt:'请输入「账号（检验人员）」与「密码（通关码/密码）」。',
         labelAccount:'账号（检验人员）', labelPassword:'密码（通关码/密码）',
         btnLogin:'登录', btnReset:'清除本机记录', btnHealth:'健康检查',
-        labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)', labelRevision:'版次 (Revision)', labelProcess:'检验制程', labelNotes:'备注',
+        labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)', labelRevision:'版次 (Revision)', labelNotes:'备注',
         sectionTitle:'尺寸与外观检验',
         hintAppearance:'第 <strong>1</strong> 行为 <strong>外观检查</strong>（可留空）；第 <strong>2</strong> 行开始为尺寸量测。',
         thItem:'项目 / 尺寸名称', thNominal:'名义值', thTolMinus:'下限公差', thTolPlus:'上限公差',
@@ -203,11 +195,11 @@
         appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG'
       },
       'en': {
-        title:'On-site QC (Antor)',
+        title:'On-site QC (Anchor)',
         loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
         labelAccount:'Account (Inspector)', labelPassword:'Password',
         btnLogin:'Sign in', btnReset:'Clear local data', btnHealth:'Health Check',
-        labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.', labelRevision:'Revision', labelProcess:'Process', labelNotes:'Notes',
+        labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.', labelRevision:'Revision', labelNotes:'Notes',
         sectionTitle:'Appearance & Dimensional Inspection',
         hintAppearance:'Row <strong>1</strong> is <strong>Appearance</strong> (optional). From row <strong>2</strong> onwards are dimensions.',
         thItem:'Item / Dimension', thNominal:'Nominal', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
@@ -240,7 +232,6 @@
     }
 
     function applyI18n(){
-      try{ fillProcessSelect(); }catch(_){}
       // 文案
       document.querySelectorAll('[data-i18n]').forEach(el=>{
         const k = el.getAttribute('data-i18n');
@@ -308,7 +299,7 @@
     document.getElementById('btnSave').addEventListener('click', save);
 
     // 自動驗證
-    window.addEventListener('DOMContentLoaded', async () => { try{fillProcessSelect();}catch(_){};
+    window.addEventListener('DOMContentLoaded', async () => {
       applyI18n(); // 先套用現有（或預設繁中）
       const u = localStorage.getItem('qci_user') || localStorage.getItem('qci_inspector') || '';
       const p = localStorage.getItem('qci_pass') || localStorage.getItem('qci_passcode') || '';
@@ -534,7 +525,6 @@
       const partNo = document.getElementById('partNo').value.trim();
       const drawingNo = document.getElementById('drawingNo').value.trim();
       const revision = document.getElementById('revision').value.trim();
-      const process  = (document.getElementById('process')?.value || '').trim();
       const notes = document.getElementById('notes').value.trim();
       if (!supplier || !partNo) { alert(t('need_supplier_part')); return null; }
 
@@ -582,7 +572,7 @@
       const isoLocal = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString();
       return {
         id, timestamp: isoLocal, inspector: inspectorName,
-        supplier, partNo, drawingNo, revision, process, notes,
+        supplier, partNo, drawingNo, revision, notes,
         measurements,
         appearance,                  // 可能是 []（外觀留空）
         overallResult: overall
@@ -628,38 +618,6 @@
       // expose helper to other scripts if needed
       window.__SUPPLIERS__ = SUPPLIERS;
     })();
-</script>
-<script>
-
-    // === Process dropdown ===
-    const PROCESSES = [
-      { code:'WIRE',     zh:'線材',   en:'WIRE' },
-      { code:'FORMING',  zh:'成形',   en:'FORMING' },
-      { code:'TAPING',   zh:'攻牙',   en:'TAPING' },
-      { code:'CUTTING',  zh:'割溝',   en:'CUTTING' },
-      { code:'PLATING',  zh:'電鍍',   en:'PLATING' },
-      { code:'FINISHED', zh:'成品',   en:'FINISHED' },
-      { code:'ASSEMBLY', zh:'組立',   en:'ASSEMBLY' },
-      { code:'FINAL',    zh:'最終成品', en:'FINAL FINISHED' }
-    ];
-    function mapProcess(code){
-      const p = PROCESSES.find(x => x.code === String(code||'').toUpperCase());
-      if (!p) return '';
-      const lang = getLang && getLang() ? getLang() : 'zh-TW';
-      return (lang==='en') ? p.en : `${p.zh} (${p.en})`;
-    }
-    function fillProcessSelect(){
-      const sel = document.getElementById('process'); if (!sel) return;
-      const keep = sel.value || '';
-      const lang = getLang && getLang() ? getLang() : 'zh-TW';
-      const opts = ['<option value=""></option>'].concat(PROCESSES.map(p=>{
-        const label = (lang==='en') ? p.en : `${p.zh} (${p.en})`;
-        return `<option value="${p.code}">${label}</option>`;
-      }));
-      sel.innerHTML = opts.join('');
-      if (keep) sel.value = keep;
-    }
-    
 </script>
 </body>
 </html>

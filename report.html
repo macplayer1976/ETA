@@ -84,7 +84,7 @@
         debugTip:'提示：網址加上 ?debug=1 可顯示伺服器原始回應；網址加 #resetpass 可清除通關碼。',
         thBasic:'基本資訊', thPart:'料件資訊', thUnified:'外觀與量測明細', thResultOps:'結果 / 操作',
         labelID:'ID：', labelTime:'時間：', labelInspector:'人員：', labelSupplier:'供應商：',
-        labelPartNo:'料號：', labelDrawingNo:'圖號：', labelRevision:'版次：', labelProcess:'檢驗製程：', labelNotes:'備註：',
+        labelPartNo:'料號：', labelDrawingNo:'圖號：', labelRevision:'版次：', labelNotes:'備註：',
         labelOverall:'整體結果：', btnPrintOne:'單筆列印', btnDelete:'刪除此筆',
         msgNoPerm:'您的帳號沒有檢視報告的權限（input）。', msgVerify:'驗證中...', msgLoading:'載入中...',
         msgLoadFail:'❌ 載入失敗：', msgEmpty:'目前沒有可顯示的資料。', msgCount:'共 {n} 筆。可用關鍵字快速過濾。',
@@ -101,7 +101,7 @@
         debugTip:'提示：网址加上 ?debug=1 可显示服务器原始回应；网址加 #resetpass 可清除通关码。',
         thBasic:'基本资讯', thPart:'料件资讯', thUnified:'外观与量测明细', thResultOps:'结果 / 操作',
         labelID:'ID：', labelTime:'时间：', labelInspector:'人员：', labelSupplier:'供应商：',
-        labelPartNo:'料号：', labelDrawingNo:'图号：', labelRevision:'版次：', labelProcess:'检验制程：', labelNotes:'备注：',
+        labelPartNo:'料号：', labelDrawingNo:'图号：', labelRevision:'版次：', labelNotes:'备注：',
         labelOverall:'整体结果：', btnPrintOne:'单笔打印', btnDelete:'删除此笔',
         msgNoPerm:'您的账号没有检视报告的权限（input）。', msgVerify:'验证中...', msgLoading:'载入中...',
         msgLoadFail:'❌ 载入失败：', msgEmpty:'目前没有可显示的资料。', msgCount:'共 {n} 笔。可用关键字快速过滤。',
@@ -111,14 +111,14 @@
         appearance:'外观'
       },
       'en': {
-        reportTitle:'QC Reports (Antor)',
+        reportTitle:'QC Reports (Anchor)',
         filterPh:'Keyword (supplier/part/drawing/inspector)',
         btnReload:'Reload', btnClear:'Clear', btnReset:'Reset account', btnDiag:'Diagnose', btnRepair:'Repair',
         btnPrint:'Print / Save as PDF', btnBackToInput:'Back to Input', langTitle:'Choose language', langHint:'Select UI language:',
         debugTip:'Tip: add ?debug=1 to show raw response; add #resetpass to clear pass.',
         thBasic:'Basic Info', thPart:'Part Info', thUnified:'Appearance & Measurements', thResultOps:'Result / Actions',
         labelID:'ID: ', labelTime:'Time: ', labelInspector:'Inspector: ', labelSupplier:'Supplier: ',
-        labelPartNo:'Part No.: ', labelDrawingNo:'Drawing No.: ', labelRevision:'Revision: ', labelProcess:'Process: ', labelNotes:'Notes: ',
+        labelPartNo:'Part No.: ', labelDrawingNo:'Drawing No.: ', labelRevision:'Revision: ', labelNotes:'Notes: ',
         labelOverall:'Overall: ', btnPrintOne:'Print single', btnDelete:'Delete',
         msgNoPerm:'Your account has no view permission (input).', msgVerify:'Verifying...', msgLoading:'Loading...',
         msgLoadFail:'❌ Load failed: ', msgEmpty:'No data to display.', msgCount:'Total {n}. Use keyword to filter.',
@@ -142,24 +142,6 @@
       document.getElementById('tipDebug').textContent = t('debugTip');
     }
 
-    
-    const PROCESSES = [
-      { code:'WIRE',     zh:'線材',   en:'WIRE' },
-      { code:'FORMING',  zh:'成形',   en:'FORMING' },
-      { code:'TAPING',   zh:'攻牙',   en:'TAPING' },
-      { code:'CUTTING',  zh:'割溝',   en:'CUTTING' },
-      { code:'PLATING',  zh:'電鍍',   en:'PLATING' },
-      { code:'FINISHED', zh:'成品',   en:'FINISHED' },
-      { code:'ASSEMBLY', zh:'組立',   en:'ASSEMBLY' },
-      { code:'FINAL',    zh:'最終成品', en:'FINAL FINISHED' }
-    ];
-    function mapProcess(code){
-      const p = PROCESSES.find(x => x.code === String(code||'').toUpperCase());
-      if (!p) return '';
-      const lang = getLang() || 'zh-TW';
-      return (lang==='en') ? p.en : `${p.zh} (${p.en})`;
-    }
-    
     const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
     const tbody = document.getElementById('tbody');
     const filterText = document.getElementById('filterText');
@@ -251,7 +233,7 @@
       const kw = (filterText.value || '').toLowerCase();
       const filtered = records.filter(r => {
         const text = [ r.inspector, r.supplier, r.partNo, r.drawingNo, r.revision, r.notes ]
-          .filter(Boolean)+ ' ' + (r.process||'')).join(' ').toLowerCase();
+          .filter(Boolean).join(' ').toLowerCase();
         return text.includes(kw);
       });
 
@@ -269,7 +251,6 @@
             <div><strong>${t('labelPartNo')}</strong>${escapeHtml(r.partNo || '')}</div>
             <div><strong>${t('labelDrawingNo')}</strong>${escapeHtml(r.drawingNo || '')}</div>
             <div><strong>${t('labelRevision')}</strong>${escapeHtml(r.revision || '')}</div>
-            <div><strong>${t('labelProcess')}</strong>${escapeHtml(mapProcess(r.process))}</div>
             <div><strong>${t('labelNotes')}</strong>${escapeHtml(r.notes || '')}</div>
           </td>
           <td>${buildUnifiedTable(r.appearance || [], r.measurements || [])}</td>
@@ -409,7 +390,7 @@
     async function diag() {
       const user = localStorage.getItem('qci_user') || '';
       const pass = localStorage.getItem('qci_pass') || '';
-      const r = await fetch('/api/inspections?auth=1', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
+      const r = await fetch('/api/inspections?diag=1', { headers: { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }});
       const t = await r.text();
       raw.style.display = 'block'; raw.textContent = '診斷結果：\n' + t;
     }

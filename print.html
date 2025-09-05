@@ -73,7 +73,6 @@
         <div><strong data-i18n="f_partno">料號 Part No.：</strong><span id="f-part"></span></div>
         <div><strong data-i18n="f_drawing">圖號 Drawing No.：</strong><span id="f-draw"></span></div>
         <div><strong data-i18n="f_revision">版次 Revision：</strong><span id="f-rev"></span></div>
-        <div><strong data-i18n="f_process">檢驗製程：</strong><span id="f-process"></span></div>
       </div>
       <div style="margin-top:8px"><strong data-i18n="f_notes">備註：</strong><span id="f-notes"></span></div>
     </div>
@@ -188,7 +187,7 @@
         lang_tip: "请选择显示语言（之后可再更改）："
       },
       "en": {
-        title_print: "Antor Co., Ltd. | Inspection Report (Single)",
+        title_print: "Anchor Co., Ltd. | Inspection Report (Single)",
         title_print_inner: "Inspection Report",
         btn_print: "Print / Download PDF",
         btn_back: "Back to list",
@@ -244,24 +243,6 @@
       const d = I18N[lang] || I18N['zh-Hant'];
       return d[key] || I18N['zh-Hant'][key] || key;
     }
-    
-    const PROCESSES = [
-      { code:'WIRE',     zh:'線材',   en:'WIRE' },
-      { code:'FORMING',  zh:'成形',   en:'FORMING' },
-      { code:'TAPING',   zh:'攻牙',   en:'TAPING' },
-      { code:'CUTTING',  zh:'割溝',   en:'CUTTING' },
-      { code:'PLATING',  zh:'電鍍',   en:'PLATING' },
-      { code:'FINISHED', zh:'成品',   en:'FINISHED' },
-      { code:'ASSEMBLY', zh:'組立',   en:'ASSEMBLY' },
-      { code:'FINAL',    zh:'最終成品', en:'FINAL FINISHED' }
-    ];
-    function mapProcess(code){
-      const p = PROCESSES.find(x => x.code === String(code||'').toUpperCase());
-      if (!p) return '';
-      const lang = getLang ? (getLang() || 'zh-Hant') : 'zh-Hant';
-      return (lang==='en') ? p.en : `${p.zh} (${p.en})`;
-    }
-    
     function applyI18n(){
       document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
       const titleEl = document.querySelector('title[data-i18n="title_print"]');
@@ -432,7 +413,6 @@
       document.getElementById('f-draw').textContent = rec.drawingNo || '';
       document.getElementById('f-rev').textContent = rec.revision || '';
       document.getElementById('f-notes').textContent = rec.notes || '';
-      const fp = document.getElementById('f-process'); if (fp) fp.textContent = mapProcess(rec.process);
 
       document.getElementById('unified').innerHTML = buildUnifiedTable(rec.appearance || [], rec.measurements || []);
     }
