@@ -36,53 +36,7 @@
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2 data-i18n="title">現場品檢（安拓）</h2>
-
-    <!-- 登入區 -->
-    <div id="loginView">
-      <p class="muted" data-i18n="loginPrompt">請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。</p>
-      <div class="row">
-        <div>
-          <label data-i18n="labelAccount">帳號（檢驗人員）</label>
-          <input id="inspector" />
-        </div>
-        <div>
-          <label data-i18n="labelPassword">密碼（通關碼/密碼）</label>
-          <input id="passcode" type="password" />
-        </div>
-      </div>
-      <div class="toolbar">
-        <button class="btn btn-primary" id="btnLogin" data-i18n="btnLogin">登入</button>
-        <button class="btn btn-ghost" id="btnResetPass" data-i18n="btnReset">清除本機記錄</button>
-        <a class="btn btn-ghost" href="/api/inspections?health=1" target="_blank" id="btnHealth" data-i18n="btnHealth">健康檢查</a>
-        <button class="btn btn-ghost" id="btnLang">🌐 語言</button>
-      </div>
-      <p id="loginMsg" class="muted"></p>
-    </div>
-
-    <!-- 表單區（input/admin 可見） -->
-    <div id="formView" class="hidden">
-      <div class="row">
-        <div>
-          <label data-i18n="labelSupplier">供應商</label>
-          <select id="supplier"></select>
-        <div class="muted" id="supplierEn"></div>
-        </div>
-        <div>
-          <label data-i18n="labelPartNo">料號 (Part No.)</label>
-          <input id="partNo" />
-        </div>
-      </div>
-      <div class="row">
-        <div>
-          <label data-i18n="labelDrawingNo">圖號 (Drawing No.)</label>
-          <input id="drawingNo" />
-        </div>
-        <div>
-          <label data-i18n="labelRevision">版次 (Revision)</label>
-          <input id="revision" />
-        </div>
+  
       </div>
       <div style="margin-top:12px">
         <label data-i18n="labelNotes">備註</label>
@@ -153,7 +107,7 @@
         loginPrompt:'請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。',
         labelAccount:'帳號（檢驗人員）', labelPassword:'密碼（通關碼/密碼）',
         btnLogin:'登入', btnReset:'清除本機記錄', btnHealth:'健康檢查',
-        labelSupplier:'供應商', labelPartNo:'料號 (Part No.)', labelDrawingNo:'圖號 (Drawing No.)', labelRevision:'版次 (Revision)', labelNotes:'備註',
+        labelSupplier:'供應商', labelPartNo:'料號 (Part No.)', labelDrawingNo:'圖號 (Drawing No.)',labelNotes:'備註',
         sectionTitle:'尺寸與外觀檢驗',
         hintAppearance:'第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。',
         thItem:'項目 / 尺寸名稱', thNominal:'名目值', thTolMinus:'下限公差', thTolPlus:'上限公差',
@@ -163,7 +117,7 @@
         viewOnlyTip:'您的角色是 <strong>viewer</strong>（只能看/印報告）。請改到 <a href="report.html">報告頁</a>。',
         langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：',
         phAccount:'例如：boss / worker1 / qa1', phPassword:'例如：admin123 / in1111 / view2222',
-        phSupplier:'例如：XX 表面處理廠', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：現場尺寸穩定/外觀無瑕疵',
+        phSupplier:'例如：XX 表面處理廠', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6',phNotes:'例如：現場尺寸穩定/外觀無瑕疵',
         phName:'例：頭部厚度', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
         phM1:'實測1', phM2:'實測2', phM3:'實測3', phM4:'實測4', phM5:'實測5',
         login_msg_need:'請輸入帳號與密碼', login_msg_auto:'自動驗證中...', login_msg_changed:'❌ 帳號或密碼已變更，請重新登入。', login_msg_wrong:'❌ 帳號或密碼錯誤', login_verifying:'驗證中...',
@@ -176,7 +130,7 @@
         loginPrompt:'请输入「账号（检验人员）」与「密码（通关码/密码）」。',
         labelAccount:'账号（检验人员）', labelPassword:'密码（通关码/密码）',
         btnLogin:'登录', btnReset:'清除本机记录', btnHealth:'健康检查',
-        labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)', labelRevision:'版次 (Revision)', labelNotes:'备注',
+        labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)',labelNotes:'备注',
         sectionTitle:'尺寸与外观检验',
         hintAppearance:'第 <strong>1</strong> 行为 <strong>外观检查</strong>（可留空）；第 <strong>2</strong> 行开始为尺寸量测。',
         thItem:'项目 / 尺寸名称', thNominal:'名义值', thTolMinus:'下限公差', thTolPlus:'上限公差',
@@ -186,7 +140,7 @@
         viewOnlyTip:'您的角色是 <strong>viewer</strong>（只能看/打印报告）。请改到 <a href="report.html">报告页</a>。',
         langTitle:'选择语言 / Language', langHint:'请选择界面语言：',
         phAccount:'例如：boss / worker1 / qa1', phPassword:'例如：admin123 / in1111 / view2222',
-        phSupplier:'例如：XX 表面处理厂', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：现场尺寸稳定/外观无瑕疵',
+        phSupplier:'例如：XX 表面处理厂', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6',phNotes:'例如：现场尺寸稳定/外观无瑕疵',
         phName:'例：头部厚度', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
         phM1:'实测1', phM2:'实测2', phM3:'实测3', phM4:'实测4', phM5:'实测5',
         login_msg_need:'请输入账号与密码', login_msg_auto:'自动验证中...', login_msg_changed:'❌ 账号或密码已变更，请重新登录。', login_msg_wrong:'❌ 账号或密码错误', login_verifying:'验证中...',
@@ -199,7 +153,7 @@
         loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
         labelAccount:'Account (Inspector)', labelPassword:'Password',
         btnLogin:'Sign in', btnReset:'Clear local data', btnHealth:'Health Check',
-        labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.', labelRevision:'Revision', labelNotes:'Notes',
+        labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.',labelNotes:'Notes',
         sectionTitle:'Appearance & Dimensional Inspection',
         hintAppearance:'Row <strong>1</strong> is <strong>Appearance</strong> (optional). From row <strong>2</strong> onwards are dimensions.',
         thItem:'Item / Dimension', thNominal:'Nominal', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
@@ -209,7 +163,7 @@
         viewOnlyTip:'Your role is <strong>viewer</strong> (view/print only). Go to <a href="report.html">Reports</a>.',
         langTitle:'Choose language', langHint:'Select UI language:',
         phAccount:'e.g. boss / worker1 / qa1', phPassword:'e.g. admin123 / in1111 / view2222',
-        phSupplier:'e.g. XX Surface Shop', phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6', phRevision:'e.g. Rev.B', phNotes:'e.g. Dimensions stable / No defects',
+        phSupplier:'e.g. XX Surface Shop', phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6',phNotes:'e.g. Dimensions stable / No defects',
         phName:'e.g. Head thickness', phNominal:'e.g. 3.000', phTolMinus:'e.g. -0.100', phTolPlus:'e.g. 0.100',
         phM1:'Sample1', phM2:'Sample2', phM3:'Sample3', phM4:'Sample4', phM5:'Sample5',
         login_msg_need:'Please enter account & password', login_msg_auto:'Auto checking...', login_msg_changed:'❌ Account or password changed, sign in again.', login_msg_wrong:'❌ Wrong account or password', login_verifying:'Verifying...',
@@ -240,7 +194,7 @@
       // placeholder
       const m = {
         '#inspector':'phAccount', '#passcode':'phPassword',
-        '#supplier':'phSupplier', '#partNo':'phPartNo', '#drawingNo':'phDrawingNo', '#revision':'phRevision', '#notes':'phNotes'
+        '#supplier':'phSupplier', '#partNo':'phPartNo', '#drawingNo':'phDrawingNo','#notes':'phNotes'
       };
       Object.entries(m).forEach(([sel,key])=>{
         const el = document.querySelector(sel); if (el) el.placeholder = t(key);
@@ -524,7 +478,6 @@
       const supplier = document.getElementById('supplier').value.trim();
       const partNo = document.getElementById('partNo').value.trim();
       const drawingNo = document.getElementById('drawingNo').value.trim();
-      const revision = document.getElementById('revision').value.trim();
       const notes = document.getElementById('notes').value.trim();
       if (!supplier || !partNo) { alert(t('need_supplier_part')); return null; }
 
