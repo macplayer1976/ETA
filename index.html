@@ -146,7 +146,13 @@
   </div>
 
   <script>
-    /* ============ I18N 字典（補上 labelProcess，避免顯示 key 本身） ============ */
+    
+// Explicit element lookups to avoid relying on legacy global IDs
+const loginView = document.getElementById('loginView');
+const formView = document.getElementById('formView');
+const viewOnlyTip = document.getElementById('viewOnlyTip');
+let _afterPick = null;
+/* ============ I18N 字典（補上 labelProcess，避免顯示 key 本身） ============ */
     const I18N = {
       'zh-TW': {
         title:'現場品檢（安拓）',
@@ -347,10 +353,6 @@
     viewOnlyTip.classList.add('hidden');
   }
 }
-
-      else { rv.classList.add('hidden'); document.getElementById('formView').classList.remove('hidden'); }
-    }
-
     // 建立要儲存的紀錄
     function buildRecord(){
       const user = localStorage.getItem('qci_user') || '';
