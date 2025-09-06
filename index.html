@@ -303,6 +303,7 @@ let _afterPick = null;
           <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
           <td></td>`;
         tbody.appendChild(tr);
+      updateDecisionForRow(tr);
       }
     }
     function addMeasureRow(){
@@ -318,7 +319,8 @@ let _afterPick = null;
         <td><input class="m m3" type="number" step="0.001" placeholder="${t('phM3')}" /></td>
         <td><input class="m m4" type="number" step="0.001" placeholder="${t('phM4')}" /></td>
         <td><input class="m m5" type="number" step="0.001" placeholder="${t('phM5')}" /></td>
-        <td></td>`;
+        <td></td
+      updateDecisionForRow(tr);>`;
       tbody.appendChild(tr);
     }
     function countMeasureRows(){ return tbody.querySelectorAll('tr[data-type="measure"]').length; }
@@ -332,6 +334,46 @@ let _afterPick = null;
     function clearMeasureRows(){
       tbody.querySelectorAll('tr[data-type="measure"]').forEach(tr=>tr.remove());
     }
+    // 判定單列 PASS/FAIL（有名目 & 公差 & 至少一筆實測才判）
+    function decidePass(nom, lo, hi, measured){
+      const hasNom = (nom===0 || nom) && !isNaN(Number(nom));
+      const hasLo  = (lo===0  || lo)  && !isNaN(Number(lo));
+      const hasHi  = (hi===0  || hi)  && !isNaN(Number(hi));
+      const vals = Array.isArray(measured) ? measured.filter(v => v===0 || v).map(Number) : [];
+      if (!(hasNom && hasLo && hasHi) || vals.length===0) return undefined; // 不顯示
+      const min = Number(nom) + Number(lo), max = Number(nom) + Number(hi);
+      return vals.every(v => v>=min && v<=max);
+    }
+    function updateDecisionForRow(tr){
+      if (!tr) return;
+      const cell = tr.querySelector('td:last-child');
+      if (!cell) return;
+      if (tr.getAttribute('data-type')==='appearance'){
+        const oks = Array.from(tr.querySelectorAll('select.ap')).map(s => (s.value||'').toUpperCase());
+        const filled = oks.filter(v => v==='OK' || v==='O.K' || v==='NG');
+        if (!filled.length){ cell.textContent=''; cell.className=''; return; }
+        const allOk = oks.every(v => v==='OK' || v==='O.K');
+        cell.textContent = allOk ? 'PASS' : 'FAIL';
+        cell.className = allOk ? 'pass' : 'fail';
+        return;
+      }
+      // measure
+      const nom = tr.querySelector('.nom').value;
+      const lo  = tr.querySelector('.lo').value;
+      const hi  = tr.querySelector('.hi').value;
+      const ms  = [1,2,3,4,5].map(i => tr.querySelector('.m'+i).value===''?null:Number(tr.querySelector('.m'+i).value));
+      const dec = decidePass(nom, lo, hi, ms);
+      if (typeof dec==='boolean'){
+        cell.textContent = dec ? 'PASS' : 'FAIL';
+        cell.className = dec ? 'pass' : 'fail';
+      }else{
+        cell.textContent = ''; cell.className='';
+      }
+    }
+    function updateAllDecisions(){
+      tbody.querySelectorAll('tr').forEach(updateDecisionForRow);
+    }
+    
 
     // 登入與權限（與後端 inspections.js 相容）
     async function authCheck(u,p){
@@ -391,7 +433,8 @@ let _afterPick = null;
           nominal: nom===''?null:Number(nom),
           tolMinus: lo===''?null:Number(lo),
           tolPlus: hi===''?null:Number(hi),
-          measured: ms
+          measured: ms,
+          pass: decidePass(nom, lo, hi, ms)
         };
       });
 
@@ -469,6 +512,7 @@ let _afterPick = null;
     function ensureMeasurementTemplate(){
       ensureAppearanceRow();
       if (countMeasureRows() === 0) ensureMeasureRows(1);
+      updateAllDecisions();
     }
 
     // 綁定事件
@@ -484,7 +528,14 @@ let _afterPick = null;
     document.getElementById('btnRemove').addEventListener('click', removeLastMeasureRow);
     document.getElementById('btnClearRows').addEventListener('click', ()=>{ clearMeasureRows(); });
 
-    window.addEventListener('DOMContentLoaded', ()=>{
+    
+    // 及時判定：輸入/變更時重新計算 PASS/FAIL
+    tbody.addEventListener('input', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
+    tbody.addEventListener('change', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
+
+    // 綁定儲存
+    document.getElementById('btnSave').addEventListener('click', save);
+window.addEventListener('DOMContentLoaded', ()=>{
       // 首次渲染 i18n 與選單
       applyI18n();
       // 若曾經登入過，自動顯示表單
