@@ -71,7 +71,6 @@
         <div><strong data-i18n="f_supplier">供應商：</strong><span id="f-supplier"></span></div>
         <div><strong data-i18n="f_partno">料號 Part No.：</strong><span id="f-part"></span></div>
         <div><strong data-i18n="f_drawing">圖號 Drawing No.：</strong><span id="f-draw"></span></div>
-        <div><strong data-i18n="f_revision">版次 Revision：</strong><span id="f-rev"></span></div>
         <div><strong data-i18n="f_process">製程 Process：</strong><span id="f-process"></span></div>
       </div>
       <div style="margin-top:8px"><strong data-i18n="f_notes">備註：</strong><span id="f-notes"></span></div>
@@ -284,7 +283,7 @@
         document.getElementById('f-supplier').textContent = curr.supplier || '';
         document.getElementById('f-part').textContent = curr.partNo || '';
         document.getElementById('f-draw').textContent = curr.drawingNo || '';
-        document.getElementById('f-rev').textContent = curr.revision || '';
+        const _revEl = document.getElementById('f-rev'); if (_revEl) _revEl.textContent = curr.revision || '';
         document.getElementById('f-process').textContent = mapProcess(curr.process||'');
         document.getElementById('f-notes').textContent = curr.notes || '';
         document.getElementById('sig-inspector').textContent = curr.inspector || '';

@@ -327,9 +327,7 @@
           </td>
           <td>
             <div>${t('labelPartNo')}${escapeHtml(r.partNo||'')}</div>
-            <div>${t('labelDrawingNo')}${escapeHtml(r.drawingNo||'')}</div>
-            <div>${t('labelRevision')}${escapeHtml(r.revision||'')}</div>
-            <div>${t('labelProcess')}${escapeHtml(mapProcess(r.process||r.processCode||''))}</div>
+            <div>${t('labelDrawingNo')}${escapeHtml(r.drawingNo||'')}</div>            <div>${t('labelProcess')}${escapeHtml(mapProcess(r.process||r.processCode||''))}</div>
             <div>${t('labelNotes')}${escapeHtml(r.notes||'')}</div>
           </td>
           <td>${buildUnifiedTable(r)}</td>
