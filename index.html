@@ -540,7 +540,7 @@ let _afterPick = null;
         id, timestamp: now.toISOString(),
         inspector: user,
         supplier: sOpt.dataset.zh, supplierEn: sOpt.dataset.en, supplierCode: sOpt.value,
-        partNo, drawingNo, revision: '', // 相容舊欄位存在，但不使用
+        orderNo, lotNo, partNo, drawingNo, material, spec, category, revision: '', // 相容舊欄位存在，但不使用
         process: pOpt ? pOpt.value : '', processLabel: pOpt ? (pOpt.dataset.zh + ' (' + pOpt.dataset.en + ')') : '',
         notes, appearance, measurements,
         overallResult: calcOverall()
