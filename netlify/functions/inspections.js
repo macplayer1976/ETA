@@ -1,253 +1,198 @@
-// netlify/functions/inspections.js
-// 擴充帳號模式 + 舊通關碼相容；GET 列表、POST 新增、DELETE 刪除（boss+admin）。
-exports.handler = async (event) => {
-  const ENV = process.env || {};
-  const API_KEY   = ENV.JSONBIN_API_KEY;
-  const BIN_ID    = ENV.JSONBIN_BIN_ID;
-  const PASSCODE  = ENV.PASSCODE;
 
-  // 解析 ACCOUNTS_JSON（舊機制）
-  const BASE_ACCOUNTS = parseAccounts(ENV.ACCOUNTS_JSON);
+/**
+ * Netlify Function: /api/inspections
+ * Features:
+ * - GET ?health=1: return {ok:true, bin, count}
+ * - GET (list): return {records:[...]}
+ * - GET ?id=...: return a single record object
+ * - POST (create): append a record into JSONBin "records" array
+ *
+ * Auth:
+ * - Uses ACCOUNT_JSON (JSON) and/or INPUT/VIEWER CSV + FIXED_PWD.
+ * - Allows POST for role "input" or "admin".
+ * - Accepts either the per-user password (x-pass) or shared PASSCODE (x-passcode) for write.
+ */
+const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || "";
+const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || process.env.JSONBIN_BIB_ID || "";
+const ACCOUNT_JSON = (()=>{ try{ return JSON.parse(process.env.ACCOUNT_JSON || "[]"); }catch{ return []; } })();
+const INPUT_USERS = (process.env.INPUT_USERS_CSV || "").split(",").map(s=>s.trim()).filter(Boolean);
+const VIEWER_USERS = (process.env.VIEWER_USERS_CSV || "").split(",").map(s=>s.trim()).filter(Boolean);
+const INPUT_FIXED_PWD = process.env.INPUT_FIXED_PWD || "";
+const VIEWER_FIXED_PWD = process.env.VIEWER_FIXED_PWD || "";
+const PASSCODE = process.env.PASSCODE || "";
 
-  // 依環境變數擴充 input/viewer（新機制）
-  const ACCOUNTS = buildAccounts(BASE_ACCOUNTS, {
-    INPUT_USERS_CSV:   ENV.INPUT_USERS_CSV || '',
-    INPUT_FIXED_PWD:   ENV.INPUT_FIXED_PWD || '',
-    VIEWER_USERS_CSV:  ENV.VIEWER_USERS_CSV || '',
-    VIEWER_FIXED_PWD:  ENV.VIEWER_FIXED_PWD || '',
+function json(res, status=200, headers={}){
+  return { statusCode: status, headers: { "content-type":"application/json; charset=utf-8", ...headers }, body: JSON.stringify(res) };
+}
+function text(res, status=200, headers={}){
+  return { statusCode: status, headers: { "content-type":"text/plain; charset=utf-8", ...headers }, body: String(res) };
+}
+function nowISO(){ return new Date().toISOString(); }
+
+function roleOf(user, pass){
+  user = String(user||"").trim(); pass = String(pass||"").trim();
+  // 1) ACCOUNT_JSON exact match
+  const acc = ACCOUNT_JSON.find(a => a && a.user===user && a.pwd===pass);
+  if (acc && acc.role) return { ok:true, role: acc.role, user };
+  // 2) INPUT via CSV + FIXED
+  if (user && INPUT_USERS.includes(user) && pass && (pass===INPUT_FIXED_PWD || pass===PASSCODE)){
+    return { ok:true, role:"input", user };
+  }
+  // 3) VIEWER via CSV + FIXED
+  if (user && VIEWER_USERS.includes(user) && pass && (pass===VIEWER_FIXED_PWD || pass===PASSCODE)){
+    return { ok:true, role:"viewer", user };
+  }
+  // 4) Fallback: if pass matches PASSCODE, treat as input (for field convenience)
+  if (pass && PASSCODE && pass===PASSCODE) return { ok:true, role:"input", user:user||"unknown" };
+  return { ok:false, role:"", user };
+}
+
+async function jsonbinLatest(){
+  if (!JSONBIN_BIN_ID) throw new Error("Missing JSONBIN_BIN_ID/JSONBIN_BIB_ID");
+  const url = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
+  const r = await fetch(url, { headers: { "X-Master-Key": JSONBIN_API_KEY } });
+  if (r.status === 404) return { record: { records: [] } };
+  if (!r.ok){
+    const t = await r.text();
+    throw new Error(`JSONBin read failed: ${r.status} ${t}`);
+  }
+  return await r.json();
+}
+
+async function jsonbinPut(record){
+  if (!JSONBIN_BIN_ID) throw new Error("Missing JSONBIN_BIN_ID/JSONBIN_BIB_ID");
+  const url = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+  const r = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "X-Master-Key": JSONBIN_API_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(record)
   });
-
-  // CORS
-  if (event.httpMethod === 'OPTIONS') return text(200, 'OK');
-
-  const qs = event.queryStringParameters || {};
-
-  // 健康檢查（不需登入）
-  if (event.httpMethod === 'GET' && (qs.health === '1' || qs.health === 'true')) {
-    return json(200, { ok: true, runtime: process.version, hasFetch: typeof fetch === 'function' });
+  if (!r.ok){
+    const t = await r.text();
+    throw new Error(`JSONBin write failed: ${r.status} ${t}`);
   }
-
-  if (!API_KEY || !BIN_ID) {
-    return json(500, { error: 'Missing env: JSONBIN_API_KEY / JSONBIN_BIN_ID' });
-  }
-
-  // --- 驗證 ---
-  const auth = authenticate(ACCOUNTS, PASSCODE, event.headers);
-  if (!auth.ok) return json(auth.status || 401, { ok:false, error: auth.error || 'Unauthorized' });
-
-  // 回傳身份（前端登入檢查用）
-  if (event.httpMethod === 'GET' && (qs.auth === '1' || qs.auth === 'true')) {
-    return json(200, { ok: true, mode: auth.mode, role: auth.role, user: auth.user || '' });
-  }
-
-  // 診斷資料（admin/viewer）
-  if (event.httpMethod === 'GET' && (qs.diag === '1' || qs.diag === 'true')) {
-    if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error: 'Forbidden' });
-    const g = await jsonbinGet(BIN_ID, API_KEY);
-    if (!g.ok) return json(g.status || 500, { ok:false, error: 'JSONBIN GET failed', detail: g.text });
-    const list = listFromJson(g.json);
-    const last = list.length ? list[list.length-1] : null;
-    return json(200, { ok:true, count:list.length, last: last ? { id:last.id, timestamp:last.timestamp, inspector:last.inspector, hasMeasurements: Array.isArray(last.measurements) } : null });
-  }
-
-  // 修復（admin）
-  if (event.httpMethod === 'GET' && (qs.repair === '1' || qs.repair === 'true')) {
-    if (!allow(auth.role, ['admin'])) return json(403, { ok:false, error:'Forbidden' });
-    const g = await jsonbinGet(BIN_ID, API_KEY);
-    if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
-    let list = listFromJson(g.json);
-    list = dedupById(list);
-    const p = await jsonbinPut(BIN_ID, API_KEY, list);
-    if (!p.ok) return json(p.status || 500, { ok:false, error:'JSONBIN PUT failed', detail:p.text });
-    return json(200, { ok:true, repaired:list.length });
-  }
-
-  // 讀清單（admin/viewer）
-  if (event.httpMethod === 'GET') {
-    if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error:'Forbidden' });
-    const g = await jsonbinGet(BIN_ID, API_KEY);
-    if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
-    return json(200, listFromJson(g.json));
-  }
-
-  // 新增（admin/input）
-  if (event.httpMethod === 'POST') {
-    if (!allow(auth.role, ['admin', 'input'])) return json(403, { ok:false, error:'Forbidden' });
-    let body = {}; try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
-    if (!body || !body.record) return json(400, { ok:false, error:'Missing record' });
-
-    const rec = sanitizeRecord(body.record, auth.user);
-    const result = await saveWithRetry(BIN_ID, API_KEY, rec, 5);
-    if (!result.ok) return json(500, { ok:false, error: 'Failed to save after retries', lastStatus: result.lastStatus, lastText: result.lastText });
-    return json(200, { ok:true, id: rec.id });
-  }
-
-  // 刪除（boss+admin）
-  if (event.httpMethod === 'DELETE') {
-    const id = (qs.id || '').trim();
-    if (!id) return json(400, { ok:false, error:'Missing id' });
-
-    const isBoss = (String(auth.user || '').toLowerCase() === 'boss') && allow(auth.role, ['admin']);
-    if (!isBoss) return json(403, { ok:false, error:'Forbidden' });
-
-    const result = await deleteWithRetry(BIN_ID, API_KEY, id, 5);
-    if (!result.ok) return json(result.lastStatus || 500, { ok:false, error:'Failed to delete', lastStatus: result.lastStatus, lastText: result.lastText });
-    return json(200, { ok:true, deleted: result.deleted ? 1 : 0, id });
-  }
-
-  return json(405, { ok:false, error:'Method Not Allowed' });
-
-  // ---- 小工具 ----
-  function headers() {
-    return {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type, x-passcode, x-user, x-pass',
-      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-    };
-  }
-  function json(code, obj) { return { statusCode: code, headers: headers(), body: JSON.stringify(obj) }; }
-  function text(code, s)    { return { statusCode: code, headers: headers(), body: s }; }
-};
-
-/* ======= 帳號擴充 ======= */
-function buildAccounts(baseAccounts, env) {
-  const base = Array.isArray(baseAccounts) ? baseAccounts : [];
-  const admins = base.filter(a => (a.role || '').toLowerCase() === 'admin');
-  const parseCsv = (s) => String(s || '').split(/[,，\n]/).map(x => x.trim()).filter(Boolean);
-  const inputUsers  = parseCsv(env.INPUT_USERS_CSV);
-  const viewerUsers = parseCsv(env.VIEWER_USERS_CSV);
-  const inputPwd    = String(env.INPUT_FIXED_PWD || '');
-  const viewerPwd   = String(env.VIEWER_FIXED_PWD || '');
-  if ((inputUsers.length && inputPwd) || (viewerUsers.length && viewerPwd)) {
-    const out = [...admins];
-    for (const u of inputUsers)  out.push({ user: u, pwd: inputPwd,  role: 'input'  });
-    for (const u of viewerUsers) out.push({ user: u, pwd: viewerPwd, role: 'viewer' });
-    const seen = new Set(); const uniq = [];
-    for (const a of out){ const k = (a.role||'').toLowerCase()+'::'+String(a.user||''); if (!seen.has(k)){ seen.add(k); uniq.push(a); } }
-    return uniq;
-  }
-  return base;
+  return await r.json();
 }
 
-/* ======= 驗證與授權 ======= */
-function parseAccounts(raw) {
-  try {
-    if (!raw) return [];
-    let s = String(raw);
-    if (/^base64:/i.test(s)) s = Buffer.from(s.slice(7), 'base64').toString('utf8');
-    const arr = JSON.parse(s);
-    return Array.isArray(arr) ? arr : [];
-  } catch { return []; }
-}
-function authenticate(accounts, passcodeEnv, headers) {
-  const h = headers || {};
-  const user = (h['x-user'] || h['X-User'] || '').trim();
-  const pass = (h['x-pass'] || h['X-Pass'] || '').trim();
-  const team = (h['x-passcode'] || h['X-Passcode'] || '').trim();
-
-  if (accounts && accounts.length) {
-    const found = accounts.find(a => String(a.user) === user && String(a.pwd) === pass);
-    if (!found) return { ok:false, status:401, error:'Unauthorized' };
-    const role = (found.role || 'input').toLowerCase();
-    return { ok:true, mode:'accounts', role, user };
+function decideOverall(rec){
+  // appearance: if any NG => FAIL; if none filled => undecided
+  let appearanceOK = null;
+  if (Array.isArray(rec.appearance) && rec.appearance.length){
+    appearanceOK = rec.appearance.every(a => String(a.result||"").toUpperCase().startsWith("OK"));
   }
-  if (!passcodeEnv || team !== passcodeEnv) {
-    return { ok:false, status:401, error:'Unauthorized' };
+  // measurements
+  let measureOK = null;
+  if (Array.isArray(rec.measurements) && rec.measurements.length){
+    measureOK = true;
+    for (const m of rec.measurements){
+      const nom = Number(m.nominal), lo = Number(m.tolMinus), hi = Number(m.tolPlus);
+      const arr = Array.isArray(m.measured) ? m.measured : [];
+      const hasNums = arr.some(v => v===0 || Number.isFinite(Number(v)));
+      if ((Number.isFinite(nom) && Number.isFinite(lo) && Number.isFinite(hi) && hasNums)){
+        const min = nom + lo, max = nom + hi;
+        const ok = arr.filter(v => v===0 || Number.isFinite(Number(v))).map(Number).every(v => v>=min && v<=max);
+        if (!ok){ measureOK = false; break; }
+      }
+    }
   }
-  return { ok:true, mode:'passcode', role:'admin', user:user || '' };
-}
-function allow(role, list) { return list.includes((role || '').toLowerCase()); }
-
-/* ======= JSONBIN I/O ======= */
-async function jsonbinGet(binId, apiKey) {
-  try {
-    const r = await fetch('https://api.jsonbin.io/v3/b/' + binId + '/latest', {
-      headers: { 'X-Master-Key': apiKey },
-    });
-    const text = await r.text();
-    let json = null; try { json = JSON.parse(text); } catch (e) { json = null; }
-    return { ok: r.ok, status: r.status, text, json };
-  } catch (e) {
-    return { ok: false, status: 0, text: String(e) };
-  }
-}
-async function jsonbinPut(binId, apiKey, list) {
-  try {
-    const r = await fetch('https://api.jsonbin.io/v3/b/' + binId, {
-      method:'PUT', headers:{ 'Content-Type':'application/json', 'X-Master-Key': apiKey },
-      body: JSON.stringify({ record: list })
-    });
-    const text = await r.text();
-    return { ok:r.ok, status:r.status, text };
-  } catch (e) {
-    return { ok:false, status:0, text:String(e) };
-  }
+  if (appearanceOK===false || measureOK===false) return "FAIL";
+  if (appearanceOK===true && (measureOK===true || measureOK===null)) return "PASS";
+  if (appearanceOK===null && measureOK===true) return "PASS";
+  return ""; // insufficient info
 }
 
-/* ======= 資料處理 ======= */
-function listFromJson(data){
-  if (!data) return [];
-  if (Array.isArray(data)) return data;
-  if (data.record) return listFromJson(data.record);
-  if (data.records) return listFromJson(data.records);
-  if (data.id && data.timestamp) return [data];
-  return [];
-}
-function dedupById(arr){
-  const seen = new Set(); const out = [];
-  for (const x of arr){
-    const id = String(x && x.id || '');
-    if (!id || seen.has(id)) continue;
-    seen.add(id); out.push(x);
-  }
-  return out;
-}
-function sanitizeRecord(r, who){
+exports.handler = async (event, context) => {
   try{
-    const now = new Date().toISOString();
-    const id = r.id && String(r.id) || `INS-${now.replace(/\D/g,'').slice(0,14)}-${Math.floor(100+Math.random()*900)}`;
-    return {
-      id, timestamp: r.timestamp || now,
-      inspector: r.inspector || who || '',
-      supplier: r.supplier || '', supplierEn: r.supplierEn || '', supplierCode: r.supplierCode || '',
-      partNo: r.partNo || '', drawingNo: r.drawingNo || '',
-      revision: r.revision || '',
-      process: r.process || r.processCode || '',
-      notes: r.notes || '',
-      appearance: Array.isArray(r.appearance) ? r.appearance : [],
-      measurements: Array.isArray(r.measurements) ? r.measurements : [],
-      overallResult: r.overallResult || ''
-    };
-  }catch{ return r; }
-}
+    const method = event.httpMethod || "GET";
+    const qs = event.queryStringParameters || {};
+    const headers = event.headers || {};
+    const user = headers["x-user"] || headers["X-User"] || "";
+    const pass = headers["x-pass"] || headers["X-Pass"] || "";
+    const passcode = headers["x-passcode"] || headers["X-Passcode"] || "";
+    const auth = roleOf(user, pass || passcode);
 
-/* ======= 儲存/刪除（重試） ======= */
-async function saveWithRetry(binId, apiKey, record, maxTry){
-  let tries=0, lastStatus=0, lastText='';
-  while (tries < (maxTry||3)){
-    tries++;
-    const g = await jsonbinGet(binId, apiKey);
-    if (!g.ok){ lastStatus=g.status; lastText=g.text; continue; }
-    const list = listFromJson(g.json);
-    list.push(record);
-    const p = await jsonbinPut(binId, apiKey, list);
-    if (p.ok) return { ok:true };
-    lastStatus = p.status; lastText = p.text;
-    await new Promise(r => setTimeout(r, 250*tries));
+    // Preflight
+    if (method === "OPTIONS"){
+      return {
+        statusCode: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, x-user, x-pass, x-passcode",
+          "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
+        },
+        body: ""
+      };
+    }
+
+    // Health & auth check
+    if (qs.health){
+      // Also try a lightweight JSONBin read to ensure connectivity
+      try{
+        const data = await jsonbinLatest();
+        const list = (data && data.record && Array.isArray(data.record.records)) ? data.record.records : [];
+        return json({ ok:true, role: auth.ok?auth.role:"", bin: !!JSONBIN_BIN_ID, count: list.length });
+      }catch(e){
+        return json({ ok:false, error: String(e.message||e) }, 500);
+      }
+    }
+    if (qs.auth){
+      if (!auth.ok) return json({ ok:false }, 401);
+      return json({ ok:true, user: auth.user, role: auth.role });
+    }
+
+    // Data ops
+    if (method === "GET"){
+      const data = await jsonbinLatest();
+      const list = (data && data.record && Array.isArray(data.record.records)) ? data.record.records : [];
+      const id = qs.id;
+      if (id){
+        const one = list.find(r => r && r.id === id);
+        if (!one) return json({ error: "Not found" }, 404);
+        return json(one, 200);
+      }
+      return json({ records: list }, 200);
+    }
+
+    if (method === "POST"){
+      if (!(auth.ok && (auth.role==="input" || auth.role==="admin"))){
+        return json({ error: "Forbidden" }, 403);
+      }
+      // Accept either per-user pass or shared PASSCODE for write (flexible)
+      const perUserOK = ACCOUNT_JSON.some(a => a.user===auth.user && a.pwd===pass);
+      const sharedOK = PASSCODE && passcode===PASSCODE;
+      const fixedOK = INPUT_FIXED_PWD && pass===INPUT_FIXED_PWD;
+      if (!(perUserOK || sharedOK || fixedOK || auth.role==="admin")){
+        // Still allow if x-pass equals PASSCODE (field convenience)
+        if (!(pass && PASSCODE && pass===PASSCODE)){
+          return json({ error: "Invalid write credential" }, 403);
+        }
+      }
+
+      let rec = {};
+      try{ rec = JSON.parse(event.body || "{}"); }catch{}
+      if (!rec || typeof rec !== "object") rec = {};
+
+      // Attach server-side fields
+      rec.id = rec.id || ("QCI-" + Date.now() + "-" + Math.random().toString(36).slice(2,8).toUpperCase());
+      rec.timestamp = rec.timestamp || nowISO();
+      rec.inspector = rec.inspector || auth.user || "unknown";
+      rec.overall = decideOverall(rec);
+
+      // Append
+      const data = await jsonbinLatest();
+      const root = data && data.record ? data.record : { records: [] };
+      if (!Array.isArray(root.records)) root.records = [];
+      root.records.push(rec);
+
+      await jsonbinPut(root);
+      return json({ ok:true, id: rec.id, timestamp: rec.timestamp, overall: rec.overall }, 200);
+    }
+
+    return json({ error: "Method not allowed" }, 405);
+  }catch(e){
+    return json({ error: String(e.message || e) }, 500);
   }
-  return { ok:false, lastStatus, lastText };
-}
-async function deleteWithRetry(binId, apiKey, id, maxTry){
-  let tries=0, lastStatus=0, lastText='';
-  while (tries < (maxTry||3)){
-    tries++;
-    const g = await jsonbinGet(binId, apiKey);
-    if (!g.ok){ lastStatus=g.status; lastText=g.text; continue; }
-    const list = listFromJson(g.json).filter(x => x && x.id !== id);
-    const p = await jsonbinPut(binId, apiKey, list);
-    if (p.ok) return { ok:true, deleted:true };
-    lastStatus = p.status; lastText = p.text;
-    await new Promise(r => setTimeout(r, 250*tries));
-  }
-  return { ok:false, lastStatus, lastText };
-}
+};
