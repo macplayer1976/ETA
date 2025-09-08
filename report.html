@@ -37,7 +37,10 @@
       <button class="btn btn-outline" id="btnReset" data-i18n="btnReset">重設帳號</button>
       <button class="btn btn-outline" id="btnDiag" data-i18n="btnDiag">診斷資料</button>
       <button class="btn btn-outline" id="btnRepair" style="display:none" data-i18n="btnRepair">一鍵修復</button>
-      <button class="btn" id="btnPrint" data-i18n="btnPrint">列印 / 存成 PDF</button>
+      <button class="btn" id="btnPrint"
+      ></button>
+      <button class="btn" id="btnExport" data-i18n="btnExport">下載 Excel（離線）</button>
+      <!-- 原本 Print 按鈕 --> data-i18n="btnPrint">列印 / 存成 PDF</button>
       <a class="btn" href="index.html" id="btnBack" data-i18n="btnBackToInput">回現場輸入</a>
       <button class="btn btn-outline" id="btnLang">🌐 語言</button>
     </div>
@@ -78,7 +81,7 @@
         reportTitle:'品檢報告（安拓）',
         filterPh:'關鍵字（供應商/料號/圖號/檢驗人員）',
         btnReload:'重新載入', btnClear:'清除關鍵字', btnReset:'重設帳號', btnDiag:'診斷資料', btnRepair:'一鍵修復',
-        btnPrint:'列印 / 存成 PDF', btnBackToInput:'回現場輸入', langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：',
+        btnPrint:'列印 / 存成 PDF', btnExport:'下載 Excel（離線）', btnBackToInput:'回現場輸入', langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：',
         debugTip:'提示：網址加上 ?debug=1 可顯示伺服器原始回應；網址加 #resetpass 可清除通關碼。',
         thBasic:'基本資訊', thPart:'料件資訊', thUnified:'外觀與量測明細', thResultOps:'結果 / 操作',
         labelID:'ID：', labelTime:'時間：', labelInspector:'人員：', labelSupplier:'供應商：',
@@ -95,7 +98,7 @@
         reportTitle:'品检报告（安拓）',
         filterPh:'关键字（供应商/料号/图号/检验人员）',
         btnReload:'重新载入', btnClear:'清除关键字', btnReset:'重设帐号', btnDiag:'诊断资料', btnRepair:'一键修复',
-        btnPrint:'打印 / 存成 PDF', btnBackToInput:'回现场输入', langTitle:'选择语言 / Language', langHint:'请选择界面语言：',
+        btnPrint:'打印 / 存成 PDF', btnExport:'离线导出 Excel', btnBackToInput:'回现场输入', langTitle:'选择语言 / Language', langHint:'请选择界面语言：',
         debugTip:'提示：网址加上 ?debug=1 可显示服务器原始回应；网址加 #resetpass 可清除通关码。',
         thBasic:'基本资讯', thPart:'料件资讯', thUnified:'外观与量测明细', thResultOps:'结果 / 操作',
         labelID:'ID：', labelTime:'时间：', labelInspector:'人员：', labelSupplier:'供应商：',
@@ -112,7 +115,7 @@
         reportTitle:'QC Reports (Anchor)',
         filterPh:'Keyword (supplier/part/drawing/inspector)',
         btnReload:'Reload', btnClear:'Clear', btnReset:'Reset account', btnDiag:'Diagnose', btnRepair:'Repair',
-        btnPrint:'Print / Save as PDF', btnBackToInput:'Back to Input', langTitle:'Choose language', langHint:'Select UI language:',
+        btnPrint:'Print / Save as PDF', btnExport:'Export Excel (offline)', btnBackToInput:'Back to Input', langTitle:'Choose language', langHint:'Select UI language:',
         debugTip:'Tip: add ?debug=1 to show raw response; add #resetpass to clear pass.',
         thBasic:'Basic Info', thPart:'Part Info', thUnified:'Appearance & Measurements', thResultOps:'Result / Actions',
         labelID:'ID: ', labelTime:'Time: ', labelInspector:'Inspector: ', labelSupplier:'Supplier: ',
@@ -192,6 +195,8 @@ function showCategory(v){
 
     // 事件
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
+    
+    document.getElementById('btnExport').addEventListener('click', exportExcel);
     document.getElementById('btnReload').addEventListener('click', load);
     document.getElementById('btnClear').addEventListener('click', () => { document.getElementById('filterText').value = ''; render(); });
     document.getElementById('btnReset').addEventListener('click', () => {
