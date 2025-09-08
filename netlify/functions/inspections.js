@@ -1,14 +1,14 @@
 
 const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || "";
 const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || process.env.JSONBIN_BIB_ID || "";
-const ACCOUNT_JSON = (()=>{ try{ return JSON.parse(process.env.ACCOUNT_JSON || "[]"); }catch{ return []; } })();
+let ACCOUNT_JSON = [];
+try{ ACCOUNT_JSON = JSON.parse(process.env.ACCOUNT_JSON || "[]"); }catch{ ACCOUNT_JSON = []; }
 const INPUT_USERS = (process.env.INPUT_USERS_CSV || "").split(",").map(s=>s.trim()).filter(Boolean);
 const VIEWER_USERS = (process.env.VIEWER_USERS_CSV || "").split(",").map(s=>s.trim()).filter(Boolean);
 const INPUT_FIXED_PWD = process.env.INPUT_FIXED_PWD || "";
 const VIEWER_FIXED_PWD = process.env.VIEWER_FIXED_PWD || "";
 const PASSCODE = process.env.PASSCODE || "";
 
-// CORS helper
 function corsHeaders(extra={}){
   return {
     "Access-Control-Allow-Origin": "*",
@@ -19,9 +19,6 @@ function corsHeaders(extra={}){
 }
 function json(res, status=200, headers={}){
   return { statusCode: status, headers: corsHeaders({ "content-type":"application/json; charset=utf-8", ...headers }), body: JSON.stringify(res) };
-}
-function text(res, status=200, headers={}){
-  return { statusCode: status, headers: corsHeaders({ "content-type":"text/plain; charset=utf-8", ...headers }), body: String(res) };
 }
 function nowISO(){ return new Date().toISOString(); }
 
@@ -103,7 +100,6 @@ exports.handler = async (event) => {
     }
 
     const authIn = readAuth(event);
-    const using = (authIn.passcode && !authIn.pass) ? "(passcode)" : "(password)";
     const auth = roleOf(authIn.user, authIn.pass || authIn.passcode);
 
     if (qs.health){
@@ -118,7 +114,7 @@ exports.handler = async (event) => {
 
     if (qs.auth){
       if (!auth.ok) return json({ ok:false }, 401);
-      return json({ ok:true, user: auth.user, role: auth.role, mode: using });
+      return json({ ok:true, user: auth.user, role: auth.role });
     }
 
     if (method === "GET"){
@@ -137,19 +133,24 @@ exports.handler = async (event) => {
       const reasons = [];
       if (!auth.ok) reasons.push("auth invalid");
       if (!(auth.ok && (auth.role==="input" || auth.role==="admin"))) reasons.push("role not allowed");
-      // Allow input if user is in INPUT csv and provided PASSCODE only (mobile convenience)
-      const convenience = auth.ok && auth.role==="input";
-      if (!(auth.ok && (auth.role==="input" || auth.role==="admin")) && !convenience){
-        if (qs.why || (event.body && event.body.includes('"__debug":true'))){
-          return json({ error:"Forbidden", reasons, who: authIn.user||"", role: auth.role||"" }, 403);
-        }
-        return json({ error:"Forbidden" }, 403);
+
+      if (reasons.length){
+        // Always detailed Forbidden (helps field debugging)
+        return json({
+          error: "Forbidden",
+          reasons,
+          received: {
+            user: authIn.user || "",
+            pass_present: !!authIn.pass,
+            passcode_present: !!authIn.passcode
+          },
+          recognized_role: auth.role || ""
+        }, 403);
       }
 
       let rec = {};
       try{ rec = JSON.parse(event.body || "{}"); }catch{}
       if (!rec || typeof rec !== "object") rec = {};
-
       rec.id = rec.id || ("QCI-" + Date.now() + "-" + Math.random().toString(36).slice(2,8).toUpperCase());
       rec.timestamp = rec.timestamp || nowISO();
       rec.inspector = rec.inspector || auth.user || "unknown";
