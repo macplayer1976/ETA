@@ -485,5 +485,26 @@ document.getElementById('btnSave').addEventListener('click', async ()=>{
   const role = localStorage.getItem('qci_role')||''; if (role) showByRole(role);
 })();
 </script>
+
+<script>
+// Ensure payload includes auth in body in addition to headers
+window._qc_save_with_auth_body = async function(url, data, user, pass, passcode){
+  const payload = Object.assign({}, data, { __auth:{ user, pass, passcode } });
+  const r = await fetch(url, {
+    method: "POST",
+    mode: "cors",
+    headers: {
+      "Content-Type":"application/json",
+      "x-user": user || "",
+      "x-pass": pass || "",
+      "x-passcode": passcode || ""
+    },
+    body: JSON.stringify(payload)
+  });
+  const t = await r.text();
+  let j; try{ j = JSON.parse(t); }catch(e){ j = { raw: t }; }
+  return { ok: r.ok, status: r.status, data: j };
+};
+</script>
 </body>
 </html>
