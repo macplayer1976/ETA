@@ -38,6 +38,7 @@
       <button class="btn btn-outline" id="btnDiag" data-i18n="btnDiag">診斷資料</button>
       <button class="btn btn-outline" id="btnRepair" style="display:none" data-i18n="btnRepair">一鍵修復</button>
       <button class="btn" id="btnPrint" data-i18n="btnPrint">列印 / 存成 PDF</button>
+      <button class="btn btn-outline" id="btnExcel" data-i18n="btnExportExcel">下載 Excel（每筆一工作表）</button>
       <a class="btn" href="index.html" id="btnBack" data-i18n="btnBackToInput">回現場輸入</a>
       <button class="btn btn-outline" id="btnLang">🌐 語言</button>
     </div>
@@ -201,6 +202,7 @@ function showCategory(v){
     document.getElementById('btnDiag').addEventListener('click', diag);
     document.getElementById('btnRepair').addEventListener('click', repair);
     document.getElementById('btnLang').addEventListener('click', ()=> openLangModal());
+    document.getElementById('btnExcel').addEventListener('click', exportExcel);
     document.getElementById('filterText').addEventListener('input', render);
 
     let role = '', currentUser = '', canDelete = false, records = [];
@@ -395,6 +397,148 @@ function showCategory(v){
         const r = await fetch('/api/inspections?repair=1', { headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p } });
         const ttxt = await r.text(); document.getElementById('raw').style.display='block'; document.getElementById('raw').textContent = ttxt;
       }catch(e){ alert(e); }
+    }
+
+    
+    // ===== Excel 匯出（SpreadsheetML 2003, 一筆一工作表） =====
+    function exportExcel(){
+      // 取得目前顯示（含關鍵字過濾後）的清單
+      const kw = (document.getElementById('filterText').value || '').trim().toLowerCase();
+      const list = (records||[]).filter(r => {
+        if (!kw) return true;
+        const s = [r.supplier, r.orderNo, r.lotNo, r.partNo, r.material, r.spec, r.category, r.drawingNo, r.inspector, r.process, r.processLabel].join(' ').toLowerCase();
+        return s.includes(kw);
+      });
+      if (!list.length){ alert(t('msgEmpty')); return; }
+
+      // XML helpers
+      const x = (s)=> String(s||'');
+      const xmlEsc = (s)=> x(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',\"'\":'&apos;'}[c]));
+      const cell = (val, type='String', style='') => `<Cell${style?` ss:StyleID="${style}"`:''}><Data ss:Type="${type}">${xmlEsc(val)}</Data></Cell>`;
+      const row = (arr)=> `<Row>${arr.join('')}</Row>`;
+
+      // Appearance map helper (與畫面一致)
+      function apMapOf(r){
+        const L = getLang();
+        const apMap = {};
+        if (Array.isArray(r.appearance)){
+          for (const a of r.appearance){
+            const m = String(a.sample||'').match(/(\d+)/);
+            const idx = m ? Number(m[1]) : null;
+            if (idx && idx>=1 && idx<=5){
+              const ok = String(a.result||'').toUpperCase()==='OK';
+              apMap[idx] = ok ? (L==='en'?'OK':'O.K') : 'NG';
+            }
+          }
+        }
+        return apMap;
+      }
+
+      // 量測明細列
+      function measurementRows(r){
+        const header = row([
+          cell(t('theadItem'),'String','sHdr'),
+          cell(t('theadNom'),'String','sHdr'),
+          cell(t('theadLo'),'String','sHdr'),
+          cell(t('theadHi'),'String','sHdr'),
+          cell(t('theadM1'),'String','sHdr'),
+          cell(t('theadM2'),'String','sHdr'),
+          cell(t('theadM3'),'String','sHdr'),
+          cell(t('theadM4'),'String','sHdr'),
+          cell(t('theadM5'),'String','sHdr'),
+          cell(t('theadDecision'),'String','sHdr'),
+        ]);
+
+        // 外觀列（如果有填）
+        const ap = apMapOf(r);
+        const apRow = Object.keys(ap).length ? row([
+          cell(t('appearance'),'String','sBold'),
+          cell(''), cell(''), cell(''),
+          cell(ap[1]||''), cell(ap[2]||''), cell(ap[3]||''), cell(ap[4]||''), cell(ap[5]||''),
+          cell(Object.values(ap).every(v=>v==='OK'||v==='O.K')?'PASS':'FAIL')
+        ]) : '';
+
+        const meas = (Array.isArray(r.measurements)?r.measurements:[]).map(m => {
+          const arr = Array.isArray(m.measured) ? m.measured : ((m.measured===0||m.measured)?[m.measured]:[]);
+          const c = [0,1,2,3,4].map(i => (arr[i]===0||arr[i]) ? Number(arr[i]).toFixed(3) : '');
+          const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : '';
+          return row([
+            cell(m.name||''),
+            cell(m.nominal===''||m.nominal===null? '': Number(m.nominal),'Number'),
+            cell(m.tolMinus===''||m.tolMinus===null? '': Number(m.tolMinus),'Number'),
+            cell(m.tolPlus===''||m.tolPlus===null? '': Number(m.tolPlus),'Number'),
+            cell(c[0], c[0]===''?'String':'Number'),
+            cell(c[1], c[1]===''?'String':'Number'),
+            cell(c[2], c[2]===''?'String':'Number'),
+            cell(c[3], c[3]===''?'String':'Number'),
+            cell(c[4], c[4]===''?'String':'Number'),
+            cell(dec)
+          ]);
+        }).join('');
+
+        return header + apRow + meas;
+      }
+
+      // 工作表名稱（<=31字、不可包含 []:*?/\\ ）
+      function sheetNameOf(r){
+        const raw = `${r.id || ''}`.trim() || `${r.supplier||''}-${r.partNo||''}` || 'Record';
+        let name = raw.replace(/[\\/:?\*\[\]]/g,' ').slice(0,31).trim();
+        if (!name) name = 'Record';
+        return name;
+      }
+
+      // 產生每張工作表
+      const sheets = list.map(r => {
+        const rows1 = [
+          row([cell(t('thBasic'),'String','sTitle')]),
+          row([cell(`${t('labelID')}${r.id||''}`)]),
+          row([cell(`${t('labelTime')}${new Date(r.timestamp||'').toLocaleString()}`)]),
+          row([cell(`${t('labelInspector')}${r.inspector||''}`)]),
+          row([cell(`${t('labelSupplier')}${r.supplier||''}`)]),
+          row([cell(`${t('labelOverall')}${r.overallResult||''}`)]),
+          row([cell('')]),
+          row([cell(t('thPart'),'String','sTitle')]),
+          row([cell(`${t('labelOrderNo')}${r.orderNo||''}`)]),
+          row([cell(`${t('labelLotNo')}${r.lotNo||''}`)]),
+          row([cell(`${t('labelPartNo')}${r.partNo||''}`)]),
+          row([cell(`${t('labelDrawingNo')}${r.drawingNo||''}`)]),
+          row([cell(`${t('labelMaterial')}${r.material||''}`)]),
+          row([cell(`${t('labelSpec')}${r.spec||''}`)]),
+          row([cell(`${t('labelCategory')}${showCategory(r.category||'')}`)]),
+          row([cell(`${t('labelProcess')}${mapProcess(r.process||r.processCode||'')}`)]),
+          row([cell(`${t('labelNotes')}${r.notes||''}`)]),
+          row([cell('')]),
+          row([cell(t('thUnified'),'String','sTitle')])
+        ].join('');
+
+        const rows2 = measurementRows(r);
+
+        return `<Worksheet ss:Name="${xmlEsc(sheetNameOf(r))}"><Table>${rows1}${rows2}</Table></Worksheet>`;
+      }).join('');
+
+      const workbook = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+  <Styles>
+    <Style ss:ID="sHdr"><Font ss:Bold="1"/></Style>
+    <Style ss:ID="sBold"><Font ss:Bold="1"/></Style>
+    <Style ss:ID="sTitle"><Font ss:Bold="1"/><Interior ss:Color="#EEEEEE" ss:Pattern="Solid"/></Style>
+  </Styles>
+  ${sheets}
+</Workbook>`;
+
+      const blob = new Blob([workbook], { type: 'application/vnd.ms-excel' });
+      const ts = new Date().toISOString().replace(/[-:T]/g,'').slice(0,14);
+      const filename = `QC_Reports_${ts}.xls`;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 3000);
     }
 
     window.addEventListener('DOMContentLoaded', load);
