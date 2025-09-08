@@ -33,7 +33,14 @@
     .modal { background:#fff; border-radius:12px; padding:16px; width: min(92vw, 420px); box-shadow:0 10px 30px rgba(0,0,0,.18); }
     .modal h3 { margin:0 0 8px 0; }
     .modal .grid { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; margin-top:8px; }
-  </style>
+  
+    /* 參考簡圖區 */
+    .sketch-box { margin: 12px 0 6px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 10px; background:#f9fafb; }
+    .sketch-box h3 { margin: 0 0 6px 0; font-size: 16px; }
+    .sketch-wrap { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+    .sketch-wrap img { max-width: 100%; height: auto; border-radius: 8px; border:1px solid #e5e7eb; }
+    .sketch-note { color:#6b7280; font-size:13px; }
+    </style>
 </head>
 <body>
   <div class="card">
@@ -87,6 +94,14 @@
       <div style="margin-top:12px">
         <label data-i18n="labelNotes">備註</label>
         <textarea id="notes" rows="2"></textarea>
+      
+      <!-- 參考簡圖（放在基本資料與尺寸表之間） -->
+      <div class="sketch-box">
+        <h3 data-i18n="sketchTitle">參考簡圖</h3>
+        <div class="sketch-wrap">
+          <img src="final_finished.jpg" alt="參考簡圖 / Reference sketch" style="max-width:100%;">
+          <div class="sketch-note" data-i18n="sketchHint">供檢驗時快速參考主要尺寸與形狀（圖檔：final_finished.jpg）。</div>
+        </div>
       </div>
 
       <!-- 整合表：第1列＝外觀（可略過）；第2列起＝尺寸 -->
@@ -155,6 +170,7 @@ let _afterPick = null;
 /* ============ I18N 字典（補上 labelProcess，避免顯示 key 本身） ============ */
     const I18N = {
       'zh-TW': {
+
         title:'現場品檢（安拓）',
         loginPrompt:'請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。',
         labelAccount:'帳號（檢驗人員）', labelPassword:'密碼（通關碼/密碼）',
@@ -176,9 +192,11 @@ let _afterPick = null;
         login_msg_need:'請輸入帳號與密碼', login_msg_auto:'自動驗證中...', login_msg_wrong:'❌ 帳號或密碼錯誤', login_verifying:'驗證中...',
         save_saving:'儲存中...', save_ok:'✅ 已儲存到雲端（可到報告頁查看/列印）', save_fail:'❌ 儲存失敗：',
         need_supplier_part:'請輸入供應商與料號',
-        appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG'
+        appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
+        sketchTitle:"\u53c3\u8003\u7c21\u5716", sketchHint:"\u4f9b\u6aa2\u9a57\u6642\u5feb\u901f\u53c3\u8003\u4e3b\u8981\u5c3a\u5bf8\u8207\u5f62\u72c0\uff08\u5716\u6a94\uff1afinal_finished.jpg\uff09\u3002"
       },
       'zh-CN': {
+
         title:'现场品检（安拓）',
         loginPrompt:'请输入「账号（检验人员）」与「密码（通关码/密码）」。',
         labelAccount:'账号（检验人员）', labelPassword:'密码（通关码/密码）',
@@ -200,7 +218,8 @@ let _afterPick = null;
         login_msg_need:'请输入账号与密码', login_msg_auto:'自动验证中...', login_msg_wrong:'❌ 账号或密码错误', login_verifying:'验证中...',
         save_saving:'保存中...', save_ok:'✅ 已保存到云端（可去报告页查看/打印）', save_fail:'❌ 保存失败：',
         need_supplier_part:'请输入供应商与料号',
-        appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG'
+        appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
+        sketchTitle:"\u53c2\u8003\u7b80\u56fe", sketchHint:"\u4fbf\u4e8e\u68c0\u9a8c\u65f6\u5feb\u901f\u53c2\u8003\u4e3b\u8981\u5c3a\u5bf8\u4e0e\u5f62\u72b6\uff08\u56fe\u6863\uff1afinal_finished.jpg\uff09\u3002"
       },
       'en': {
         title:'On-site QC (Anchor)',
