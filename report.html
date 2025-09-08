@@ -160,6 +160,36 @@
       return `${p.zh} (${p.en})`;
     }
 
+
+// 產品類別顯示（雙語）
+const CATEGORIES = [
+  { code:'PLUG',        zh:'塞子',         cn:'塞子',       en:'plug' },
+  { code:'SLEEVE_A',    zh:'管子_A type',  cn:'管子_A type', en:'sleeve_A type' },
+  { code:'SLEEVE_B',    zh:'管子_B type',  cn:'管子_B type', en:'sleeve_B type' },
+  { code:'SLEEVE_H',    zh:'管子_H type',  cn:'管子_H type', en:'sleeve_H type' },
+  { code:'FINISHED_A',  zh:'成品_A type',  cn:'成品_A type', en:'Finished_A type' },
+  { code:'FINISHED_B',  zh:'成品_B type',  cn:'成品_B type', en:'Finished_B type' },
+  { code:'FINISHED_H',  zh:'成品_H type',  cn:'成品_H type', en:'Finished_H type' },
+  { code:'TOOL',        zh:'內迫工具',     cn:'内迫工具',    en:'special tool' }
+];
+function mapCategory(code){
+  if (!code) return '';
+  const c = CATEGORIES.find(x => x.code === String(code).toUpperCase());
+  const lang = getLang() || 'zh-TW';
+  if (!c) return code;
+  if (lang==='en') return c.en;
+  if (lang==='zh-CN') return `${c.cn} (${c.en})`;
+  return `${c.zh} (${c.en})`;
+}
+function showCategory(v){
+  // 向後相容：舊資料若是純文字，直接回傳；若為代碼，轉換為雙語
+  const txt = String(v||'');
+  const found = CATEGORIES.find(x => x.code === txt.toUpperCase());
+  return found ? mapCategory(txt) : txt;
+}
+
+
+
     // 事件
     document.getElementById('btnPrint').addEventListener('click', () => window.print());
     document.getElementById('btnReload').addEventListener('click', load);
@@ -224,28 +254,7 @@
       return [];
     }
 
-    
-// --- Category mapping (safe, no dependency) ---
-function mapCategory(code){
-  if (!code) return '';
-  const m = {
-    'PLUG': ['塞子','plug'],
-    'SLEEVE_A': ['管子_A type','sleeve_A type'],
-    'SLEEVE_B': ['管子_B type','sleeve_B type'],
-    'SLEEVE_H': ['管子_H type','sleeve_H type'],
-    'FINISHED_A': ['成品_A type','Finished_A type'],
-    'FINISHED_B': ['成品_B type','Finished_B type'],
-    'FINISHED_H': ['成品_H type','Finished_H type'],
-    'SPECIAL_TOOL': ['內迫工具','special tool']
-  };
-  const rec = m[String(code).toUpperCase()];
-  if (!rec) return code;
-  const lang = (localStorage.getItem('qci_lang')||document.documentElement.lang||'zh-Hant').toLowerCase();
-  if (lang.startsWith('en')) return rec[1];
-  // zh-Hant/zh-CN: show 中文 (English)
-  return rec[0] + ' (' + rec[1] + ')';
-}
-async function load(){
+    async function load(){
       applyI18n();
       msg.textContent = t('msgVerify');
       const ok = await ensureAuth();
@@ -352,7 +361,7 @@ async function load(){
             <div>${t('labelPartNo')}${escapeHtml(r.partNo||'')}</div>
             <div>${t('labelMaterial')}${escapeHtml(r.material||'')}</div>
             <div>${t('labelSpec')}${escapeHtml(r.spec||'')}</div>
-            <div>${t('labelCategory')}${escapeHtml(mapCategory(r.category||''))}</div>
+            <div>${t('labelCategory')}${escapeHtml(showCategory(r.category||''))}</div>
             <div>${t('labelDrawingNo')}${escapeHtml(r.drawingNo||'')}</div>
             <div>${t('labelProcess')}${escapeHtml(mapProcess(r.process||r.processCode||''))}</div>
             <div>${t('labelNotes')}${escapeHtml(r.notes||'')}</div>
