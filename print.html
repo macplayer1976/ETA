@@ -22,6 +22,9 @@
     .result { font-weight:700; }
     .pass { color:#116329; }
     .fail { color:#c02020; }
+    .toolbar { display:flex; gap:8px; align-items:center; margin: 8px 0 12px; }
+    .btn { padding:10px 14px; border:none; border-radius:10px; background:#2563eb; color:#fff; cursor:pointer; }
+    .btn.outline { background:#f3f4f6; color:#111; }
     .sign { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-top:12px; }
     .sign .cell { border:1px solid var(--line); border-radius:10px; padding:10px; height:80px; }
     .cell small { color:var(--gray); display:block; margin-bottom:6px; }
@@ -43,10 +46,10 @@
       <div class="title" data-i18n="title_print_inner">品檢報告 Inspection Report</div>
     </header>
 
-    <div class="noprint" style="display:flex; gap:8px; align-items:center; margin-bottom:10px">
-      <button class="lang-btn" id="btnLang" title="Language / 語言 / 语言">🌐</button>
-      <button class="lang-btn" id="btnPrint" data-i18n="btn_print">列印 / 下載 PDF</button>
-      <a class="lang-btn" href="report.html" data-i18n="btn_back">返回報告列表</a>
+    <div class="toolbar noprint">
+      <button class="btn" id="btnPrint" data-i18n="btn_print">列印 / 下載 PDF</button>
+      <a class="btn outline" href="report.html" data-i18n="btn_back">返回報告列表</a>
+      <button class="btn outline" id="btnLang" title="Language / 語言 / 语言">🌐</button>
       <span class="muted" id="tip"></span>
     </div>
 
@@ -61,24 +64,19 @@
       </div>
     </div>
 
-    <!-- 料件資訊（新版欄位齊全） -->
+    <!-- 料件資訊 -->
     <div class="block" style="margin-top:10px">
       <h3 data-i18n="section_part">料件資訊</h3>
       <div class="row">
         <div><strong data-i18n="f_supplier">供應商：</strong><span id="f-supplier"></span></div>
-        <div><strong data-i18n="f_order">訂單號碼：</strong><span id="f-order"></span></div>
-        <div><strong data-i18n="f_lot">生產批號：</strong><span id="f-lot"></span></div>
-        <div><strong data-i18n="f_partno">產品料號：</strong><span id="f-part"></span></div>
-        <div><strong data-i18n="f_drawing">圖號：</strong><span id="f-draw"></span></div>
-        <div><strong data-i18n="f_material">材質：</strong><span id="f-material"></span></div>
-        <div><strong data-i18n="f_spec">規格：</strong><span id="f-spec"></span></div>
-        <div><strong data-i18n="f_pt">產品類別：</strong><span id="f-pt"></span></div>
-        <div><strong data-i18n="f_process">製程：</strong><span id="f-process"></span></div>
+        <div><strong data-i18n="f_partno">料號 Part No.：</strong><span id="f-part"></span></div>
+        <div><strong data-i18n="f_drawing">圖號 Drawing No.：</strong><span id="f-draw"></span></div>
+        <div><strong data-i18n="f_process">製程 Process：</strong><span id="f-process"></span></div>
       </div>
       <div style="margin-top:8px"><strong data-i18n="f_notes">備註：</strong><span id="f-notes"></span></div>
     </div>
 
-    <!-- 外觀與量測明細 -->
+    <!-- 外觀與量測明細（合併；外觀有資料才顯示） -->
     <div class="block" style="margin-top:10px">
       <h3 data-i18n="section_unified">外觀與量測明細</h3>
       <div id="unified"></div>
@@ -108,177 +106,194 @@
     </div>
   </div>
 
-<script>
-const I18N = {
-  'zh-TW': {
-    title_print: "安拓實業有限公司｜品檢報告（單筆）",
-    title_print_inner: "品檢報告 Inspection Report",
-    btn_print: "列印 / 下載 PDF",
-    btn_back: "返回報告列表",
-    section_basic: "基本資訊",
-    section_part: "料件資訊",
-    section_unified: "外觀與量測明細",
-    section_sign: "簽核",
-    sign_inspector: "檢驗人員",
-    sign_qc: "品保主管",
-    sign_approve: "核准",
-    f_id: "報告編號：", f_time: "檢驗時間：", f_inspector: "檢驗人員：", f_overall: "檢驗結果：",
-    f_supplier: "供應商：", f_order:"訂單號碼：", f_lot:"生產批號：", f_partno: "產品料號：", f_drawing: "圖號：",
-    f_material:"材質：", f_spec:"規格：", f_pt:"產品類別：", f_process: "製程：", f_notes: "備註：",
-    col_item: "項目 / 尺寸", col_nominal: "名目", col_tol_minus: "下限公差", col_tol_plus: "上限公差",
-    col_m1: "樣品/實測1", col_m2: "樣品/實測2", col_m3: "樣品/實測3", col_m4: "樣品/實測4", col_m5: "樣品/實測5", col_judgement: "判定",
-    appearance: "外觀",
-    lang_title: "選擇語言", lang_tip: "請選擇顯示語言（之後可再更改）："
-  },
-  'zh-CN': {
-    title_print: "安拓实业有限公司｜品检报告（单笔）",
-    title_print_inner: "品检报告 Inspection Report",
-    btn_print: "打印 / 下载 PDF",
-    btn_back: "返回报告列表",
-    section_basic: "基本信息",
-    section_part: "料件信息",
-    section_unified: "外观与量测明细",
-    section_sign: "签核",
-    sign_inspector: "检验人员",
-    sign_qc: "品保主管",
-    sign_approve: "核准",
-    f_id: "报告编号：", f_time: "检验时间：", f_inspector: "检验人员：", f_overall: "检验结果：",
-    f_supplier: "供应商：", f_order:"订单号码：", f_lot:"生产批号：", f_partno: "产品料号：", f_drawing: "图号：",
-    f_material:"材质：", f_spec:"规格：", f_pt:"产品类别：", f_process: "制程：", f_notes: "备注：",
-    col_item: "项目 / 尺寸", col_nominal: "名义", col_tol_minus: "下限公差", col_tol_plus: "上限公差",
-    col_m1: "样品/实测1", col_m2: "样品/实测2", col_m3: "样品/实测3", col_m4: "样品/实测4", col_m5: "样品/实测5", col_judgement: "判定",
-    appearance: "外观",
-    lang_title: "选择语言", lang_tip: "请选择显示语言（之后可再更改）："
-  },
-  'en': {
-    title_print: "Anchor Co., Ltd. | Inspection Report (Single)",
-    title_print_inner: "Inspection Report",
-    btn_print: "Print / Download PDF",
-    btn_back: "Back to list",
-    section_basic: "Basic Info",
-    section_part: "Part Info",
-    section_unified: "Appearance & Measurements",
-    section_sign: "Sign-off",
-    sign_inspector: "Inspector",
-    sign_qc: "QA Manager",
-    sign_approve: "Approved",
-    f_id: "Report ID: ", f_time: "Time: ", f_inspector: "Inspector: ", f_overall: "Overall: ",
-    f_supplier: "Supplier: ", f_order:"Order No.: ", f_lot:"Lot No.: ", f_partno: "Part No.: ",
-    f_drawing: "Drawing No.: ", f_material:"Material: ", f_spec:"Spec: ", f_pt:"Product Category: ", f_process: "Process: ", f_notes: "Notes: ",
-    col_item: "Item / Dim.", col_nominal: "Nominal", col_tol_minus: "Lower Tol.", col_tol_plus: "Upper Tol.",
-    col_m1: "Sample/Meas.1", col_m2: "Sample/Meas.2", col_m3: "Sample/Meas.3", col_m4: "Sample/Meas.4", col_m5: "Sample/Meas.5", col_judgement: "Judgement",
-    appearance: "Appearance",
-    lang_title: "Choose language", lang_tip: "Pick a display language (you can change it later):"
-  }
-};
-function getLang(){ return localStorage.getItem('qci_lang') || 'zh-TW'; }
-function setLang(x){ localStorage.setItem('qci_lang', x); applyI18n(); if (curr) document.getElementById('unified').innerHTML = buildUnifiedTable(curr.appearance||[], curr.measurements||[]); }
-function t(key){ const d = I18N[getLang()] || I18N['zh-TW']; return d[key] || I18N['zh-TW'][key] || key; }
-function applyI18n(){
-  document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
-  const titleEl = document.querySelector('title[data-i18n="title_print"]'); if (titleEl) titleEl.textContent = t('title_print');
-}
-document.getElementById('btnLang').addEventListener('click', ()=> document.getElementById('langModal').style.display='flex');
-document.getElementById('langModal').addEventListener('click', (e)=>{ if (e.target.id==='langModal') document.getElementById('langModal').style.display='none'; });
-document.querySelectorAll('#langModal .lang-btn').forEach(b=> b.addEventListener('click', ()=>{ setLang(b.getAttribute('data-lang')); document.getElementById('langModal').style.display='none'; }));
+  <script>
+    const PROCESSES = [
+      { code:'WIRE',     zh:'線材',   cn:'线材',   en:'WIRE' },
+      { code:'FORMING',  zh:'成形',   cn:'成形',   en:'FORMING' },
+      { code:'TAPING',   zh:'攻牙',   cn:'攻牙',   en:'TAPING' },
+      { code:'CUTTING',  zh:'割溝',   cn:'割沟',   en:'CUTTING' },
+      { code:'PLATING',  zh:'電鍍',   cn:'电镀',   en:'PLATING' },
+      { code:'FINISHED', zh:'成品',   cn:'成品',   en:'FINISHED' },
+      { code:'ASSEMBLY', zh:'組立',   cn:'组立',   en:'ASSEMBLY' },
+      { code:'FINAL',    zh:'最終成品', cn:'最终成品', en:'FINAL FINISHED' }
+    ];
+    function mapProcess(code){
+      if (!code) return '';
+      const lang = getLang();
+      const p = PROCESSES.find(x => x.code === String(code).toUpperCase());
+      if (!p) return code;
+      if (lang === 'en') return p.en;
+      if (lang === 'zh-CN') return `${p.cn} (${p.en})`;
+      return `${p.zh} (${p.en})`;
+    }
 
-document.getElementById('btnPrint').addEventListener('click', ()=> window.print());
+    const I18N = {
+      'zh-TW': {
+        title_print: "安拓實業有限公司｜品檢報告（單筆）",
+        title_print_inner: "品檢報告 Inspection Report",
+        btn_print: "列印 / 下載 PDF",
+        btn_back: "返回報告列表",
+        section_basic: "基本資訊",
+        section_part: "料件資訊",
+        section_unified: "外觀與量測明細",
+        section_sign: "簽核",
+        sign_inspector: "檢驗人員",
+        sign_qc: "品保主管",
+        sign_approve: "核准",
+        f_id: "報告編號：", f_time: "檢驗時間：", f_inspector: "檢驗人員：", f_overall: "檢驗結果：",
+        f_supplier: "供應商：", f_partno: "料號 Part No.：", f_drawing: "圖號 Drawing No.：",
+        f_revision: "版次 Revision：", f_process: "製程 Process：", f_notes: "備註：",
+        col_item: "項目 / 尺寸", col_nominal: "名目", col_tol_minus: "下限公差", col_tol_plus: "上限公差",
+        col_m1: "樣品/實測1", col_m2: "樣品/實測2", col_m3: "樣品/實測3", col_m4: "樣品/實測4", col_m5: "樣品/實測5", col_judgement: "判定",
+        appearance: "外觀",
+        lang_title: "選擇語言", lang_tip: "請選擇顯示語言（之後可再更改）："
+      },
+      'zh-CN': {
+        title_print: "安拓实业有限公司｜品检报告（单笔）",
+        title_print_inner: "品检报告 Inspection Report",
+        btn_print: "打印 / 下载 PDF",
+        btn_back: "返回报告列表",
+        section_basic: "基本信息",
+        section_part: "料件信息",
+        section_unified: "外观与量测明细",
+        section_sign: "签核",
+        sign_inspector: "检验人员",
+        sign_qc: "品保主管",
+        sign_approve: "核准",
+        f_id: "报告编号：", f_time: "检验时间：", f_inspector: "检验人员：", f_overall: "检验结果：",
+        f_supplier: "供应商：", f_partno: "料号 Part No.：", f_drawing: "图号 Drawing No.：",
+        f_revision: "版次 Revision：", f_process: "制程 Process：", f_notes: "备注：",
+        col_item: "项目 / 尺寸", col_nominal: "名义", col_tol_minus: "下限公差", col_tol_plus: "上限公差",
+        col_m1: "样品/实测1", col_m2: "样品/实测2", col_m3: "样品/实测3", col_m4: "样品/实测4", col_m5: "样品/实测5", col_judgement: "判定",
+        appearance: "外观",
+        lang_title: "选择语言", lang_tip: "请选择显示语言（之后可再更改）："
+      },
+      'en': {
+        title_print: "Anchor Co., Ltd. | Inspection Report (Single)",
+        title_print_inner: "Inspection Report",
+        btn_print: "Print / Download PDF",
+        btn_back: "Back to list",
+        section_basic: "Basic Info",
+        section_part: "Part Info",
+        section_unified: "Appearance & Measurements",
+        section_sign: "Sign-off",
+        sign_inspector: "Inspector",
+        sign_qc: "QA Manager",
+        sign_approve: "Approved",
+        f_id: "Report ID: ", f_time: "Time: ", f_inspector: "Inspector: ", f_overall: "Overall: ",
+        f_supplier: "Supplier: ", f_partno: "Part No.: ", f_drawing: "Drawing No.: ",
+        f_revision: "Revision: ", f_process: "Process: ", f_notes: "Notes: ",
+        col_item: "Item / Dim.", col_nominal: "Nominal", col_tol_minus: "Lower Tol.", col_tol_plus: "Upper Tol.",
+        col_m1: "Sample/Meas.1", col_m2: "Sample/Meas.2", col_m3: "Sample/Meas.3", col_m4: "Sample/Meas.4", col_m5: "Sample/Meas.5", col_judgement: "Judgement",
+        appearance: "Appearance",
+        lang_title: "Choose language", lang_tip: "Pick a display language (you can change it later):"
+      }
+    };
+    function getLang(){ return localStorage.getItem('qci_lang') || 'zh-TW'; }
+    function setLang(x){ localStorage.setItem('qci_lang', x); applyI18n(); }
+    function t(key){ const lang = getLang(); const d = I18N[lang] || I18N['zh-TW']; return d[key] || I18N['zh-TW'][key] || key; }
+    function applyI18n(){
+      document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.getAttribute('data-i18n')));
+      const titleEl = document.querySelector('title[data-i18n="title_print"]'); if (titleEl) titleEl.textContent = t('title_print');
+      if (curr) document.getElementById('unified').innerHTML = buildUnifiedTable(curr.appearance||[], curr.measurements||[]);
+    }
 
-function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
-function num(v){ return (v===0||v) ? Number(v).toFixed(3) : ''; }
+    // 語言視窗
+    const langModal = document.getElementById('langModal');
+    document.getElementById('btnLang').addEventListener('click', ()=> langModal.style.display='flex');
+    langModal.addEventListener('click', (e)=>{ if (e.target.id==='langModal') langModal.style.display='none'; });
+    langModal.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', ()=>{ setLang(b.getAttribute('data-lang')); langModal.style.display='none'; }));
 
-let curr = null;
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c])); }
+    function num(v){ return (v===0||v) ? Number(v).toFixed(3) : ''; }
 
-function buildUnifiedTable(appearance, measurements){
-  const th = `<thead><tr>
-    <th>${t('col_item')}</th>
-    <th>${t('col_nominal')}</th>
-    <th>${t('col_tol_minus')}</th>
-    <th>${t('col_tol_plus')}</th>
-    <th>${t('col_m1')}</th>
-    <th>${t('col_m2')}</th>
-    <th>${t('col_m3')}</th>
-    <th>${t('col_m4')}</th>
-    <th>${t('col_m5')}</th>
-    <th>${t('col_judgement')}</th>
-  </tr></thead>`;
+    function buildUnifiedTable(appearance, measurements){
+      const th = `
+        <thead><tr>
+          <th>${t('col_item')}</th>
+          <th>${t('col_nominal')}</th>
+          <th>${t('col_tol_minus')}</th>
+          <th>${t('col_tol_plus')}</th>
+          <th>${t('col_m1')}</th>
+          <th>${t('col_m2')}</th>
+          <th>${t('col_m3')}</th>
+          <th>${t('col_m4')}</th>
+          <th>${t('col_m5')}</th>
+          <th>${t('col_judgement')}</th>
+        </tr></thead>`;
 
-  const apMap = {};
-  if (Array.isArray(appearance)){
-    for (const a of appearance){
-      const m = String(a.sample||'').match(/(\d+)/);
-      const idx = m ? Number(m[1]) : null;
-      if (idx && idx>=1 && idx<=5){
-        apMap[idx] = String(a.result||'').toUpperCase().startsWith('OK') ? (getLang()==='en'?'OK':'O.K') : 'NG';
+      const apMap = {};
+      if (Array.isArray(appearance)){
+        for (const a of appearance){
+          const m = String(a.sample||'').match(/(\d+)/);
+          const idx = m ? Number(m[1]) : null;
+          if (idx && idx>=1 && idx<=5){
+            apMap[idx] = String(a.result||'').toUpperCase()==='OK' ? (getLang()==='en'?'OK':'O.K') : 'NG';
+          }
+        }
+      }
+      const apRow = Object.keys(apMap).length ? `
+        <tr>
+          <td><strong>${t('appearance')}</strong></td>
+          <td></td><td></td><td></td>
+          <td>${escapeHtml(apMap[1]||'')}</td>
+          <td>${escapeHtml(apMap[2]||'')}</td>
+          <td>${escapeHtml(apMap[3]||'')}</td>
+          <td>${escapeHtml(apMap[4]||'')}</td>
+          <td>${escapeHtml(apMap[5]||'')}</td>
+          <td>${Object.values(apMap).every(v=>v==='OK'||v==='O.K')?'PASS':'FAIL'}</td>
+        </tr>` : '';
+
+      const rows = (Array.isArray(measurements)?measurements:[]).map(m=>{
+        const arr = Array.isArray(m.measured) ? m.measured : ((m.measured===0||m.measured)?[m.measured]:[]);
+        const c = [0,1,2,3,4].map(i => (arr[i]===0||arr[i]) ? Number(arr[i]).toFixed(3) : '');
+        const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : '';
+        return `<tr>
+          <td>${escapeHtml(m.name||'')}</td>
+          <td>${num(m.nominal)}</td>
+          <td>${num(m.tolMinus)}</td>
+          <td>${num(m.tolPlus)}</td>
+          <td>${c[0]}</td><td>${c[1]}</td><td>${c[2]}</td><td>${c[3]}</td><td>${c[4]}</td>
+          <td>${dec}</td>
+        </tr>`;
+      }).join('');
+
+      return `<table>${th}<tbody>${apRow}${rows}</tbody></table>`;
+    }
+
+    let curr=null;
+    async function load(){
+      applyI18n();
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id') || '';
+      const u = localStorage.getItem('qci_user')||'';
+      const p = localStorage.getItem('qci_pass')||'';
+      if (!id){ document.getElementById('unified').textContent = '缺少 id'; return; }
+      try{
+        const res = await fetch('/api/inspections', { headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p } });
+        const text = await res.text();
+        if (!res.ok) throw new Error(text || ('HTTP '+res.status));
+        let list=[]; try{ const j=JSON.parse(text); list = Array.isArray(j) ? j : (j.record||j.records||[]); }catch{}
+        curr = list.find(x => x && x.id === id);
+        if (!curr){ document.getElementById('unified').textContent = '找不到資料'; return; }
+        document.getElementById('f-id').textContent = curr.id || '';
+        document.getElementById('f-time').textContent = new Date(curr.timestamp||'').toLocaleString();
+        document.getElementById('f-inspector').textContent = curr.inspector || '';
+        document.getElementById('f-overall').textContent = curr.overallResult || '';
+        document.getElementById('f-supplier').textContent = curr.supplier || '';
+        document.getElementById('f-part').textContent = curr.partNo || '';
+        document.getElementById('f-draw').textContent = curr.drawingNo || '';
+        const _revEl = document.getElementById('f-rev'); if (_revEl) _revEl.textContent = curr.revision || '';
+        document.getElementById('f-process').textContent = mapProcess(curr.process||'');
+        document.getElementById('f-notes').textContent = curr.notes || '';
+        document.getElementById('sig-inspector').textContent = curr.inspector || '';
+        document.getElementById('unified').innerHTML = buildUnifiedTable(curr.appearance||[], curr.measurements||[]);
+      }catch(e){
+        document.getElementById('unified').textContent = '讀取失敗：' + (e.message||e);
       }
     }
-  }
-  const apRow = Object.keys(apMap).length ? `
-    <tr>
-      <td><strong>${t('appearance')}</strong></td>
-      <td></td><td></td><td></td>
-      <td>${escapeHtml(apMap[1]||'')}</td>
-      <td>${escapeHtml(apMap[2]||'')}</td>
-      <td>${escapeHtml(apMap[3]||'')}</td>
-      <td>${escapeHtml(apMap[4]||'')}</td>
-      <td>${escapeHtml(apMap[5]||'')}</td>
-      <td>${Object.values(apMap).every(v=>v==='OK'||v==='O.K')?'PASS':'FAIL'}</td>
-    </tr>` : '';
-
-  const rows = (Array.isArray(measurements)?measurements:[]).map(m=>{
-    const arr = Array.isArray(m.measured) ? m.measured : ((m.measured===0||m.measured)?[m.measured]:[]);
-    const vs = [0,1,2,3,4].map(i=> num(arr[i]));
-    let dec='';
-    if ((m.nominal===0||m.nominal) && (m.tolMinus===0||m.tolMinus) && (m.tolPlus===0||m.tolPlus) && arr.length){
-      const min = Number(m.nominal)+Number(m.tolMinus), max = Number(m.nominal)+Number(m.tolPlus);
-      const ok = arr.filter(v=>v===0||v).map(Number).every(v => v>=min && v<=max);
-      dec = ok?'PASS':'FAIL';
-    }
-    return `<tr>
-      <td>${escapeHtml(m.name||'')}</td>
-      <td>${num(m.nominal)}</td><td>${num(m.tolMinus)}</td><td>${num(m.tolPlus)}</td>
-      <td>${vs[0]}</td><td>${vs[1]}</td><td>${vs[2]}</td><td>${vs[3]}</td><td>${vs[4]}</td><td>${dec}</td>
-    </tr>`;
-  }).join('');
-
-  return `<table>${th}<tbody>${apRow}${rows}</tbody></table>`;
-}
-
-async function load(){
-  applyI18n();
-  const params = new URLSearchParams(location.search);
-  const id = params.get('id')||'';
-  if (!id){ document.getElementById('tip').textContent = 'No id'; return; }
-  try{
-    const u = localStorage.getItem('qci_user')||'';
-    const p = localStorage.getItem('qci_pass')||'';
-    const res = await fetch('/api/inspections?id='+encodeURIComponent(id), { headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p } });
-    const text = await res.text(); let r={}; try{ r=JSON.parse(text);}catch{}
-    curr = r;
-    // Basic
-    document.getElementById('f-id').textContent = r.id||'';
-    document.getElementById('f-time').textContent = r.timestamp||'';
-    document.getElementById('f-inspector').textContent = r.inspector||'';
-    document.getElementById('f-overall').textContent = (r.overall||'') ? r.overall : '';
-    // Part info
-    document.getElementById('f-supplier').textContent = r.supplier||'';
-    document.getElementById('f-order').textContent = r.orderNo||'';
-    document.getElementById('f-lot').textContent = r.lotNo||'';
-    document.getElementById('f-part').textContent = r.partNo||'';
-    document.getElementById('f-draw').textContent = r.drawingNo||'';
-    document.getElementById('f-material').textContent = r.material||'';
-    document.getElementById('f-spec').textContent = r.spec||'';
-    document.getElementById('f-pt').textContent = r.productType||'';
-    document.getElementById('f-process').textContent = r.process||'';
-    document.getElementById('f-notes').textContent = r.notes||'';
-
-    document.getElementById('unified').innerHTML = buildUnifiedTable(r.appearance||[], r.measurements||[]);
-    document.getElementById('sig-inspector').textContent = r.inspector||'';
-  }catch(e){
-    document.getElementById('tip').textContent = 'Load failed: '+(e.message||e);
-  }
-}
-load();
-</script>
+    document.getElementById('btnPrint').addEventListener('click', ()=> window.print());
+    window.addEventListener('DOMContentLoaded', load);
+  </script>
 </body>
 </html>
