@@ -127,7 +127,7 @@
 </div>
   <div>
     <label data-i18n="labelCategory">產品類別</label>
-    <select id="category" /></select>
+    <select id="category"></select>
   </div>
 </div>
 <div class="row">
@@ -144,8 +144,8 @@
       <div class="sketch-box">
         <h3 data-i18n="sketchTitle">參考簡圖</h3>
         <div class="sketch-wrap">
-          <img data-reference-image src="final_finished.jpg" alt="參考簡圖 / Reference sketch" style="max-width:100%;">
-          <div class="sketch-note" data-i18n="sketchHint">供檢驗時快速參考主要尺寸與形狀（圖檔：final_finished.jpg）。</div>
+          <img id="sketchImg" src="final_finished.jpg" alt="參考簡圖 / Reference sketch" style="max-width:100%;">
+          <div class="sketch-note" data-i18n="sketchHint">供檢驗時快速參考主要尺寸與形狀（圖檔：{file}）。</div>
         </div>
       </div>
 
@@ -311,6 +311,8 @@ let _afterPick = null;
         btnSave:'Save to cloud', btnGoReport:'View/Print Reports',
         viewOnlyTip:'Your role is <strong>viewer</strong> (view/print only). Go to <a href="report.html">Reports</a>.',
         langTitle:'Choose language', langHint:'Select UI language:',
+        sketchTitle:'Reference Sketch', sketchHint:'For quick reference to key dimensions and shapes (file: {file}).',
+
         phAccount:'e.g. boss / worker1 / qa1', phPassword:'e.g. admin123 / in1111 / view2222',
         phSupplier:'e.g. Anchor / AKF', phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6', phRevision:'e.g. Rev.B', phNotes:'e.g. Dimensions stable / No defects', phOrderNo:'e.g. PO12345', phLotNo:'e.g. 2025-09-A', phMaterial:'e.g. SCM435', phSpec:'e.g. M8 x 30', phCategory:'e.g. Bolt',
         phName:'e.g. Head thickness', phNominal:'e.g. 3.000', phTolMinus:'e.g. -0.100', phTolPlus:'e.g. 0.100',
@@ -346,6 +348,7 @@ let _afterPick = null;
         '#supplier':'phSupplier', '#orderNo':'phOrderNo', '#lotNo':'phLotNo', '#partNo':'phPartNo', '#drawingNo':'phDrawingNo', '#material':'phMaterial', '#spec':'phSpec', '#category':'phCategory', '#notes':'phNotes'
       };
       Object.entries(m).forEach(([sel,key])=>{ const el=document.querySelector(sel); if (el) el.placeholder = t(key); });
+      updateSketchByCategory();
     }
 
     // 供應商下拉
@@ -383,6 +386,28 @@ let _afterPick = null;
     }
 
 
+
+// === Reference sketch switcher ===
+function getSketchFileForCategory(code){
+  switch(String(code||'').toUpperCase()){
+    case 'PLUG': return 'plug.jpg';
+    case 'TOOL': return 'special_tool.jpg';
+    default:     return 'final_finished.jpg';
+  }
+}
+function updateSketchByCategory(){
+  const sel = document.getElementById('category');
+  const img = document.getElementById('sketchImg');
+  const note = document.querySelector('.sketch-note');
+  if (!img) return;
+  const file = getSketchFileForCategory(sel ? sel.value : '');
+  img.src = file;
+  if (note){
+    // Use i18n text and fill in {file}
+    const base = t('sketchHint');
+    note.innerHTML = String(base || '').replace('{file}', file);
+  }
+}
 // 產品類別下拉（雙語選單）
 const CATEGORIES = [
   { code:'PLUG',        zh:'塞子',         cn:'塞子',       en:'plug' },
@@ -411,6 +436,10 @@ function fillCategorySelect(){
     `<option value="${c.code}">${c.zh} (${c.en})</option>`
   ).join('');
   if (prev) sel.value = prev;
+  // 綁定事件並立即套用一次
+  sel.removeEventListener('change', updateSketchByCategory);
+  sel.addEventListener('change', updateSketchByCategory);
+  updateSketchByCategory();
 }
 
 
@@ -680,6 +709,5 @@ window.addEventListener('DOMContentLoaded', ()=>{
       }
     });
   </script>
-<script src="./product-image-mapping.js" defer></script>
 </body>
 </html>
