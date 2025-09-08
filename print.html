@@ -67,12 +67,27 @@
     <!-- 料件資訊 -->
     <div class="block" style="margin-top:10px">
       <h3 data-i18n="section_part">料件資訊</h3>
-      <div class="row">
-        <div><strong data-i18n="f_supplier">供應商：</strong><span id="f-supplier"></span></div>
-        <div><strong data-i18n="f_partno">料號 Part No.：</strong><span id="f-part"></span></div>
-        <div><strong data-i18n="f_drawing">圖號 Drawing No.：</strong><span id="f-draw"></span></div>
-        <div><strong data-i18n="f_process">製程 Process：</strong><span id="f-process"></span></div>
-      </div>
+      
+<div class="row">
+  <div><strong data-i18n="f_supplier">供應商：</strong><span id="f-supplier"></span></div>
+  <div><strong data-i18n="f_order">訂單號碼：</strong><span id="f-order"></span></div>
+</div>
+<div class="row">
+  <div><strong data-i18n="f_lot">生產批號：</strong><span id="f-lot"></span></div>
+  <div><strong data-i18n="f_partno">料號 Part No.：</strong><span id="f-part"></span></div>
+</div>
+<div class="row">
+  <div><strong data-i18n="f_drawing">圖號 Drawing No.：</strong><span id="f-draw"></span></div>
+  <div><strong data-i18n="f_material">材質：</strong><span id="f-material"></span></div>
+</div>
+<div class="row">
+  <div><strong data-i18n="f_spec">規格：</strong><span id="f-spec"></span></div>
+  <div><strong data-i18n="f_category">產品類別：</strong><span id="f-category"></span></div>
+</div>
+<div class="row">
+  <div><strong data-i18n="f_process">製程 Process：</strong><span id="f-process"></span></div>
+</div>
+
       <div style="margin-top:8px"><strong data-i18n="f_notes">備註：</strong><span id="f-notes"></span></div>
     </div>
 
@@ -141,7 +156,7 @@
         sign_qc: "品保主管",
         sign_approve: "核准",
         f_id: "報告編號：", f_time: "檢驗時間：", f_inspector: "檢驗人員：", f_overall: "檢驗結果：",
-        f_supplier: "供應商：", f_partno: "料號 Part No.：", f_drawing: "圖號 Drawing No.：",
+        f_supplier: "供應商：", f_order:"訂單號碼：", f_lot:"生產批號：", f_partno: "料號 Part No.：", f_drawing: "圖號 Drawing No.：", f_material:"材質：", f_spec:"規格：", f_category:"產品類別：",
         f_revision: "版次 Revision：", f_process: "製程 Process：", f_notes: "備註：",
         col_item: "項目 / 尺寸", col_nominal: "名目", col_tol_minus: "下限公差", col_tol_plus: "上限公差",
         col_m1: "樣品/實測1", col_m2: "樣品/實測2", col_m3: "樣品/實測3", col_m4: "樣品/實測4", col_m5: "樣品/實測5", col_judgement: "判定",
@@ -161,7 +176,7 @@
         sign_qc: "品保主管",
         sign_approve: "核准",
         f_id: "报告编号：", f_time: "检验时间：", f_inspector: "检验人员：", f_overall: "检验结果：",
-        f_supplier: "供应商：", f_partno: "料号 Part No.：", f_drawing: "图号 Drawing No.：",
+        f_supplier: "供应商：", f_order:"订单号码：", f_lot:"生产批号：", f_partno: "料号 Part No.：", f_drawing: "图号 Drawing No.：", f_material:"材质：", f_spec:"规格：", f_category:"产品类别：",
         f_revision: "版次 Revision：", f_process: "制程 Process：", f_notes: "备注：",
         col_item: "项目 / 尺寸", col_nominal: "名义", col_tol_minus: "下限公差", col_tol_plus: "上限公差",
         col_m1: "样品/实测1", col_m2: "样品/实测2", col_m3: "样品/实测3", col_m4: "样品/实测4", col_m5: "样品/实测5", col_judgement: "判定",
@@ -181,7 +196,7 @@
         sign_qc: "QA Manager",
         sign_approve: "Approved",
         f_id: "Report ID: ", f_time: "Time: ", f_inspector: "Inspector: ", f_overall: "Overall: ",
-        f_supplier: "Supplier: ", f_partno: "Part No.: ", f_drawing: "Drawing No.: ",
+        f_supplier: "Supplier: ", f_order:"Order No.: ", f_lot:"Lot No.: ", f_partno: "Part No.: ", f_drawing: "Drawing No.: ", f_material:"Material: ", f_spec:"Spec: ", f_category:"Category: ",
         f_revision: "Revision: ", f_process: "Process: ", f_notes: "Notes: ",
         col_item: "Item / Dim.", col_nominal: "Nominal", col_tol_minus: "Lower Tol.", col_tol_plus: "Upper Tol.",
         col_m1: "Sample/Meas.1", col_m2: "Sample/Meas.2", col_m3: "Sample/Meas.3", col_m4: "Sample/Meas.4", col_m5: "Sample/Meas.5", col_judgement: "Judgement",
@@ -281,6 +296,11 @@
         document.getElementById('f-inspector').textContent = curr.inspector || '';
         document.getElementById('f-overall').textContent = curr.overallResult || '';
         document.getElementById('f-supplier').textContent = curr.supplier || '';
+        document.getElementById('f-order').textContent = curr.orderNo || '';
+        document.getElementById('f-lot').textContent = curr.lotNo || '';
+        document.getElementById('f-material').textContent = curr.material || '';
+        document.getElementById('f-spec').textContent = curr.spec || '';
+        document.getElementById('f-category').textContent = curr.category || '';
         document.getElementById('f-part').textContent = curr.partNo || '';
         document.getElementById('f-draw').textContent = curr.drawingNo || '';
         const _revEl = document.getElementById('f-rev'); if (_revEl) _revEl.textContent = curr.revision || '';

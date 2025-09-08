@@ -70,32 +70,59 @@
 
     <!-- 表單區（input/admin 可見） -->
     <div id="formView" class="hidden">
-      <div class="row">
-        <div>
-          <label data-i18n="labelSupplier">供應商</label>
-          <select id="supplier"></select>
-          <div class="muted" id="supplierEn"></div>
-        </div>
-        <div>
-          <label data-i18n="labelPartNo">料號 (Part No.)</label>
-          <input id="partNo" />
-        </div>
-      </div>
-      <div class="row">
-        <div>
-          <label data-i18n="labelDrawingNo">圖號 (Drawing No.)</label>
-          <input id="drawingNo" />
-        </div>
-        <div>
-          <label data-i18n="labelProcess">製程 (Process)</label>
-          <select id="process"></select>
-        </div>
-      </div>
-      <div style="margin-top:12px">
-        <label data-i18n="labelNotes">備註</label>
-        <textarea id="notes" rows="2"></textarea>
       
-      <!-- 參考簡圖（放在基本資料與尺寸表之間） -->
+<div class="row">
+  <div>
+    <label data-i18n="labelSupplier">供應商</label>
+    <select id="supplier"></select>
+    <div class="muted" id="supplierEn"></div>
+  </div>
+  <div>
+    <label data-i18n="labelOrderNo">訂單號碼</label>
+    <input id="orderNo" />
+  </div>
+</div>
+<div class="row">
+  <div>
+    <label data-i18n="labelLotNo">生產批號</label>
+    <input id="lotNo" />
+  </div>
+  <div>
+    <label data-i18n="labelPartNo">料號 (Part No.)</label>
+    <input id="partNo" />
+  </div>
+</div>
+<div class="row">
+  <div>
+    <label data-i18n="labelDrawingNo">圖號 (Drawing No.)</label>
+    <input id="drawingNo" />
+  </div>
+  <div>
+    <label data-i18n="labelMaterial">材質</label>
+    <input id="material" />
+  </div>
+</div>
+<div class="row">
+  <div>
+    <label data-i18n="labelSpec">規格</label>
+    <input id="spec" />
+  </div>
+  <div>
+    <label data-i18n="labelCategory">產品類別</label>
+    <input id="category" />
+  </div>
+</div>
+<div class="row">
+  <div>
+    <label data-i18n="labelProcess">製程 (Process)</label>
+    <select id="process"></select>
+  </div>
+  <div>
+    <label data-i18n="labelNotes">備註</label>
+    <textarea id="notes" rows="2"></textarea>
+  </div>
+</div>
+<!-- 參考簡圖（放在基本資料與尺寸表之間） -->
       <div class="sketch-box">
         <h3 data-i18n="sketchTitle">參考簡圖</h3>
         <div class="sketch-wrap">
@@ -177,6 +204,16 @@ let _afterPick = null;
         btnLogin:'登入', btnReset:'清除本機記錄', btnHealth:'健康檢查',
         labelSupplier:'供應商', labelPartNo:'料號 (Part No.)', labelDrawingNo:'圖號 (Drawing No.)',
         labelRevision:'版次 (Revision)', labelProcess:'製程 (Process)', labelNotes:'備註',
+        labelOrderNo:'訂單號碼',
+        labelLotNo:'生產批號',
+        labelMaterial:'材質',
+        labelSpec:'規格',
+        labelCategory:'產品類別',
+        phOrderNo:'例如：PO12345',
+        phLotNo:'例如：2025-09-A',
+        phMaterial:'例如：SCM435',
+        phSpec:'例如：M8 x 30',
+        phCategory:'例如：螺栓',
         sectionTitle:'尺寸與外觀檢驗',
         hintAppearance:'第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。',
         thItem:'項目 / 尺寸名稱', thNominal:'名目值', thTolMinus:'下限公差', thTolPlus:'上限公差',
@@ -202,7 +239,17 @@ let _afterPick = null;
         labelAccount:'账号（检验人员）', labelPassword:'密码（通关码/密码）',
         btnLogin:'登录', btnReset:'清除本机记录', btnHealth:'健康检查',
         labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)',
-        labelRevision:'版次 (Revision)', labelProcess:'制程 (Process)', labelNotes:'备注',
+        labelRevision:'版次 (Revision)', labelProcess:'制程 (Process)', labelNotes:'备注', labelOrderNo:'订单号码', labelLotNo:'生产批号', labelMaterial:'材质', labelSpec:'规格', labelCategory:'产品类别',
+        labelOrderNo:'訂單號碼',
+        labelLotNo:'生產批號',
+        labelMaterial:'材質',
+        labelSpec:'規格',
+        labelCategory:'產品類別',
+        phOrderNo:'例如：PO12345',
+        phLotNo:'例如：2025-09-A',
+        phMaterial:'例如：SCM435',
+        phSpec:'例如：M8 x 30',
+        phCategory:'例如：螺栓',
         sectionTitle:'尺寸与外观检验',
         hintAppearance:'第 <strong>1</strong> 行为 <strong>外观检查</strong>（可留空）；第 <strong>2</strong> 行开始为尺寸量测。',
         thItem:'项目 / 尺寸名称', thNominal:'名义值', thTolMinus:'下限公差', thTolPlus:'上限公差',
@@ -212,7 +259,7 @@ let _afterPick = null;
         viewOnlyTip:'您的账号是 <strong>viewer</strong>（只能看/打印）。请前往 <a href="report.html">报告页</a>。',
         langTitle:'选择语言 / Language', langHint:'请选择界面语言：',
         phAccount:'例如：boss / worker1 / qa1', phPassword:'例如：admin123 / in1111 / view2222',
-        phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸稳定/外观无瑕疵',
+        phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸稳定/外观无瑕疵', phOrderNo:'例如：PO12345', phLotNo:'例如：2025-09-A', phMaterial:'例如：SCM435', phSpec:'例如：M8 x 30', phCategory:'例如：螺栓',
         phName:'例：头部厚度', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
         phM1:'实测1', phM2:'实测2', phM3:'实测3', phM4:'实测4', phM5:'实测5',
         login_msg_need:'请输入账号与密码', login_msg_auto:'自动验证中...', login_msg_wrong:'❌ 账号或密码错误', login_verifying:'验证中...',
@@ -227,7 +274,17 @@ let _afterPick = null;
         labelAccount:'Account (Inspector)', labelPassword:'Password',
         btnLogin:'Sign in', btnReset:'Clear local data', btnHealth:'Health Check',
         labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.',
-        labelRevision:'Revision', labelProcess:'Process', labelNotes:'Notes',
+        labelRevision:'Revision', labelProcess:'Process', labelNotes:'Notes', labelOrderNo:'Order No.', labelLotNo:'Lot No.', labelMaterial:'Material', labelSpec:'Spec', labelCategory:'Product Category',
+        labelOrderNo:'訂單號碼',
+        labelLotNo:'生產批號',
+        labelMaterial:'材質',
+        labelSpec:'規格',
+        labelCategory:'產品類別',
+        phOrderNo:'例如：PO12345',
+        phLotNo:'例如：2025-09-A',
+        phMaterial:'例如：SCM435',
+        phSpec:'例如：M8 x 30',
+        phCategory:'例如：螺栓',
         sectionTitle:'Appearance & Dimensional Inspection',
         hintAppearance:'Row <strong>1</strong> is <strong>Appearance</strong> (optional). From row <strong>2</strong> onwards are dimensions.',
         thItem:'Item / Dimension', thNominal:'Nominal', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
@@ -237,7 +294,7 @@ let _afterPick = null;
         viewOnlyTip:'Your role is <strong>viewer</strong> (view/print only). Go to <a href="report.html">Reports</a>.',
         langTitle:'Choose language', langHint:'Select UI language:',
         phAccount:'e.g. boss / worker1 / qa1', phPassword:'e.g. admin123 / in1111 / view2222',
-        phSupplier:'e.g. Anchor / AKF', phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6', phRevision:'e.g. Rev.B', phNotes:'e.g. Dimensions stable / No defects',
+        phSupplier:'e.g. Anchor / AKF', phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6', phRevision:'e.g. Rev.B', phNotes:'e.g. Dimensions stable / No defects', phOrderNo:'e.g. PO12345', phLotNo:'e.g. 2025-09-A', phMaterial:'e.g. SCM435', phSpec:'e.g. M8 x 30', phCategory:'e.g. Bolt',
         phName:'e.g. Head thickness', phNominal:'e.g. 3.000', phTolMinus:'e.g. -0.100', phTolPlus:'e.g. 0.100',
         phM1:'Sample1', phM2:'Sample2', phM3:'Sample3', phM4:'Sample4', phM5:'Sample5',
         login_msg_need:'Please enter account & password', login_msg_auto:'Auto checking...', login_msg_wrong:'❌ Wrong account or password', login_verifying:'Verifying...',
@@ -267,7 +324,7 @@ let _afterPick = null;
       // placeholder
       const m = {
         '#inspector':'phAccount', '#passcode':'phPassword',
-        '#supplier':'phSupplier', '#partNo':'phPartNo', '#drawingNo':'phDrawingNo', '#notes':'phNotes'
+        '#supplier':'phSupplier', '#orderNo':'phOrderNo', '#lotNo':'phLotNo', '#partNo':'phPartNo', '#drawingNo':'phDrawingNo', '#material':'phMaterial', '#spec':'phSpec', '#category':'phCategory', '#notes':'phNotes'
       };
       Object.entries(m).forEach(([sel,key])=>{ const el=document.querySelector(sel); if (el) el.placeholder = t(key); });
     }
@@ -420,8 +477,13 @@ let _afterPick = null;
       const pass = localStorage.getItem('qci_pass') || '';
       if (!user || !pass){ alert(t('login_msg_need')); return null; }
 
+      const orderNo = document.getElementById('orderNo').value.trim();
+      const lotNo = document.getElementById('lotNo').value.trim();
       const partNo = document.getElementById('partNo').value.trim();
       const drawingNo = document.getElementById('drawingNo').value.trim();
+      const material = document.getElementById('material').value.trim();
+      const spec = document.getElementById('spec').value.trim();
+      const category = document.getElementById('category').value.trim();
       const notes = document.getElementById('notes').value.trim();
 
       const selS = document.getElementById('supplier');
