@@ -38,7 +38,6 @@
       <button class="btn btn-outline" id="btnDiag" data-i18n="btnDiag">診斷資料</button>
       <button class="btn btn-outline" id="btnRepair" style="display:none" data-i18n="btnRepair">一鍵修復</button>
       <button class="btn" id="btnPrint" data-i18n="btnPrint">列印 / 存成 PDF</button>
-      <button class="btn btn-outline" id="btnExcel" data-i18n="btnExportExcel">下載 Excel（每筆一工作表）</button>
       <a class="btn" href="index.html" id="btnBack" data-i18n="btnBackToInput">回現場輸入</a>
       <button class="btn btn-outline" id="btnLang">🌐 語言</button>
     </div>
@@ -202,7 +201,6 @@ function showCategory(v){
     document.getElementById('btnDiag').addEventListener('click', diag);
     document.getElementById('btnRepair').addEventListener('click', repair);
     document.getElementById('btnLang').addEventListener('click', ()=> openLangModal());
-    document.getElementById('btnExcel').addEventListener('click', exportExcel);
     document.getElementById('filterText').addEventListener('input', render);
 
     let role = '', currentUser = '', canDelete = false, records = [];
@@ -400,145 +398,143 @@ function showCategory(v){
     }
 
     
-    // ===== Excel 匯出（SpreadsheetML 2003, 一筆一工作表） =====
-    function exportExcel(){
-      // 取得目前顯示（含關鍵字過濾後）的清單
+    /* ====== Offline Excel Export (.xls via SpreadsheetML 2003) ====== */
+    function getFilteredRecords(){
       const kw = (document.getElementById('filterText').value || '').trim().toLowerCase();
-      const list = (records||[]).filter(r => {
+      return (records||[]).filter(r => {
         if (!kw) return true;
         const s = [r.supplier, r.orderNo, r.lotNo, r.partNo, r.material, r.spec, r.category, r.drawingNo, r.inspector, r.process, r.processLabel].join(' ').toLowerCase();
         return s.includes(kw);
       });
-      if (!list.length){ alert(t('msgEmpty')); return; }
+    }
+    function escapeXml(s){
+      return String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+    function sheetNameFrom(r){
+      const base = (r.supplier||'') + '-' + (r.partNo||'') + '-' + (r.id||'INS');
+      // Excel sheet name rules: max 31 chars, cannot contain : \ / ? * [ ]
+      let name = base.replace(/[:\\\/\?\*\[\]]/g, ' ').trim();
+      if (name.length > 31) name = name.slice(0, 31);
+      if (!name) name = 'Sheet';
+      return name;
+    }
+    function cell(v, type, styleId){
+      const hasStyle = styleId ? ` ss:StyleID="${styleId}"` : '';
+      if (type === 'Number' && v !== '' && v !== null && v !== undefined && !isNaN(Number(v))) {
+        return `<Cell${hasStyle}><Data ss:Type="Number">${Number(v)}</Data></Cell>`;
+      }
+      return `<Cell${hasStyle}><Data ss:Type="String">${escapeXml(v)}</Data></Cell>`;
+    }
+    function buildSpreadsheetXml(list){
+      const now = new Date();
+      const docProps = `
+        <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+          <Author>Anchor QC</Author>
+          <LastAuthor>Anchor QC</LastAuthor>
+          <Created>${now.toISOString()}</Created>
+          <Company>ANCHOR FASTENERS INDUSTRIAL CO., LTD.</Company>
+          <Version>12.00</Version>
+        </DocumentProperties>`;
+      const styles = `
+        <Styles>
+          <Style ss:ID="sHeader"><Font ss:Bold="1"/><Interior ss:Color="#EEECE1" ss:Pattern="Solid"/></Style>
+          <Style ss:ID="sSub"><Font ss:Bold="1"/></Style>
+          <Style ss:ID="sNum3"><NumberFormat ss:Format="0.000"/></Style>
+          <Style ss:ID="sCenter"><Alignment ss:Horizontal="Center"/></Style>
+        </Styles>`;
 
-      // XML helpers
-      const x = (s)=> String(s||'');
-      const xmlEsc = (s)=> x(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',\"'\":'&apos;'}[c]));
-      const cell = (val, type='String', style='') => `<Cell${style?` ss:StyleID="${style}"`:''}><Data ss:Type="${type}">${xmlEsc(val)}</Data></Cell>`;
-      const row = (arr)=> `<Row>${arr.join('')}</Row>`;
-
-      // Appearance map helper (與畫面一致)
-      function apMapOf(r){
-        const L = getLang();
+      const ws = list.map((r, idx) => {
+        // Appearance map
         const apMap = {};
-        if (Array.isArray(r.appearance)){
-          for (const a of r.appearance){
+        if (Array.isArray(r.appearance)) {
+          for (const a of r.appearance) {
             const m = String(a.sample||'').match(/(\d+)/);
-            const idx = m ? Number(m[1]) : null;
-            if (idx && idx>=1 && idx<=5){
-              const ok = String(a.result||'').toUpperCase()==='OK';
-              apMap[idx] = ok ? (L==='en'?'OK':'O.K') : 'NG';
-            }
+            const i = m ? Number(m[1]) : null;
+            if (i && i>=1 && i<=5) apMap[i] = String(a.result||'').toUpperCase()==='OK' ? (getLang()==='en'?'OK':'O.K') : 'NG';
           }
         }
-        return apMap;
-      }
+        // Header + sections
+        const rows = [];
+        rows.push(`<Row>${cell('QC Report / 品檢報告', 'String', 'sHeader')}${cell('', 'String', 'sHeader')}${cell('', 'String', 'sHeader')}${cell('', 'String', 'sHeader')}</Row>`);
 
-      // 量測明細列
-      function measurementRows(r){
-        const header = row([
-          cell(t('theadItem'),'String','sHdr'),
-          cell(t('theadNom'),'String','sHdr'),
-          cell(t('theadLo'),'String','sHdr'),
-          cell(t('theadHi'),'String','sHdr'),
-          cell(t('theadM1'),'String','sHdr'),
-          cell(t('theadM2'),'String','sHdr'),
-          cell(t('theadM3'),'String','sHdr'),
-          cell(t('theadM4'),'String','sHdr'),
-          cell(t('theadM5'),'String','sHdr'),
-          cell(t('theadDecision'),'String','sHdr'),
-        ]);
+        // Basic Info
+        rows.push(`<Row>${cell(t('thBasic'), 'String', 'sSub')}</Row>`);
+        rows.push(`<Row>${cell(t('labelID') + (r.id||''))}${cell(t('labelTime') + new Date(r.timestamp||'').toLocaleString())}${cell(t('labelInspector') + (r.inspector||''))}${cell(t('labelOverall') + (r.overallResult||''))}</Row>`);
+        rows.push(`<Row>${cell(t('labelSupplier') + (r.supplier||''))}${cell(t('labelOrderNo') + (r.orderNo||''))}${cell(t('labelLotNo') + (r.lotNo||''))}${cell('')}</Row>`);
 
-        // 外觀列（如果有填）
-        const ap = apMapOf(r);
-        const apRow = Object.keys(ap).length ? row([
-          cell(t('appearance'),'String','sBold'),
-          cell(''), cell(''), cell(''),
-          cell(ap[1]||''), cell(ap[2]||''), cell(ap[3]||''), cell(ap[4]||''), cell(ap[5]||''),
-          cell(Object.values(ap).every(v=>v==='OK'||v==='O.K')?'PASS':'FAIL')
-        ]) : '';
+        // Part Info
+        rows.push(`<Row/>`);
+        rows.push(`<Row>${cell(t('thPart'), 'String', 'sSub')}</Row>`);
+        rows.push(`<Row>${cell(t('labelPartNo') + (r.partNo||''))}${cell(t('labelDrawingNo') + (r.drawingNo||''))}${cell(t('labelMaterial') + (r.material||''))}${cell(t('labelSpec') + (r.spec||''))}</Row>`);
+        rows.push(`<Row>${cell(t('labelCategory') + (showCategory(r.category||'')))}${cell(t('labelProcess') + (mapProcess(r.process||'')))}${cell(t('labelNotes') + (r.notes||''))}${cell('')}</Row>`);
 
-        const meas = (Array.isArray(r.measurements)?r.measurements:[]).map(m => {
+        // Measurements table header
+        rows.push(`<Row/>`);
+        rows.push(`<Row>${cell(t('thUnified'), 'String', 'sSub')}</Row>`);
+        rows.push(`<Row>${cell(t('theadItem'),'String','sHeader')}${cell(t('theadNom'),'String','sHeader')}${cell(t('theadLo'),'String','sHeader')}${cell(t('theadHi'),'String','sHeader')}${cell(t('theadM1'),'String','sHeader')}${cell(t('theadM2'),'String','sHeader')}${cell(t('theadM3'),'String','sHeader')}${cell(t('theadM4'),'String','sHeader')}${cell(t('theadM5'),'String','sHeader')}${cell(t('theadDecision'),'String','sHeader')}</Row>`);
+
+        // Appearance row (optional)
+        if (Object.keys(apMap).length) {
+          const pass = Object.values(apMap).every(v => v==='OK' || v==='O.K') ? 'PASS' : 'FAIL';
+          rows.push(`<Row>${cell(t('appearance'))}${cell('')}${cell('')}${cell('')}${cell(apMap[1]||'')}${cell(apMap[2]||'')}${cell(apMap[3]||'')}${cell(apMap[4]||'')}${cell(apMap[5]||'')}${cell(pass)}</Row>`);
+        }
+
+        // Measurement rows
+        const ms = Array.isArray(r.measurements) ? r.measurements : [];
+        for (const m of ms) {
           const arr = Array.isArray(m.measured) ? m.measured : ((m.measured===0||m.measured)?[m.measured]:[]);
-          const c = [0,1,2,3,4].map(i => (arr[i]===0||arr[i]) ? Number(arr[i]).toFixed(3) : '');
-          const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : '';
-          return row([
-            cell(m.name||''),
-            cell(m.nominal===''||m.nominal===null? '': Number(m.nominal),'Number'),
-            cell(m.tolMinus===''||m.tolMinus===null? '': Number(m.tolMinus),'Number'),
-            cell(m.tolPlus===''||m.tolPlus===null? '': Number(m.tolPlus),'Number'),
-            cell(c[0], c[0]===''?'String':'Number'),
-            cell(c[1], c[1]===''?'String':'Number'),
-            cell(c[2], c[2]===''?'String':'Number'),
-            cell(c[3], c[3]===''?'String':'Number'),
-            cell(c[4], c[4]===''?'String':'Number'),
-            cell(dec)
-          ]);
-        }).join('');
+          const c = [0,1,2,3,4].map(i => (arr[i]===0||arr[i]) ? Number(arr[i]) : '');
+          const dec = (typeof m.pass==='boolean') ? (m.pass ? 'PASS' : 'FAIL') : '';
+          rows.push(
+            `<Row>` +
+            cell(m.name||'') +
+            cell(m.nominal, 'Number', 'sNum3') +
+            cell(m.tolMinus, 'Number', 'sNum3') +
+            cell(m.tolPlus, 'Number', 'sNum3') +
+            cell(c[0], 'Number', 'sNum3') +
+            cell(c[1], 'Number', 'sNum3') +
+            cell(c[2], 'Number', 'sNum3') +
+            cell(c[3], 'Number', 'sNum3') +
+            cell(c[4], 'Number', 'sNum3') +
+            cell(dec) +
+            `</Row>`
+          );
+        }
 
-        return header + apRow + meas;
-      }
-
-      // 工作表名稱（<=31字、不可包含 []:*?/\\ ）
-      function sheetNameOf(r){
-        const raw = `${r.id || ''}`.trim() || `${r.supplier||''}-${r.partNo||''}` || 'Record';
-        let name = raw.replace(/[\\/:?\*\[\]]/g,' ').slice(0,31).trim();
-        if (!name) name = 'Record';
-        return name;
-      }
-
-      // 產生每張工作表
-      const sheets = list.map(r => {
-        const rows1 = [
-          row([cell(t('thBasic'),'String','sTitle')]),
-          row([cell(`${t('labelID')}${r.id||''}`)]),
-          row([cell(`${t('labelTime')}${new Date(r.timestamp||'').toLocaleString()}`)]),
-          row([cell(`${t('labelInspector')}${r.inspector||''}`)]),
-          row([cell(`${t('labelSupplier')}${r.supplier||''}`)]),
-          row([cell(`${t('labelOverall')}${r.overallResult||''}`)]),
-          row([cell('')]),
-          row([cell(t('thPart'),'String','sTitle')]),
-          row([cell(`${t('labelOrderNo')}${r.orderNo||''}`)]),
-          row([cell(`${t('labelLotNo')}${r.lotNo||''}`)]),
-          row([cell(`${t('labelPartNo')}${r.partNo||''}`)]),
-          row([cell(`${t('labelDrawingNo')}${r.drawingNo||''}`)]),
-          row([cell(`${t('labelMaterial')}${r.material||''}`)]),
-          row([cell(`${t('labelSpec')}${r.spec||''}`)]),
-          row([cell(`${t('labelCategory')}${showCategory(r.category||'')}`)]),
-          row([cell(`${t('labelProcess')}${mapProcess(r.process||r.processCode||'')}`)]),
-          row([cell(`${t('labelNotes')}${r.notes||''}`)]),
-          row([cell('')]),
-          row([cell(t('thUnified'),'String','sTitle')])
-        ].join('');
-
-        const rows2 = measurementRows(r);
-
-        return `<Worksheet ss:Name="${xmlEsc(sheetNameOf(r))}"><Table>${rows1}${rows2}</Table></Worksheet>`;
+        const table = `<Table>${rows.join('')}</Table>`;
+        const name = escapeXml(sheetNameFrom(r) || ('Sheet'+(idx+1)));
+        return `<Worksheet ss:Name="${name}">${table}</Worksheet>`;
       }).join('');
 
-      const workbook = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
+      const xml = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
  xmlns:o="urn:schemas-microsoft-com:office:office"
  xmlns:x="urn:schemas-microsoft-com:office:excel"
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
  xmlns:html="http://www.w3.org/TR/REC-html40">
-  <Styles>
-    <Style ss:ID="sHdr"><Font ss:Bold="1"/></Style>
-    <Style ss:ID="sBold"><Font ss:Bold="1"/></Style>
-    <Style ss:ID="sTitle"><Font ss:Bold="1"/><Interior ss:Color="#EEEEEE" ss:Pattern="Solid"/></Style>
-  </Styles>
-  ${sheets}
+ ${docProps}
+ ${styles}
+ ${ws}
 </Workbook>`;
+      return xml;
+    }
 
-      const blob = new Blob([workbook], { type: 'application/vnd.ms-excel' });
-      const ts = new Date().toISOString().replace(/[-:T]/g,'').slice(0,14);
-      const filename = `QC_Reports_${ts}.xls`;
+    function exportExcel(){
+      const list = getFilteredRecords();
+      if (!list.length){ alert(t('msgEmpty') || 'No data'); return; }
+      const xml = buildSpreadsheetXml(list);
+      const blob = new Blob([xml], { type: 'application/vnd.ms-excel' });
       const a = document.createElement('a');
+      const dt = new Date();
+      const pad = (n)=> String(n).padStart(2,'0');
+      const fname = `QC_Reports_${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}_${pad(dt.getHours())}${pad(dt.getMinutes())}${pad(dt.getSeconds())}.xls`;
       a.href = URL.createObjectURL(blob);
-      a.download = filename;
+      a.download = fname;
       document.body.appendChild(a);
       a.click();
-      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 3000);
+      URL.revokeObjectURL(a.href);
+      a.remove();
     }
 
     window.addEventListener('DOMContentLoaded', load);
