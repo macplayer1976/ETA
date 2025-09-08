@@ -156,7 +156,27 @@
       const lang = getLang() || 'zh-TW';
       if (!p) return code;
       if (lang==='en') return p.en;
-      if (lang==='zh-CN') return `${p.cn} (${p.en})`;
+      if (lang==='zh-CN') return `${p.cn} 
+const CATEGORIES = [
+  { code:'PLUG',        zh:'塞子',            cn:'塞子',            en:'plug' },
+  { code:'SLEEVE_A',    zh:'管子_A type',     cn:'管子_A type',     en:'sleeve_A type' },
+  { code:'SLEEVE_B',    zh:'管子_B type',     cn:'管子_B type',     en:'sleeve_B type' },
+  { code:'SLEEVE_H',    zh:'管子_H type',     cn:'管子_H type',     en:'sleeve_H type' },
+  { code:'FINISHED_A',  zh:'成品_A type',     cn:'成品_A type',     en:'Finished_A type' },
+  { code:'FINISHED_B',  zh:'成品_B type',     cn:'成品_B type',     en:'Finished_B type' },
+  { code:'FINISHED_H',  zh:'成品_H type',     cn:'成品_H type',     en:'Finished_H type' },
+  { code:'SPECIAL_TOOL',zh:'內迫工具',        cn:'内迫工具',        en:'special tool' }
+];
+function mapCategory(code){
+  if (!code) return '';
+  const lang = getLang() || 'zh-TW';
+  const c = CATEGORIES.find(x => x.code === String(code).toUpperCase());
+  if (!c) return code;
+  if (lang === 'en') return c.en;
+  if (lang === 'zh-CN') return `${c.cn} (${c.en})`;
+  return `${c.zh} (${c.en})`;
+}
+(${p.en})`;
       return `${p.zh} (${p.en})`;
     }
 
