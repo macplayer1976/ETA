@@ -37,7 +37,8 @@
       <button class="btn btn-outline" id="btnReset" data-i18n="btnReset">重設帳號</button>
       <button class="btn btn-outline" id="btnDiag" data-i18n="btnDiag">診斷資料</button>
       <button class="btn btn-outline" id="btnRepair" style="display:none" data-i18n="btnRepair">一鍵修復</button>
-      <button class="btn" id="btnPrint" data-i18n="btnPrint">列印 / 存成 PDF</button>
+      <button class="btn btn-gray" id="btnExcel" data-i18n="btnExcel">下載 Excel</button>
+        <button class="btn" id="btnPrint" data-i18n="btnPrint">列印 / 存成 PDF</button>
       <a class="btn" href="index.html" id="btnBack" data-i18n="btnBackToInput">回現場輸入</a>
       <button class="btn btn-outline" id="btnLang">🌐 語言</button>
     </div>
@@ -71,6 +72,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
   <script>
     /* ===== I18N ===== */
     const I18N = {
@@ -79,6 +81,7 @@
         filterPh:'關鍵字（供應商/料號/圖號/檢驗人員）',
         btnReload:'重新載入', btnClear:'清除關鍵字', btnReset:'重設帳號', btnDiag:'診斷資料', btnRepair:'一鍵修復',
         btnPrint:'列印 / 存成 PDF', btnBackToInput:'回現場輸入', langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：',
+        btnExcel:'下載 Excel',
         debugTip:'提示：網址加上 ?debug=1 可顯示伺服器原始回應；網址加 #resetpass 可清除通關碼。',
         thBasic:'基本資訊', thPart:'料件資訊', thUnified:'外觀與量測明細', thResultOps:'結果 / 操作',
         labelID:'ID：', labelTime:'時間：', labelInspector:'人員：', labelSupplier:'供應商：',
@@ -96,6 +99,7 @@
         filterPh:'关键字（供应商/料号/图号/检验人员）',
         btnReload:'重新载入', btnClear:'清除关键字', btnReset:'重设帐号', btnDiag:'诊断资料', btnRepair:'一键修复',
         btnPrint:'打印 / 存成 PDF', btnBackToInput:'回现场输入', langTitle:'选择语言 / Language', langHint:'请选择界面语言：',
+        btnExcel:'下载 Excel',
         debugTip:'提示：网址加上 ?debug=1 可显示服务器原始回应；网址加 #resetpass 可清除通关码。',
         thBasic:'基本资讯', thPart:'料件资讯', thUnified:'外观与量测明细', thResultOps:'结果 / 操作',
         labelID:'ID：', labelTime:'时间：', labelInspector:'人员：', labelSupplier:'供应商：',
@@ -113,6 +117,7 @@
         filterPh:'Keyword (supplier/part/drawing/inspector)',
         btnReload:'Reload', btnClear:'Clear', btnReset:'Reset account', btnDiag:'Diagnose', btnRepair:'Repair',
         btnPrint:'Print / Save as PDF', btnBackToInput:'Back to Input', langTitle:'Choose language', langHint:'Select UI language:',
+        btnExcel:'Download Excel',
         debugTip:'Tip: add ?debug=1 to show raw response; add #resetpass to clear pass.',
         thBasic:'Basic Info', thPart:'Part Info', thUnified:'Appearance & Measurements', thResultOps:'Result / Actions',
         labelID:'ID: ', labelTime:'Time: ', labelInspector:'Inspector: ', labelSupplier:'Supplier: ',
@@ -201,6 +206,7 @@ function showCategory(v){
     document.getElementById('btnDiag').addEventListener('click', diag);
     document.getElementById('btnRepair').addEventListener('click', repair);
     document.getElementById('btnLang').addEventListener('click', ()=> openLangModal());
+      document.getElementById('btnExcel').addEventListener('click', exportExcel);
     document.getElementById('filterText').addEventListener('input', render);
 
     let role = '', currentUser = '', canDelete = false, records = [];
@@ -397,7 +403,95 @@ function showCategory(v){
       }catch(e){ alert(e); }
     }
 
-    window.addEventListener('DOMContentLoaded', load);
+    
+    // ===== Excel Export (one record per worksheet) =====
+    function sanitizeSheetName(name){
+      // Excel sheet names max 31 chars; cannot contain: \ / ? * [ ] :
+      const bad = /[\\\/\?\*\[\]\:]/g;
+      let s = (name || 'Sheet').replace(bad, ' ').trim();
+      if (!s) s = 'Sheet';
+      return s.slice(0,31);
+    }
+    function recordToAOA(r){
+      const L = getLang();
+      const A = [];
+      // Title / basic
+      A.push([t('reportTitle')]);
+      A.push([]);
+      A.push([t('labelID'), r.id || '', t('labelTime'), new Date(r.timestamp||'').toLocaleString(), t('labelInspector'), r.inspector || '']);
+      A.push([t('labelSupplier'), r.supplier || '', t('labelOrderNo'), r.orderNo || '', t('labelLotNo'), r.lotNo || '']);
+      A.push([t('labelPartNo'), r.partNo || '', t('labelMaterial'), r.material || '', t('labelSpec'), r.spec || '']);
+      A.push([t('labelCategory'), showCategory(r.category||''), t('labelDrawingNo'), r.drawingNo || '', t('labelProcess'), mapProcess(r.process||r.processCode||'')]);
+      A.push([t('labelNotes'), r.notes || '']);
+      A.push([t('labelOverall'), r.overallResult || '']);
+      A.push([]);
+      // Unified header
+      const header = [t('theadItem'), t('theadNom'), t('theadLo'), t('theadHi'), t('theadM1'), t('theadM2'), t('theadM3'), t('theadM4'), t('theadM5'), t('theadDecision')];
+      A.push(header);
+      // Appearance row (if any)
+      const apMap = {};
+      if (Array.isArray(r.appearance)){
+        for (const a of r.appearance){
+          const m = String(a.sample||'').match(/(\d+)/);
+          const idx = m ? Number(m[1]) : null;
+          if (idx && idx>=1 && idx<=5){
+            const ok = String(a.result||'').toUpperCase()==='OK';
+            apMap[idx] = ok ? (L==='en'?'OK':'O.K') : 'NG';
+          }
+        }
+      }
+      if (Object.keys(apMap).length){
+        const allPass = Object.values(apMap).every(v=>v==='OK'||v==='O.K');
+        A.push([t('appearance'), '', '', '', apMap[1]||'', apMap[2]||'', apMap[3]||'', apMap[4]||'', apMap[5]||'', allPass?'PASS':'FAIL']);
+      }
+      // Measurements rows
+      const ms = Array.isArray(r.measurements) ? r.measurements : [];
+      for (const m of ms){
+        const arr = Array.isArray(m.measured) ? m.measured : ((m.measured===0||m.measured)?[m.measured]:[]);
+        const c = [0,1,2,3,4].map(i => (arr[i]===0||arr[i]) ? Number(arr[i]).toFixed(3) : '');
+        const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : '';
+        A.push([String(m.name||''), (m.nominal===0||m.nominal)?Number(m.nominal):'', (m.tolMinus===0||m.tolMinus)?Number(m.tolMinus):'', (m.tolPlus===0||m.tolPlus)?Number(m.tolPlus):'', c[0], c[1], c[2], c[3], c[4], dec]);
+      }
+      return A;
+    }
+    function getFilteredRecords(){
+      const kw = (document.getElementById('filterText').value || '').trim().toLowerCase();
+      return records.filter(r => {
+        if (!kw) return true;
+        const s = [r.supplier, r.orderNo, r.lotNo, r.partNo, r.material, r.spec, r.category, r.drawingNo, r.inspector, r.process, r.processLabel].join(' ').toLowerCase();
+        return s.includes(kw);
+      });
+    }
+    function exportExcel(){
+      try{
+        if (typeof XLSX === 'undefined'){ alert('Excel library not loaded. 請連線網路再試。'); return; }
+        const list = getFilteredRecords();
+        if (!list.length){ alert(t('msgEmpty')); return; }
+        const wb = XLSX.utils.book_new();
+        const usedNames = new Set();
+        list.forEach((r, idx) => {
+          const aoa = recordToAOA(r);
+          const ws = XLSX.utils.aoa_to_sheet(aoa);
+          // simple column widths
+          ws['!cols'] = [{wch:24},{wch:20},{wch:16},{wch:18},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12}];
+          let nameBase = sanitizeSheetName(((r.supplier||'') + '-' + (r.partNo||r.id||'')).trim() || ('Sheet'+(idx+1)));
+          if (!nameBase) nameBase = 'Sheet'+(idx+1);
+          let name = nameBase, k = 1;
+          while (usedNames.has(name)){ name = sanitizeSheetName(nameBase + '-' + (++k)); }
+          usedNames.add(name);
+          XLSX.utils.book_append_sheet(wb, ws, name);
+        });
+        const now = new Date();
+        const pad = n=> String(n).padStart(2,'0');
+        const fname = `QC_Reports_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.xlsx`;
+        XLSX.writeFile(wb, fname);
+      }catch(e){
+        console.error(e);
+        alert('❌ 匯出失敗：' + (e.message||e));
+      }
+    }
+
+      window.addEventListener('DOMContentLoaded', load);
   </script>
 </body>
 </html>
