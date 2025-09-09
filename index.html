@@ -571,60 +571,82 @@ function addMeasureRow(){
 }
     // 建立要儲存的紀錄
     function buildRecord(){
-      const user = localStorage.getItem('qci_user') || '';
-      const pass = localStorage.getItem('qci_pass') || '';
-      if (!user || !pass){ alert(t('login_msg_need')); return null; }
+  const user = localStorage.getItem('qci_user') || '';
+  const pass = localStorage.getItem('qci_pass') || '';
+  if (!user || !pass){ alert(t('login_msg_need')); return null; }
+  const sSel = document.getElementById('supplier');
+  const sOpt = sSel.options[sSel.selectedIndex] || { value:'', dataset:{ zh:'', en:'' } };
 
-      const orderNo = document.getElementById('orderNo').value.trim();
-      const lotNo = document.getElementById('lotNo').value.trim();
-      const partNo = document.getElementById('partNo').value.trim();
-      const drawingNo = document.getElementById('drawingNo').value.trim();
-      const material = document.getElementById('material').value.trim();
-      const spec = document.getElementById('spec').value.trim();
-      const category = document.getElementById('category').value.trim();
-      const notes = document.getElementById('notes').value.trim();
+  const supplier = sOpt.dataset.zh || sOpt.value || '';
+  const supplierEn = sOpt.dataset.en || '';
+  const orderNo = document.getElementById('orderNo').value.trim();
+  const lotNo = document.getElementById('lotNo').value.trim();
+  const partNo = document.getElementById('partNo').value.trim();
+  const drawingNo = document.getElementById('drawingNo').value.trim();
+  const material = document.getElementById('material').value.trim();
+  const spec = document.getElementById('spec').value.trim();
+  const category = document.getElementById('category').value.trim();
+  const process = document.getElementById('process').value.trim();
+  const notes = document.getElementById('notes').value.trim();
+  if (!supplier || !partNo){ alert(t('need_supplier_part')); return null; }
 
-      const selS = document.getElementById('supplier');
-      const sOpt = selS.options[selS.selectedIndex];
-      const selP = document.getElementById('process');
-      const pOpt = selP.options[selP.selectedIndex];
+  // 外觀
+  const appearance = [];
+  const ap = document.querySelectorAll('tr[data-type="appearance"] select.ap');
+  ap.forEach((sel, idx) => {
+    const v = (sel.value||'').toUpperCase();
+    if (v==='OK' || v==='NG'){ appearance.push({ sample: 'Sample'+(idx+1), result: v }); }
+  });
 
-      if (!sOpt || !partNo){ alert(t('need_supplier_part')); return null; }
+  // 尺寸
+  const measurements = Array.from(document.getElementById('tbody').querySelectorAll('tr[data-type="measure"]')).map(tr => {
+    const code = tr.querySelector('.code')?.value.trim() || '';
+    const name = tr.querySelector('.name')?.value.trim() || '';
+    const nom  = tr.querySelector('.nom')?.value ?? '';
+    const lo   = tr.querySelector('.lo')?.value ?? '';
+    const hi   = tr.querySelector('.hi')?.value ?? '';
+    const ms = [1,2,3,4,5].map(i => {
+      const v = tr.querySelector('.m'+i)?.value;
+      return (v==='' || v===undefined) ? null : Number(v);
+    });
+    const pass = decidePass(nom, lo, hi, ms);
+    return {
+      code, name,
+      nominal: nom===''?null:Number(nom),
+      tolMinus: lo===''?null:Number(lo),
+      tolPlus:  hi===''?null:Number(hi),
+      measured: ms,
+      pass: (typeof pass==='boolean') ? pass : undefined
+    };
+  });
 
-      // 外觀
-      const apSel = Array.from(tbody.querySelectorAll('tr[data-type="appearance"] select.ap'));
-      const apHas = apSel.some(x => x.value);
-      const appearance = apHas ? apSel.map((s,i)=>({ sample:`樣品${i+1}`, result: s.value||'' })) : [];
+  function calcOverall(){
+    const apOK = !appearance.length || appearance.every(a => String(a.result||'').toUpperCase()==='OK');
+    const msOK = measurements.every(m => {
+      if (typeof m.pass === 'boolean') return m.pass;
+      const min = (m.nominal??0) + (m.tolMinus??0);
+      const max = (m.nominal??0) + (m.tolPlus??0);
+      const arr = Array.isArray(m.measured) ? m.measured : [];
+      const vals = arr.filter(v => v===0 || v).map(Number);
+      return vals.length===0 || vals.every(v => v>=min && v<=max);
+    });
+    return (apOK && msOK) ? 'PASS' : 'FAIL';
+  }
 
-      // 尺寸
-      const rows = Array.from(tbody.querySelectorAll('tr[data-type="measure"]'));
-      const measurements = Array.from(tbody.querySelectorAll('tr[data-type="measure"]')).map(tr=>({
-  code: tr.querySelector('.code') ? tr.querySelector('.code').value.trim() : (tr.querySelector('.name')?.value.trim() || ''),
-  name: tr.querySelector('.name') ? tr.querySelector('.name').value.trim() : '',
-  nominal: tr.querySelector('.nom') ? Number(tr.querySelector('.nom').value||'') : undefined,
-  tolMinus: tr.querySelector('.lo') ? Number(tr.querySelector('.lo').value||'') : undefined,
-  tolPlus: tr.querySelector('.hi') ? Number(tr.querySelector('.hi').value||'') : undefined,
-  measured: [1,2,3,4,5].map(i => { const v = tr.querySelector('.m'+i)?.value; return (v===''||v===undefined)?null:Number(v); }),
-  pass: (function(){ const nom=tr.querySelector('.nom')?.value, lo=tr.querySelector('.lo')?.value, hi=tr.querySelector('.hi')?.value;
-    const ms=[1,2,3,4,5].map(i=>{ const x=tr.querySelector('.m'+i)?.value; return (x===''||x===undefined)?null:Number(x); });
-    const dec = decidePass(nom,lo,hi,ms); return (typeof dec==='boolean')?dec:undefined; })()
-}));
-        const nom = tr.querySelector('.nom').value;
-        const lo  = tr.querySelector('.lo').value;
-        const hi  = tr.querySelector('.hi').value;
-        const ms = [1,2,3,4,5].map(i => {
-          const v = tr.querySelector('.m'+i).value;
-          return v==='' ? null : Number(v);
-        });
-        return {
-          name,
-          nominal: nom===''?null:Number(nom),
-          tolMinus: lo===''?null:Number(lo),
-          tolPlus: hi===''?null:Number(hi),
-          measured: ms,
-          pass: decidePass(nom, lo, hi, ms)
-        };
-      });
+  const now = new Date();
+  const id = `INS-${now.toISOString().replace(/[-:T]/g,'').slice(0,14)}-${Math.floor(100+Math.random()*900)}`;
+
+  return {
+    id, timestamp: now.toISOString(),
+    inspector: user,
+    supplier, supplierEn, supplierCode: sOpt.value,
+    orderNo, lotNo, partNo, drawingNo, material, spec, category, revision:'',
+    process, notes,
+    appearance,
+    measurements,
+    overall: calcOverall()
+  };
+});
 
       // 整體結果
       function calcOverall(){
