@@ -253,8 +253,7 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
       const th = `
         <thead><tr>
           <th>${t('col_code')}</th>
-          <th>${t('col_code')}</th>
-          <th>${t('col_item')}</th>
+                    <th>${t('col_item')}</th>
           <th>${t('col_nominal')}</th>
           <th>${t('col_tol_minus')}</th>
           <th>${t('col_tol_plus')}</th>
@@ -279,7 +278,6 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
       const apRow = Object.keys(apMap).length ? `
         <tr>
           <td></td>
-          <td></td>
           <td><strong>${t('appearance')}</strong></td>
           <td></td><td></td><td></td>
           <td>${escapeHtml(apMap[1]||'')}</td>
@@ -295,7 +293,6 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
         const c = [0,1,2,3,4].map(i => (arr[i]===0||arr[i]) ? Number(arr[i]).toFixed(3) : '');
         const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : '';
         return `<tr>
-          <td>${escapeHtml(m.code||'')}</td>
           <td>${escapeHtml(m.code||'')}</td>
           <td>${escapeHtml(m.name||'')}</td>
           <td>${num(m.nominal)}</td>

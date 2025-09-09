@@ -292,8 +292,7 @@ function showCategory(v){
       const th = `
         <thead><tr>
           <th>${t('theadCode')}</th>
-          <th>${t('theadCode')}</th>
-          <th>${t('theadItem')}</th>
+                    <th>${t('theadItem')}</th>
           <th>${t('theadNom')}</th>
           <th>${t('theadLo')}</th>
           <th>${t('theadHi')}</th>
@@ -320,7 +319,6 @@ function showCategory(v){
       const apRow = Object.keys(apMap).length ? `
         <tr>
           <td></td>
-          <td></td>
           <td><strong>${t('appearance')}</strong></td>
           <td></td><td></td><td></td>
           <td>${escapeHtml(apMap[1]||'')}</td>
@@ -336,7 +334,6 @@ function showCategory(v){
         const c = [0,1,2,3,4].map(i => (arr[i]===0||arr[i]) ? Number(arr[i]).toFixed(3) : '');
         const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : '';
         return `<tr>
-          <td>${escapeHtml(m.code||'')}</td>
           <td>${escapeHtml(m.code||'')}</td>
           <td>${escapeHtml(m.name||'')}</td>
           <td>${num(m.nominal)}</td>
@@ -481,7 +478,7 @@ function showCategory(v){
         // Measurements table header
         rows.push(`<Row/>`);
         rows.push(`<Row>${cell(t('thUnified'), 'String', 'sSub')}</Row>`);
-        rows.push(`<Row>${cell(t('theadCode'),'String','sHeader')}${cell(t('theadCode'),'String','sHeader')}${cell(t('theadItem'),'String','sHeader')}${cell(t('theadNom'),'String','sHeader')}${cell(t('theadLo'),'String','sHeader')}${cell(t('theadHi'),'String','sHeader')}${cell(t('theadM1'),'String','sHeader')}${cell(t('theadM2'),'String','sHeader')}${cell(t('theadM3'),'String','sHeader')}${cell(t('theadM4'),'String','sHeader')}${cell(t('theadM5'),'String','sHeader')}${cell(t('theadDecision'),'String','sHeader')}</Row>`);
+        rows.push(`<Row>${cell(t('theadCode'),'String','sHeader')}${cell(t('theadItem'),'String','sHeader')}${cell(t('theadNom'),'String','sHeader')}${cell(t('theadLo'),'String','sHeader')}${cell(t('theadHi'),'String','sHeader')}${cell(t('theadM1'),'String','sHeader')}${cell(t('theadM2'),'String','sHeader')}${cell(t('theadM3'),'String','sHeader')}${cell(t('theadM4'),'String','sHeader')}${cell(t('theadM5'),'String','sHeader')}${cell(t('theadDecision'),'String','sHeader')}</Row>`);
 
         // Appearance row (optional)
         if (Object.keys(apMap).length) {
