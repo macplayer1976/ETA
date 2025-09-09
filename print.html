@@ -252,6 +252,7 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
     function buildUnifiedTable(appearance, measurements){
       const th = `
         <thead><tr>
+          <th>${t('col_code')}</th>
           <th>${t('col_item')}</th>
           <th>${t('col_nominal')}</th>
           <th>${t('col_tol_minus')}</th>
@@ -288,9 +289,10 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
 
       const rows = (Array.isArray(measurements)?measurements:[]).map(m=>{
         const arr = Array.isArray(m.measured) ? m.measured : ((m.measured===0||m.measured)?[m.measured]:[]);
-        const c = [0,1,2,3,4].map(i => (arr[i]===0||arr[i]) ? Number(arr[i]).toFixed(3) : '');
+        const c = [0,1,2,3,4].map(i => fmt(arr[i]));
         const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : '';
         return `<tr>
+          <td>${escapeHtml(m.code||'')}</td>
           <td>${escapeHtml(m.name||'')}</td>
           <td>${num(m.nominal)}</td>
           <td>${num(m.tolMinus)}</td>

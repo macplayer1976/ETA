@@ -123,7 +123,7 @@
         msgNoPerm:'Your account has no view permission (input).', msgVerify:'Verifying...', msgLoading:'Loading...',
         msgLoadFail:'❌ Load failed: ', msgEmpty:'No data to display.', msgCount:'Total {n}. Use keyword to filter.',
         msgDeleting:'Deleting...', msgDeleted:'✅ Deleted.', msgDeleteFail:'❌ Delete failed: ', msgReLogin:'❌ Session expired. Please sign in again.',
-        theadItem:'Item / Dimension', theadNom:'Nominal', theadLo:'Lower Tol.', theadHi:'Upper Tol.',
+        theadCode:'Code', theadItem:'Item', theadNom:'Standard', theadLo:'Lower Tol.', theadHi:'Upper Tol.',
         theadM1:'Sample1', theadM2:'Sample2', theadM3:'Sample3', theadM4:'Sample4', theadM5:'Sample5', theadDecision:'Decision',
         appearance:'Appearance'
       }
@@ -291,6 +291,7 @@ function showCategory(v){
       const L = getLang();
       const th = `
         <thead><tr>
+          <th>${t('theadCode')}</th>
           <th>${t('theadItem')}</th>
           <th>${t('theadNom')}</th>
           <th>${t('theadLo')}</th>
@@ -329,9 +330,10 @@ function showCategory(v){
 
       const rows = (Array.isArray(r.measurements)?r.measurements:[]).map(m=>{
         const arr = Array.isArray(m.measured) ? m.measured : ((m.measured===0||m.measured)?[m.measured]:[]);
-        const c = [0,1,2,3,4].map(i => (arr[i]===0||arr[i]) ? Number(arr[i]).toFixed(3) : '');
+        const c = [0,1,2,3,4].map(i => fmt(arr[i]));
         const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : '';
         return `<tr>
+          <td>${escapeHtml(m.code||'')}</td>
           <td>${escapeHtml(m.name||'')}</td>
           <td>${num(m.nominal)}</td>
           <td>${num(m.tolMinus)}</td>
