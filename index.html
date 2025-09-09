@@ -460,7 +460,7 @@ function fillCategorySelect(){
 
 
     // 表格建置
-    cfunction ensureAppearanceRow(){
+function ensureAppearanceRow(){
   if (!tbody.querySelector('tr[data-type="appearance"]')){
     const tr = document.createElement('tr');
     tr.setAttribute('data-type','appearance');
@@ -477,11 +477,9 @@ function fillCategorySelect(){
     tbody.appendChild(tr);
     updateDecisionForRow(tr);
   }
-}(tr);
-      updateDecisionForRow(tr);
-      }
-    }
-    function addMeasureRow(){
+}
+
+function addMeasureRow(){
   const tr = document.createElement('tr');
   tr.setAttribute('data-type','measure');
   tr.innerHTML = `
