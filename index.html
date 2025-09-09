@@ -164,7 +164,6 @@
       <table id="tbl">
         <thead>
           <tr>
-            <th style="width:8%" data-i18n="thCode">代號</th>
             <th style="width:14%" data-i18n="thItem">項目 / 尺寸名稱</th>
             <th style="width:10%" data-i18n="thNominal">名目值</th>
             <th style="width:10%" data-i18n="thTolMinus">下限公差</th>
@@ -181,9 +180,9 @@
       </table>
 
       <div class="toolbar">
-        <button class="btn btn-ghost" id="btnAdd" data-i18n="btnAdd">＋新增檢驗項目</button>
+        <button class="btn btn-ghost" id="btnAdd" data-i18n="btnAdd">＋新增尺寸</button>
         <button class="btn btn-ghost" id="btnRemove" data-i18n="btnRemove">－刪除最後一列</button>
-        <button class="btn btn-ghost" id="btnClearRows" data-i18n="btnClearRows">清空所有列</button>
+        <button class="btn btn-ghost" id="btnClearRows" data-i18n="btnClearRows">清空尺寸列（保留外觀）</button>
         <button class="btn btn-ghost" id="btnLang2">🌐 語言</button>
       </div>
 
@@ -243,15 +242,15 @@ let _afterPick = null;
         phCategory:'例如：螺栓',
         sectionTitle:'尺寸與外觀檢驗',
         hintAppearance:'第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。',
-        thCode:'代號', thItem:'Item', thNominal:'Standard', thTolMinus:'下限公差', thTolPlus:'上限公差',
+        thItem:'項目 / 尺寸名稱', thNominal:'名目值', thTolMinus:'下限公差', thTolPlus:'上限公差',
         thM1:'實測1', thM2:'實測2', thM3:'實測3', thM4:'實測4', thM5:'實測5', thDecision:'結果',
-        btnAdd:'＋Add item', btnRemove:'－刪除最後一列', btnClearRows:'Clear all rows',
+        btnAdd:'＋新增尺寸', btnRemove:'－刪除最後一列', btnClearRows:'清空尺寸列（保留外觀）',
         btnSave:'儲存到雲端', btnGoReport:'查看/列印報告',
         viewOnlyTip:'您的角色是 <strong>viewer</strong>（只能看/印報告）。請改到 <a href="report.html">報告頁</a>。',
         langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：',
         phAccount:'例如：boss / worker1 / qa1', phPassword:'例如：admin123 / in1111 / view2222',
         phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸穩定/外觀無瑕疵',
-        phCode:'例如：A', phName:'例：頭部厚度', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
+        phName:'例：頭部厚度', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
         phM1:'實測1', phM2:'實測2', phM3:'實測3', phM4:'實測4', phM5:'實測5',
         login_msg_need:'請輸入帳號與密碼', login_msg_auto:'自動驗證中...', login_msg_wrong:'❌ 帳號或密碼錯誤', login_verifying:'驗證中...',
         save_saving:'儲存中...', save_ok:'✅ 已儲存到雲端（可到報告頁查看/列印）', save_fail:'❌ 儲存失敗：',
@@ -279,15 +278,15 @@ let _afterPick = null;
         phCategory:'例如：螺栓',
         sectionTitle:'尺寸与外观检验',
         hintAppearance:'第 <strong>1</strong> 行为 <strong>外观检查</strong>（可留空）；第 <strong>2</strong> 行开始为尺寸量测。',
-        thCode:'代號', thItem:'Item', thNominal:'Standard', thTolMinus:'下限公差', thTolPlus:'上限公差',
+        thItem:'项目 / 尺寸名称', thNominal:'名义值', thTolMinus:'下限公差', thTolPlus:'上限公差',
         thM1:'实测1', thM2:'实测2', thM3:'实测3', thM4:'实测4', thM5:'实测5', thDecision:'判定',
-        btnAdd:'＋新增檢驗項目', btnRemove:'－删除最后一行', btnClearRows:'清空所有列',
+        btnAdd:'＋新增尺寸', btnRemove:'－删除最后一行', btnClearRows:'清空尺寸行（保留外观）',
         btnSave:'保存到云端', btnGoReport:'查看/打印报告',
         viewOnlyTip:'您的账号是 <strong>viewer</strong>（只能看/打印）。请前往 <a href="report.html">报告页</a>。',
         langTitle:'选择语言 / Language', langHint:'请选择界面语言：',
         phAccount:'例如：boss / worker1 / qa1', phPassword:'例如：admin123 / in1111 / view2222',
         phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸稳定/外观无瑕疵', phOrderNo:'例如：PO12345', phLotNo:'例如：2025-09-A', phMaterial:'例如：SCM435', phSpec:'例如：M8 x 30', phCategory:'例如：螺栓',
-        phCode:'例如：A', phName:'例：头部厚度', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
+        phName:'例：头部厚度', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
         phM1:'实测1', phM2:'实测2', phM3:'实测3', phM4:'实测4', phM5:'实测5',
         login_msg_need:'请输入账号与密码', login_msg_auto:'自动验证中...', login_msg_wrong:'❌ 账号或密码错误', login_verifying:'验证中...',
         save_saving:'保存中...', save_ok:'✅ 已保存到云端（可去报告页查看/打印）', save_fail:'❌ 保存失败：',
@@ -313,10 +312,10 @@ let _afterPick = null;
         phSpec:'例如：M8 x 30',
         phCategory:'例如：螺栓',
         sectionTitle:'Appearance & Dimensional Inspection',
-        hintAppearance:'Each row is customizable: Code / Item / Standard / Lower Tol. / Upper Tol. / Sample1~5 / Decision.',
-        thCode:'代號', thItem:'Item', thNominal:'Standard', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
+        hintAppearance:'Row <strong>1</strong> is <strong>Appearance</strong> (optional). From row <strong>2</strong> onwards are dimensions.',
+        thItem:'Item / Dimension', thNominal:'Nominal', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
         thM1:'Sample1', thM2:'Sample2', thM3:'Sample3', thM4:'Sample4', thM5:'Sample5', thDecision:'Decision',
-        btnAdd:'＋新增檢驗項目', btnRemove:'－Remove last row', btnClearRows:'清空所有列',
+        btnAdd:'＋Add dimension', btnRemove:'－Remove last row', btnClearRows:'Clear dimension rows (keep appearance)',
         btnSave:'Save to cloud', btnGoReport:'View/Print Reports',
         viewOnlyTip:'Your role is <strong>viewer</strong> (view/print only). Go to <a href="report.html">Reports</a>.',
         langTitle:'Choose language', langHint:'Select UI language:',
@@ -324,7 +323,7 @@ let _afterPick = null;
 
         phAccount:'e.g. boss / worker1 / qa1', phPassword:'e.g. admin123 / in1111 / view2222',
         phSupplier:'e.g. Anchor / AKF', phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6', phRevision:'e.g. Rev.B', phNotes:'e.g. Dimensions stable / No defects', phOrderNo:'e.g. PO12345', phLotNo:'e.g. 2025-09-A', phMaterial:'e.g. SCM435', phSpec:'e.g. M8 x 30', phCategory:'e.g. Bolt',
-        phCode:'例如：A', phCode:'e.g. A', phName:'e.g. Head thickness', phNominal:'e.g. 3.000', phTolMinus:'e.g. -0.100', phTolPlus:'e.g. 0.100',
+        phName:'e.g. Head thickness', phNominal:'e.g. 3.000', phTolMinus:'e.g. -0.100', phTolPlus:'e.g. 0.100',
         phM1:'Sample1', phM2:'Sample2', phM3:'Sample3', phM4:'Sample4', phM5:'Sample5',
         login_msg_need:'Please enter account & password', login_msg_auto:'Auto checking...', login_msg_wrong:'❌ Wrong account or password', login_verifying:'Verifying...',
         save_saving:'Saving...', save_ok:'✅ Saved (check the report page to view/print)', save_fail:'❌ Save failed: ',
@@ -480,23 +479,20 @@ function fillCategorySelect(){
     }
     function addMeasureRow(){
       const tr = document.createElement('tr');
-tr.setAttribute('data-type','measure');
-tr.innerHTML = `
-  <td><input class="code" placeholder="${t('phCode')||''}" /></td>
-  <td><input class="name" placeholder="${t('phName')||''}" /></td>
-  <td><input class="nominal" type="number" step="0.001" placeholder="${t('phNominal')||''}" /></td>
-  <td><input class="tolMinus" type="number" step="0.001" placeholder="${t('phTolMinus')||''}" /></td>
-  <td><input class="tolPlus" type="number" step="0.001" placeholder="${t('phTolPlus')||''}" /></td>
-  <td><input class="m m1" type="text" placeholder="${t('phM1')||''}" /></td>
-  <td><input class="m m2" type="text" placeholder="${t('phM2')||''}" /></td>
-  <td><input class="m m3" type="text" placeholder="${t('phM3')||''}" /></td>
-  <td><input class="m m4" type="text" placeholder="${t('phM4')||''}" /></td>
-  <td><input class="m m5" type="text" placeholder="${t('phM5')||''}" /></td>
-  <td class="decision"></td>
-`;
-tbody.appendChild(tr);
-tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', ()=> updateDecisionForRow(tr)));
-updateDecisionForRow(tr);
+      tr.setAttribute('data-type','measure');
+      tr.innerHTML = `
+        <td><input class="name" placeholder="${t('phName')}" /></td>
+        <td><input class="nom" type="number" step="0.001" placeholder="${t('phNominal')}" /></td>
+        <td><input class="lo"  type="number" step="0.001" placeholder="${t('phTolMinus')}" /></td>
+        <td><input class="hi"  type="number" step="0.001" placeholder="${t('phTolPlus')}" /></td>
+        <td><input class="m m1" type="number" step="0.001" placeholder="${t('phM1')}" /></td>
+        <td><input class="m m2" type="number" step="0.001" placeholder="${t('phM2')}" /></td>
+        <td><input class="m m3" type="number" step="0.001" placeholder="${t('phM3')}" /></td>
+        <td><input class="m m4" type="number" step="0.001" placeholder="${t('phM4')}" /></td>
+        <td><input class="m m5" type="number" step="0.001" placeholder="${t('phM5')}" /></td>
+        <td></td
+      updateDecisionForRow(tr);>`;
+      tbody.appendChild(tr);
     }
     function countMeasureRows(){ return tbody.querySelectorAll('tr[data-type="measure"]').length; }
     function ensureMeasureRows(n){
@@ -520,31 +516,13 @@ updateDecisionForRow(tr);
       return vals.every(v => v>=min && v<=max);
     }
     function updateDecisionForRow(tr){
-  if (!tr) return;
-  const dec = tr.querySelector('.decision'); if (!dec) return;
-  const nom = Number(tr.querySelector('.nominal')?.value || NaN);
-  const lo = Number(tr.querySelector('.tolMinus')?.value || NaN);
-  const hi = Number(tr.querySelector('.tolPlus')?.value || NaN);
-  const vals = Array.from(tr.querySelectorAll('input.m')).map(i => (i.value||'').trim());
-  // Determine if textual OK/NG style
-  const hasText = vals.some(v => /^(ok|o\.k|ng)$/i.test(v));
-  const hasNumber = vals.some(v => v!=='' && !isNaN(Number(v)));
-  let pass = '';
-  if (hasText && !hasNumber){
-    const allOk = vals.filter(v=>v!=='').every(v => /^ok|o\.k$/i.test(v));
-    const anyNg = vals.some(v => /^ng$/i.test(v));
-    pass = anyNg ? 'FAIL' : (allOk ? 'PASS' : '');
-  } else if (hasNumber && !isNaN(nom) && !isNaN(lo) && !isNaN(hi)){
-    const lower = nom + lo; const upper = nom + hi;
-    const nums = vals.filter(v=>v!=='').map(v=>Number(v)).filter(v=>!isNaN(v));
-    if (nums.length){
-      pass = nums.every(v => v>=lower && v<=upper) ? 'PASS' : 'FAIL';
-    } else pass = '';
-  } else {
-    pass = '';
-  }
-  dec.textContent = pass;
-}
+      if (!tr) return;
+      const cell = tr.querySelector('td:last-child');
+      if (!cell) return;
+      if (tr.getAttribute('data-type')==='appearance'){
+        const oks = Array.from(tr.querySelectorAll('select.ap')).map(s => (s.value||'').toUpperCase());
+        const filled = oks.filter(v => v==='OK' || v==='O.K' || v==='NG');
+        if (!filled.length){ cell.textContent=''; cell.className=''; return; }
         const allOk = oks.every(v => v==='OK' || v==='O.K');
         cell.textContent = allOk ? 'PASS' : 'FAIL';
         cell.className = allOk ? 'pass' : 'fail';
@@ -692,7 +670,7 @@ updateDecisionForRow(tr);
     }
 
     // 登入
-    async async async function onLogin(){
+    async function onLogin(){
       const u = document.getElementById('inspector').value.trim();
       const p = document.getElementById('passcode').value.trim();
       if (!u || !p){ document.getElementById('loginMsg').textContent = t('login_msg_need'); return; }
@@ -708,10 +686,10 @@ updateDecisionForRow(tr);
 
     // 初始外觀 + 至少 1 列尺寸
     function ensureMeasurementTemplate(){
-  const tbody = document.getElementById('tbody');
-  const hasAny = !!tbody.querySelector('tr[data-type="measure"]');
-  if (!hasAny) { addMeasureRow(); }
-}
+      ensureAppearanceRow();
+      if (countMeasureRows() === 0) ensureMeasureRows(1);
+      updateAllDecisions();
+    }
 
     // 綁定事件
     document.getElementById('btnLogin').addEventListener('click', onLogin);
