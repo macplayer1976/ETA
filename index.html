@@ -601,27 +601,29 @@ function fillCategorySelect(){
 
       // 尺寸
       const rows = Array.from(tbody.querySelectorAll('tr[data-type="measure"]'));
-      const measurements = rows.map(tr => {
-        const code = (tr.querySelector('.code')?.value||'').trim();
-        const name = tr.querySelector('.name').value.trim();
-        const nom = tr.querySelector('.nom').value;
-        const lo  = tr.querySelector('.lo').value;
-        const hi  = tr.querySelector('.hi').value;
-        const code = (tr.querySelector('.code')?.value || '').trim();
-        const ms = [1,2,3,4,5].map(i => {
-          const v = tr.querySelector('.m'+i).value;
-          return v==='' ? null : Number(v);
-        });
-        return {
-          code,
-          name,
-          nominal: nom===''?null:Number(nom),
-          tolMinus: lo===''?null:Number(lo),
-          tolPlus: hi===''?null:Number(hi),
-          measured: ms,
-          pass: decidePass(nom, lo, hi, ms)
-        };
-      });
+  const measurements = rows.map(tr => {
+    const codes = tr.querySelectorAll('.code');
+    const code1 = (codes[0]?.value || '').trim();
+    const code2 = (codes[1]?.value || '').trim();
+    const name = tr.querySelector('.name').value.trim();
+    const nom = tr.querySelector('.nom').value;
+    const lo  = tr.querySelector('.lo').value;
+    const hi  = tr.querySelector('.hi').value;
+    const ms = [1,2,3,4,5].map(i => {
+      const v = tr.querySelector('.m'+i).value;
+      return v==='' ? null : Number(v);
+    });
+    
+    return {
+      code: code1 + (code2 ? '/' + code2 : ''), // 合併兩個代號
+      name,
+      nominal: nom===''?null:Number(nom),
+      tolMinus: lo===''?null:Number(lo),
+      tolPlus: hi===''?null:Number(hi),
+      measured: ms,
+      pass: decidePass(nom, lo, hi, ms)
+    };
+  });
 
       // 整體結果
       function calcOverall(){
