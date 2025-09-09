@@ -164,9 +164,8 @@
       <table id="tbl">
         <thead>
           <tr>
-            <th style="width:10%" data-i18n="thCode">項目代號</th>
-            <th style="width:14%" data-i18n="thName">項目名稱</th>
-            <th style="width:10%" data-i18n="thNominal">標準值</th>
+            <th style="width:14%" data-i18n="thItem">項目 / 尺寸名稱</th>
+            <th style="width:10%" data-i18n="thNominal">名目值</th>
             <th style="width:10%" data-i18n="thTolMinus">下限公差</th>
             <th style="width:10%" data-i18n="thTolPlus">上限公差</th>
             <th style="width:8%" data-i18n="thM1">實測1</th>
@@ -225,19 +224,17 @@ let _afterPick = null;
     const I18N = {
       'zh-TW': {
 
-
-
         title:'現場品檢（安拓）',
         loginPrompt:'請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。',
         labelAccount:'帳號（檢驗人員）', labelPassword:'密碼（通關碼/密碼）',
         btnLogin:'登入', btnReset:'清除本機記錄', btnHealth:'健康檢查',
         labelSupplier:'供應商', labelPartNo:'料號 (Part No.)', labelDrawingNo:'圖號 (Drawing No.)',
         labelRevision:'版次 (Revision)', labelProcess:'製程 (Process)', labelNotes:'備註',
-        
-        
-        
-        
-        
+        labelOrderNo:'訂單號碼',
+        labelLotNo:'生產批號',
+        labelMaterial:'材質',
+        labelSpec:'規格',
+        labelCategory:'產品類別',
         phOrderNo:'例如：PO12345',
         phLotNo:'例如：2025-09-A',
         phMaterial:'例如：SCM435',
@@ -245,7 +242,7 @@ let _afterPick = null;
         phCategory:'例如：螺栓',
         sectionTitle:'尺寸與外觀檢驗',
         hintAppearance:'第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。',
-        thItem:'項目名稱', thCode:'項目代號', thName:'項目名稱', thNominal:'標準值', thTolMinus:'下限公差', thTolPlus:'上限公差',
+        thItem:'項目 / 尺寸名稱', thNominal:'名目值', thTolMinus:'下限公差', thTolPlus:'上限公差',
         thM1:'實測1', thM2:'實測2', thM3:'實測3', thM4:'實測4', thM5:'實測5', thDecision:'結果',
         btnAdd:'＋新增尺寸', btnRemove:'－刪除最後一列', btnClearRows:'清空尺寸列（保留外觀）',
         btnSave:'儲存到雲端', btnGoReport:'查看/列印報告',
@@ -260,12 +257,8 @@ let _afterPick = null;
         need_supplier_part:'請輸入供應商與料號',
         appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c3\u8003\u7c21\u5716", sketchHint:"\u4f9b\u6aa2\u9a57\u6642\u5feb\u901f\u53c3\u8003\u4e3b\u8981\u5c3a\u5bf8\u8207\u5f62\u72c0\uff08\u5716\u6a94\uff1afinal_finished.jpg\uff09\u3002"
-      
-      
       },
       'zh-CN': {
-
-
 
         title:'现场品检（安拓）',
         loginPrompt:'请输入「账号（检验人员）」与「密码（通关码/密码）」。',
@@ -273,11 +266,11 @@ let _afterPick = null;
         btnLogin:'登录', btnReset:'清除本机记录', btnHealth:'健康检查',
         labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)',
         labelRevision:'版次 (Revision)', labelProcess:'制程 (Process)', labelNotes:'备注', labelOrderNo:'订单号码', labelLotNo:'生产批号', labelMaterial:'材质', labelSpec:'规格', labelCategory:'产品类别',
-        
-        
-        
-        
-        
+        labelOrderNo:'訂單號碼',
+        labelLotNo:'生產批號',
+        labelMaterial:'材質',
+        labelSpec:'規格',
+        labelCategory:'產品類別',
         phOrderNo:'例如：PO12345',
         phLotNo:'例如：2025-09-A',
         phMaterial:'例如：SCM435',
@@ -285,7 +278,7 @@ let _afterPick = null;
         phCategory:'例如：螺栓',
         sectionTitle:'尺寸与外观检验',
         hintAppearance:'第 <strong>1</strong> 行为 <strong>外观检查</strong>（可留空）；第 <strong>2</strong> 行开始为尺寸量测。',
-        thItem:'項目名稱', thCode:'項目代號', thName:'項目名稱', thNominal:'标准值', thTolMinus:'下限公差', thTolPlus:'上限公差',
+        thItem:'项目 / 尺寸名称', thNominal:'名义值', thTolMinus:'下限公差', thTolPlus:'上限公差',
         thM1:'实测1', thM2:'实测2', thM3:'实测3', thM4:'实测4', thM5:'实测5', thDecision:'判定',
         btnAdd:'＋新增尺寸', btnRemove:'－删除最后一行', btnClearRows:'清空尺寸行（保留外观）',
         btnSave:'保存到云端', btnGoReport:'查看/打印报告',
@@ -300,23 +293,19 @@ let _afterPick = null;
         need_supplier_part:'请输入供应商与料号',
         appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c2\u8003\u7b80\u56fe", sketchHint:"\u4fbf\u4e8e\u68c0\u9a8c\u65f6\u5feb\u901f\u53c2\u8003\u4e3b\u8981\u5c3a\u5bf8\u4e0e\u5f62\u72b6\uff08\u56fe\u6863\uff1afinal_finished.jpg\uff09\u3002"
-      
-      
       },
       'en': {
-
-
         title:'On-site QC (Anchor)',
         loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
         labelAccount:'Account (Inspector)', labelPassword:'Password',
         btnLogin:'Sign in', btnReset:'Clear local data', btnHealth:'Health Check',
         labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.',
         labelRevision:'Revision', labelProcess:'Process', labelNotes:'Notes', labelOrderNo:'Order No.', labelLotNo:'Lot No.', labelMaterial:'Material', labelSpec:'Spec', labelCategory:'Product Category',
-        
-        
-        
-        
-        
+        labelOrderNo:'訂單號碼',
+        labelLotNo:'生產批號',
+        labelMaterial:'材質',
+        labelSpec:'規格',
+        labelCategory:'產品類別',
         phOrderNo:'例如：PO12345',
         phLotNo:'例如：2025-09-A',
         phMaterial:'例如：SCM435',
@@ -324,7 +313,7 @@ let _afterPick = null;
         phCategory:'例如：螺栓',
         sectionTitle:'Appearance & Dimensional Inspection',
         hintAppearance:'Row <strong>1</strong> is <strong>Appearance</strong> (optional). From row <strong>2</strong> onwards are dimensions.',
-        thItem:'項目名稱', thCode:'項目代號', thName:'項目名稱', thNominal:'Standard', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
+        thItem:'Item / Dimension', thNominal:'Nominal', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
         thM1:'Sample1', thM2:'Sample2', thM3:'Sample3', thM4:'Sample4', thM5:'Sample5', thDecision:'Decision',
         btnAdd:'＋Add dimension', btnRemove:'－Remove last row', btnClearRows:'Clear dimension rows (keep appearance)',
         btnSave:'Save to cloud', btnGoReport:'View/Print Reports',
@@ -389,15 +378,15 @@ let _afterPick = null;
 
     // 製程下拉
     const PROCESSES = [
-  { code:'WIRE',     zh:'線材',   en:'WIRE' },
-  { code:'FORMING',  zh:'成形',   en:'FORMING' },
-  { code:'TAPING',   zh:'攻牙',   en:'TAPING' },
-  { code:'CUTTING',  zh:'割溝',   en:'CUTTING' },
-  { code:'PLATING',  zh:'電鍍',   en:'PLATING' },
-  { code:'FINISHED', zh:'成品',   en:'FINISHED' },
-  { code:'ASSEMBLY', zh:'組立',   en:'ASSEMBLY' },
-  { code:'FINAL',    zh:'最終成品', en:'FINAL FINISHED' }
-];
+      { code:'WIRE', zh:'線材', en:'WIRE' },
+      { code:'FORMING', zh:'成形', en:'FORMING' },
+      { code:'TAPING', zh:'攻牙', en:'TAPING' },
+      { code:'CUTTING', zh:'割溝', en:'CUTTING' },
+      { code:'PLATING', zh:'電鍍', en:'PLATING' },
+      { code:'FINISHED', zh:'成品', en:'FINISHED' },
+      { code:'ASSEMBLY', zh:'組立', en:'ASSEMBLY' },
+      { code:'FINAL', zh:'最終成品', en:'FINAL FINISHED' }
+    ];
     function fillProcessSelect(){
       const sel = document.getElementById('process');
       if (!sel) return;
@@ -409,117 +398,90 @@ let _afterPick = null;
 // === Reference sketch switcher ===
 function getSketchFileForCategory(code){
   switch(String(code||'').toUpperCase()){
-    case 'PLUG':        return 'plug.jpg';
-    case 'SLEEVE_A':    return 'sleeve_a.jpg';
-    case 'SLEEVE_B':    return 'sleeve_b.jpg';
-    case 'SLEEVE_H':    return 'sleeve_h.jpg';
-    case 'FINISHED_A':  return 'finished_a.jpg';
-    case 'FINISHED_B':  return 'finished_b.jpg';
-    case 'FINISHED_H':  return 'finished_h.jpg';
-    case 'TOOL':        return 'tool.jpg';
-    case 'FINAL':
-    default:            return 'final_finished.jpg';
+    case 'PLUG': return 'plug.jpg';
+    case 'TOOL': return 'special_tool.jpg';
+    case 'SLEEVE_A': return 'sleeve_A.jpg';
+    case 'SLEEVE_B': return 'sleeve_B.jpg';
+    case 'SLEEVE_H': return 'sleeve_H.jpg';
+    case 'FINISHED_A': return 'finish_A.jpg';
+    case 'FINISHED_B': return 'finish_A.jpg';
+    case 'FINISHED_H': return 'finish_H.jpg';
+    default:     return 'final_finished.jpg';
   }
 }
 function updateSketchByCategory(){
-  const sel  = document.getElementById('category');
-  const img  = document.getElementById('sketchImg');
+  const sel = document.getElementById('category');
+  const img = document.getElementById('sketchImg');
   const note = document.querySelector('.sketch-note');
-  const lang = (localStorage.getItem('qci_lang')||'zh-TW');
-  const code = (sel && sel.value) ? sel.value : '';
-  const file = getSketchFileForCategory(code);
-  if (img) img.src = file;
+  if (!img) return;
+  const file = getSketchFileForCategory(sel ? sel.value : '');
+  img.src = file;
   if (note){
-    if (lang==='en') note.textContent = `For quick reference to key dimensions and shapes (file: ${file}).`;
-    else if (lang==='zh-CN') note.textContent = `便于检验时快速参考主要尺寸与形状（图档：${file}）。`;
-    else note.textContent = `供檢驗時快速參考主要尺寸與形狀（圖檔：${file}）。`;
+    // Use i18n text and fill in {file}
+    const base = t('sketchHint');
+    note.innerHTML = String(base || '').replace('{file}', file);
   }
+}
+// 產品類別下拉（雙語選單）
+const CATEGORIES = [
+  { code:'PLUG',        zh:'塞子',         cn:'塞子',       en:'plug' },
+  { code:'SLEEVE_A',    zh:'管子_A type',  cn:'管子_A type', en:'sleeve_A type' },
+  { code:'SLEEVE_B',    zh:'管子_B type',  cn:'管子_B type', en:'sleeve_B type' },
+  { code:'SLEEVE_H',    zh:'管子_H type',  cn:'管子_H type', en:'sleeve_H type' },
+  { code:'FINISHED_A',  zh:'成品_A type',  cn:'成品_A type', en:'Finished_A type' },
+  { code:'FINISHED_B',  zh:'成品_B type',  cn:'成品_B type', en:'Finished_B type' },
+  { code:'FINISHED_H',  zh:'成品_H type',  cn:'成品_H type', en:'Finished_H type' },
+  { code:'TOOL',        zh:'內迫工具',     cn:'内迫工具',    en:'special tool' }
+];
+function _categoryLabel(code){
+  const lang = getLang() || 'zh-TW';
+  const c = CATEGORIES.find(x => x.code === String(code||'').toUpperCase());
+  if (!c) return String(code||'');
+  if (lang==='en') return c.en;
+  if (lang==='zh-CN') return `${c.cn} (${c.en})`;
+  return `${c.zh} (${c.en})`;
 }
 function fillCategorySelect(){
   const sel = document.getElementById('category');
   if (!sel) return;
-  const CATEGORIES = [
-    { code:'PLUG',        zh:'塞子',         en:'plug' },
-    { code:'SLEEVE_A',    zh:'管子_A type',  en:'sleeve_A type' },
-    { code:'SLEEVE_B',    zh:'管子_B type',  en:'sleeve_B type' },
-    { code:'SLEEVE_H',    zh:'管子_H type',  en:'sleeve_H type' },
-    { code:'FINISHED_A',  zh:'成品_A type',  en:'Finished_A type' },
-    { code:'FINISHED_B',  zh:'成品_B type',  en:'Finished_B type' },
-    { code:'FINISHED_H',  zh:'成品_H type',  en:'Finished_H type' },
-    { code:'TOOL',        zh:'內迫工具',     en:'special tool' },
-    { code:'FINAL',       zh:'最終成品',     en:'FINAL FINISHED' }
-  ];
-  sel.innerHTML = '<option value=""></option>' + CATEGORIES.map(c=>`<option value="${c.code}" data-zh="${c.zh}" data-en="${c.en}">${c.zh} (${c.en})</option>`).join('');
-  sel.onchange = updateSketchByCategory;
+  const prev = sel.value;
+  // 先放一個空白選項（可保持舊邏輯允許空白）
+  sel.innerHTML = '<option value=""></option>' + CATEGORIES.map(c => 
+    `<option value="${c.code}">${c.zh} (${c.en})</option>`
+  ).join('');
+  if (prev) sel.value = prev;
+  // 綁定事件並立即套用一次
+  sel.removeEventListener('change', updateSketchByCategory);
+  sel.addEventListener('change', updateSketchByCategory);
+  updateSketchByCategory();
 }
-// 表格建置
+
+
+
+    // 表格建置
     const tbody = document.getElementById('tbody');
-    
     function ensureAppearanceRow(){
-  if (!tbody.querySelector('tr[data-type="appearance"]')){
-    const tr = document.createElement('tr');
-    tr.setAttribute('data-type','appearance');
-    tr.innerHTML = `
-      <td class="muted"></td>
-      <td><strong data-i18n="appearanceTitle">外觀檢查</strong></td>
-      <td colspan="3" class="muted">（可留空）</td>
-      <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-      <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-      <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-      <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-      <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-      <td></td>`;
-    tbody.appendChild(tr);
-    updateDecisionForRow(tr);
-  }
-}
-    }
-    }
-function addMeasureRow(){
-  const tr = document.createElement('tr');
-  tr.setAttribute('data-type','measure');
-  tr.innerHTML = `
-    <td><input class="code" placeholder="${t('phCode')||'例：D1'}" /></td>
-    <td><input class="name" placeholder="${t('phName')||'例：頭部厚度'}" /></td>
-    <td><input class="nom" type="number" step="0.001" placeholder="${t('phNominal')||'例：3.000'}" /></td>
-    <td><input class="lo"  type="number" step="0.001" placeholder="${t('phTolMinus')||'-0.100'}" /></td>
-    <td><input class="hi"  type="number" step="0.001" placeholder="${t('phTolPlus')||'0.100'}" /></td>
-    <td><input class="m m1" type="number" step="0.001" placeholder="${t('phM1')||'1'}" /></td>
-    <td><input class="m m2" type="number" step="0.001" placeholder="${t('phM2')||'2'}" /></td>
-    <td><input class="m m3" type="number" step="0.001" placeholder="${t('phM3')||'3'}" /></td>
-    <td><input class="m m4" type="number" step="0.001" placeholder="${t('phM4')||'4'}" /></td>
-    <td><input class="m m5" type="number" step="0.001" placeholder="${t('phM5')||'5'}" /></td>
-    <td></td>`;
-  tbody.appendChild(tr);
-  updateDecisionForRow(tr);
-}" /></td>
-        <td><input class="name" placeholder="${t('phName')}" /></td>
-        <td><input class="nom" type="number" step="0.001" placeholder="${t('phNominal')}" /></td>
-        <td><input class="lo"  type="number" step="0.001" placeholder="${t('phTolMinus')}" /></td>
-        <td><input class="hi"  type="number" step="0.001" placeholder="${t('phTolPlus')}" /></td>
-        <td><input class="m m1" type="number" step="0.001" placeholder="${t('phM1')}" /></td>
-        <td><input class="m m2" type="number" step="0.001" placeholder="${t('phM2')}" /></td>
-        <td><input class="m m3" type="number" step="0.001" placeholder="${t('phM3')}" /></td>
-        <td><input class="m m4" type="number" step="0.001" placeholder="${t('phM4')}" /></td>
-        <td><input class="m m5" type="number" step="0.001" placeholder="${t('phM5')}" /></td>
-        <td></td>`;
-      tbody.appendChild(tr);
+      if (!tbody.querySelector('tr[data-type="appearance"]')){
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-type','appearance');
+        tr.innerHTML = `
+          <td><strong data-i18n="appearanceTitle">外觀檢查</strong></td>
+          <td colspan="3" class="muted">（可留空）</td>
+          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+          <td></td>`;
+        tbody.appendChild(tr);
       updateDecisionForRow(tr);
-    }" /></td>
-        <td><input class="name" placeholder="${t('phName')}" /></td>
-        <td><input class="nom" type="number" step="0.001" placeholder="${t('phNominal')}" /></td>
-        <td><input class="lo"  type="number" step="0.001" placeholder="${t('phTolMinus')}" /></td>
-        <td><input class="hi"  type="number" step="0.001" placeholder="${t('phTolPlus')}" /></td>
-        <td><input class="m m1" type="number" step="0.001" placeholder="${t('phM1')}" /></td>
-        <td><input class="m m2" type="number" step="0.001" placeholder="${t('phM2')}" /></td>
-        <td><input class="m m3" type="number" step="0.001" placeholder="${t('phM3')}" /></td>
-        <td><input class="m m4" type="number" step="0.001" placeholder="${t('phM4')}" /></td>
-        <td><input class="m m5" type="number" step="0.001" placeholder="${t('phM5')}" /></td>
-        <td></td>`;
-      tbody.appendChild(tr);
-      updateDecisionForRow(tr);
+      }
     }
-    " /></td>
+    function addMeasureRow(){
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-type','measure');
+      tr.innerHTML = `
+        <td><input class="name" placeholder="${t('phName')}" /></td>
         <td><input class="nom" type="number" step="0.001" placeholder="${t('phNominal')}" /></td>
         <td><input class="lo"  type="number" step="0.001" placeholder="${t('phTolMinus')}" /></td>
         <td><input class="hi"  type="number" step="0.001" placeholder="${t('phTolPlus')}" /></td>
@@ -634,25 +596,8 @@ function addMeasureRow(){
       // 尺寸
       const rows = Array.from(tbody.querySelectorAll('tr[data-type="measure"]'));
       const measurements = rows.map(tr => {
-  const code = tr.querySelector('.code')?.value?.trim() || '';
-  const name = tr.querySelector('.name')?.value?.trim() || '';
-  const nom  = Number(tr.querySelector('.nom')?.value || 0);
-  const lo   = Number(tr.querySelector('.lo')?.value || 0);
-  const hi   = Number(tr.querySelector('.hi')?.value || 0);
-  const ms   = [1,2,3,4,5].map(i => {
-    const v = tr.querySelector('.m'+i)?.value;
-    return (v===0||v) ? Number(v) : Number(v||0);
-  });
-  const pass = tr.querySelector('td:last-child')?.textContent || '';
-  return { code, name, nominal:nom, tolMinus:lo, tolPlus:hi, measured:ms, pass };
-});const lo   = Number(tr.querySelector('.lo')?.value || 0);
-      const hi   = Number(tr.querySelector('.hi')?.value || 0);
-      const ms = [1,2,3,4,5].map(i => {
-        const v = tr.querySelector('.m'+i)?.value; return (v===0||v)?Number(v):Number(v||0);
-      });
-      const pass = tr.querySelector('td:last-child')?.textContent || '';
-      return { code, name, nominal:nom, tolMinus:lo, tolPlus:hi, measured:ms, pass };
-    });const nom = tr.querySelector('.nom').value;
+        const name = tr.querySelector('.name').value.trim();
+        const nom = tr.querySelector('.nom').value;
         const lo  = tr.querySelector('.lo').value;
         const hi  = tr.querySelector('.hi').value;
         const ms = [1,2,3,4,5].map(i => {
@@ -660,7 +605,6 @@ function addMeasureRow(){
           return v==='' ? null : Number(v);
         });
         return {
-          code,
           name,
           nominal: nom===''?null:Number(nom),
           tolMinus: lo===''?null:Number(lo),

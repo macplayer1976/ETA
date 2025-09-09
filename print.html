@@ -144,8 +144,6 @@
 
     const I18N = {
       'zh-TW': {
-
-
         title_print: "安拓實業有限公司｜品檢報告（單筆）",
         title_print_inner: "品檢報告 Inspection Report",
         btn_print: "列印 / 下載 PDF",
@@ -160,16 +158,12 @@
         f_id: "報告編號：", f_time: "檢驗時間：", f_inspector: "檢驗人員：", f_overall: "檢驗結果：",
         f_supplier: "供應商：", f_order:"訂單號碼：", f_lot:"生產批號：", f_partno: "料號 Part No.：", f_drawing: "圖號 Drawing No.：", f_material:"材質：", f_spec:"規格：", f_category:"產品類別：",
         f_revision: "版次 Revision：", f_process: "製程 Process：", f_notes: "備註：",
-        col_item: "項目代號/名稱", col_nominal: "標準值", col_tol_minus: "下限公差", col_tol_plus: "上限公差",
+        col_item: "項目 / 尺寸", col_nominal: "名目", col_tol_minus: "下限公差", col_tol_plus: "上限公差",
         col_m1: "樣品/實測1", col_m2: "樣品/實測2", col_m3: "樣品/實測3", col_m4: "樣品/實測4", col_m5: "樣品/實測5", col_judgement: "判定",
         appearance: "外觀",
         lang_title: "選擇語言", lang_tip: "請選擇顯示語言（之後可再更改）："
-      
-      
       },
       'zh-CN': {
-
-
         title_print: "安拓实业有限公司｜品检报告（单笔）",
         title_print_inner: "品检报告 Inspection Report",
         btn_print: "打印 / 下载 PDF",
@@ -188,12 +182,8 @@
         col_m1: "样品/实测1", col_m2: "样品/实测2", col_m3: "样品/实测3", col_m4: "样品/实测4", col_m5: "样品/实测5", col_judgement: "判定",
         appearance: "外观",
         lang_title: "选择语言", lang_tip: "请选择显示语言（之后可再更改）："
-      
-      
       },
       'en': {
-
-
         title_print: "Anchor Co., Ltd. | Inspection Report (Single)",
         title_print_inner: "Inspection Report",
         btn_print: "Print / Download PDF",
@@ -212,8 +202,6 @@
         col_m1: "Sample/Meas.1", col_m2: "Sample/Meas.2", col_m3: "Sample/Meas.3", col_m4: "Sample/Meas.4", col_m5: "Sample/Meas.5", col_judgement: "Judgement",
         appearance: "Appearance",
         lang_title: "Choose language", lang_tip: "Pick a display language (you can change it later):"
-      
-      
       }
     };
     function getLang(){ return localStorage.getItem('qci_lang') || 'zh-TW'; }
@@ -264,8 +252,7 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
     function buildUnifiedTable(appearance, measurements){
       const th = `
         <thead><tr>
-          <th>${t('col_code')}</th>
-          <th>${t('col_name')}</th>
+          <th>${t('col_item')}</th>
           <th>${t('col_nominal')}</th>
           <th>${t('col_tol_minus')}</th>
           <th>${t('col_tol_plus')}</th>
@@ -289,7 +276,6 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
       }
       const apRow = Object.keys(apMap).length ? `
         <tr>
-          <td></td>
           <td><strong>${t('appearance')}</strong></td>
           <td></td><td></td><td></td>
           <td>${escapeHtml(apMap[1]||'')}</td>
@@ -305,7 +291,6 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
         const c = [0,1,2,3,4].map(i => (arr[i]===0||arr[i]) ? Number(arr[i]).toFixed(3) : '');
         const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : '';
         return `<tr>
-          <td>${escapeHtml(m.code||'')}</td>
           <td>${escapeHtml(m.name||'')}</td>
           <td>${num(m.nominal)}</td>
           <td>${num(m.tolMinus)}</td>
