@@ -599,7 +599,8 @@ function addMeasureRow(){
   });
 
   // 尺寸
-  const measurements = Array.from(document.getElementById('tbody').querySelectorAll('tr[data-type="measure"]')).map(tr => {
+  const tbody = document.getElementById('tbody');
+  const measurements = Array.from(tbody.querySelectorAll('tr[data-type="measure"]')).map(tr => {
     const code = tr.querySelector('.code')?.value.trim() || '';
     const name = tr.querySelector('.name')?.value.trim() || '';
     const nom  = tr.querySelector('.nom')?.value ?? '';
@@ -648,32 +649,7 @@ function addMeasureRow(){
   };
 });
 
-      // 整體結果
-      function calcOverall(){
-        const apOK = !appearance.length || appearance.every(a => String(a.result||'').toUpperCase()==='OK');
-        const msOK = !measurements.length || measurements.every(m => {
-          const nom = Number(m.nominal); const lo=Number(m.tolMinus); const hi=Number(m.tolPlus);
-          if (isNaN(nom) || isNaN(lo) || isNaN(hi)) return true;
-          const min = nom + lo, max = nom + hi;
-          const arr = Array.isArray(m.measured)?m.measured:[];
-          const vals = arr.filter(v=>v===0 || v).map(Number);
-          return vals.length===0 || vals.every(v => v>=min && v<=max);
-        });
-        return (apOK && msOK) ? 'PASS' : 'FAIL';
-      }
-
-      const now = new Date();
-      const id = `INS-${now.toISOString().replace(/[-:T]/g,'').slice(0,14)}-${Math.floor(100+Math.random()*900)}`;
-
-      return {
-        id, timestamp: now.toISOString(),
-        inspector: user,
-        supplier: sOpt.dataset.zh, supplierEn: sOpt.dataset.en, supplierCode: sOpt.value,
-        orderNo, lotNo, partNo, drawingNo, material, spec, category, revision: '', // 相容舊欄位存在，但不使用
-        process: pOpt ? pOpt.value : '', processLabel: pOpt ? (pOpt.dataset.zh + ' (' + pOpt.dataset.en + ')') : '',
-        notes, appearance, measurements,
-        overallResult: calcOverall()
-      };
+      
     }
 
     // 儲存
