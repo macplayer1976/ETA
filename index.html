@@ -409,6 +409,34 @@ let _afterPick = null;
 // === Reference sketch switcher ===
 function getSketchFileForCategory(code){
   switch(String(code||'').toUpperCase()){
+    case 'PLUG':        return 'plug.jpg';
+    case 'SLEEVE_A':    return 'sleeve_a.jpg';
+    case 'SLEEVE_B':    return 'sleeve_b.jpg';
+    case 'SLEEVE_H':    return 'sleeve_h.jpg';
+    case 'FINISHED_A':  return 'finished_a.jpg';
+    case 'FINISHED_B':  return 'finished_b.jpg';
+    case 'FINISHED_H':  return 'finished_h.jpg';
+    case 'TOOL':        return 'tool.jpg';
+    case 'FINAL':
+    default:            return 'final_finished.jpg';
+  }
+function updateSketchByCategory(){
+  const sel  = document.getElementById('category');
+  const img  = document.getElementById('sketchImg');
+  const note = document.querySelector('.sketch-note');
+  const lang = (localStorage.getItem('qci_lang')||'zh-TW');
+  const code = (sel && sel.value) ? sel.value : '';
+  const file = getSketchFileForCategory(code);
+  if (img) img.src = file;
+  if (note){
+    if (lang==='en') note.textContent = `For quick reference to key dimensions and shapes (file: ${file}).`;
+    else if (lang==='zh-CN') note.textContent = `便于检验时快速参考主要尺寸与形状（图档：${file}）。`;
+    else note.textContent = `供檢驗時快速參考主要尺寸與形狀（圖檔：${file}）。`;
+  }
+}
+
+function getSketchFileForCategory(code){
+  switch(String(code||'').toUpperCase()){
     case 'PLUG': return 'plug.jpg';
     case 'SLEEVE_A': return 'sleeve_a.jpg';
     case 'SLEEVE_B': return 'sleeve_b.jpg';
@@ -456,6 +484,8 @@ function fillCategorySelect(){
   const sel = document.getElementById('category');
   if (!sel) return;
   sel.innerHTML = '<option value=""></option>' + CATEGORIES.map(c=>`<option value="${c.code}" data-zh="${c.zh}" data-en="${c.en}">${c.zh} (${c.en})</option>`).join('');
+  if (!sel.onchange) sel.onchange = updateSketchByCategory;
+}" data-zh="${c.zh}" data-en="${c.en}">${c.zh} (${c.en})</option>`).join('');
   sel.onchange = updateSketchByCategory;
 }
 
@@ -484,10 +514,7 @@ function fillCategorySelect(){
 }
     }
     }
-    
-    }
-    
-    function addMeasureRow(){
+function addMeasureRow(){
   const tr = document.createElement('tr');
   tr.setAttribute('data-type','measure');
   tr.innerHTML = `
