@@ -164,11 +164,10 @@
       <table id="tbl">
         <thead>
           <tr>
-            <th style="width:8%" data-i18n="thCode">項目代號</th>
-            <th style="width:14%" data-i18n="thName">項目名稱</th>
-            <th style="width:10%" data-i18n="thStd">標準值</th>
-            <th style="width:9%" data-i18n="thTolMinus">下限公差</th>
-            <th style="width:9%" data-i18n="thTolPlus">上限公差</th>
+            <th style="width:14%" data-i18n="thItem">項目 / 尺寸名稱</th>
+            <th style="width:10%" data-i18n="thNominal">名目值</th>
+            <th style="width:10%" data-i18n="thTolMinus">下限公差</th>
+            <th style="width:10%" data-i18n="thTolPlus">上限公差</th>
             <th style="width:8%" data-i18n="thM1">實測1</th>
             <th style="width:8%" data-i18n="thM2">實測2</th>
             <th style="width:8%" data-i18n="thM3">實測3</th>
@@ -243,7 +242,7 @@ let _afterPick = null;
         phCategory:'例如：螺栓',
         sectionTitle:'尺寸與外觀檢驗',
         hintAppearance:'第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。',
-        thCode:'項目代號', thName:'項目名稱', thStd:'標準值', thTolMinus:'下限公差', thTolPlus:'上限公差', thTolMinus:'下限公差', thTolPlus:'上限公差',
+        thItem:'項目 / 尺寸名稱', thNominal:'名目值', thTolMinus:'下限公差', thTolPlus:'上限公差',
         thM1:'實測1', thM2:'實測2', thM3:'實測3', thM4:'實測4', thM5:'實測5', thDecision:'結果',
         btnAdd:'＋新增尺寸', btnRemove:'－刪除最後一列', btnClearRows:'清空尺寸列（保留外觀）',
         btnSave:'儲存到雲端', btnGoReport:'查看/列印報告',
@@ -251,7 +250,7 @@ let _afterPick = null;
         langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：',
         phAccount:'例如：boss / worker1 / qa1', phPassword:'例如：admin123 / in1111 / view2222',
         phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸穩定/外觀無瑕疵',
-        phCode:'例：A1 或 D2-1', phName:'例：頭部厚度', phStd:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
+        phName:'例：頭部厚度', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
         phM1:'實測1', phM2:'實測2', phM3:'實測3', phM4:'實測4', phM5:'實測5',
         login_msg_need:'請輸入帳號與密碼', login_msg_auto:'自動驗證中...', login_msg_wrong:'❌ 帳號或密碼錯誤', login_verifying:'驗證中...',
         save_saving:'儲存中...', save_ok:'✅ 已儲存到雲端（可到報告頁查看/列印）', save_fail:'❌ 儲存失敗：',
@@ -279,7 +278,7 @@ let _afterPick = null;
         phCategory:'例如：螺栓',
         sectionTitle:'尺寸与外观检验',
         hintAppearance:'第 <strong>1</strong> 行为 <strong>外观检查</strong>（可留空）；第 <strong>2</strong> 行开始为尺寸量测。',
-        thCode:'项目代号', thName:'项目名称', thStd:'标准值', thTolMinus:'下限公差', thTolPlus:'上限公差', thTolMinus:'下限公差', thTolPlus:'上限公差',
+        thItem:'项目 / 尺寸名称', thNominal:'名义值', thTolMinus:'下限公差', thTolPlus:'上限公差',
         thM1:'实测1', thM2:'实测2', thM3:'实测3', thM4:'实测4', thM5:'实测5', thDecision:'判定',
         btnAdd:'＋新增尺寸', btnRemove:'－删除最后一行', btnClearRows:'清空尺寸行（保留外观）',
         btnSave:'保存到云端', btnGoReport:'查看/打印报告',
@@ -287,7 +286,7 @@ let _afterPick = null;
         langTitle:'选择语言 / Language', langHint:'请选择界面语言：',
         phAccount:'例如：boss / worker1 / qa1', phPassword:'例如：admin123 / in1111 / view2222',
         phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸稳定/外观无瑕疵', phOrderNo:'例如：PO12345', phLotNo:'例如：2025-09-A', phMaterial:'例如：SCM435', phSpec:'例如：M8 x 30', phCategory:'例如：螺栓',
-        phCode:'例：A1 或 D2-1', phName:'例：头部厚度', phStd:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
+        phName:'例：头部厚度', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
         phM1:'实测1', phM2:'实测2', phM3:'实测3', phM4:'实测4', phM5:'实测5',
         login_msg_need:'请输入账号与密码', login_msg_auto:'自动验证中...', login_msg_wrong:'❌ 账号或密码错误', login_verifying:'验证中...',
         save_saving:'保存中...', save_ok:'✅ 已保存到云端（可去报告页查看/打印）', save_fail:'❌ 保存失败：',
@@ -314,7 +313,7 @@ let _afterPick = null;
         phCategory:'例如：螺栓',
         sectionTitle:'Appearance & Dimensional Inspection',
         hintAppearance:'Row <strong>1</strong> is <strong>Appearance</strong> (optional). From row <strong>2</strong> onwards are dimensions.',
-        thCode:'Item Code', thName:'Item Name', thStd:'Standard', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
+        thItem:'Item / Dimension', thNominal:'Nominal', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
         thM1:'Sample1', thM2:'Sample2', thM3:'Sample3', thM4:'Sample4', thM5:'Sample5', thDecision:'Decision',
         btnAdd:'＋Add dimension', btnRemove:'－Remove last row', btnClearRows:'Clear dimension rows (keep appearance)',
         btnSave:'Save to cloud', btnGoReport:'View/Print Reports',
@@ -324,7 +323,7 @@ let _afterPick = null;
 
         phAccount:'e.g. boss / worker1 / qa1', phPassword:'e.g. admin123 / in1111 / view2222',
         phSupplier:'e.g. Anchor / AKF', phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6', phRevision:'e.g. Rev.B', phNotes:'e.g. Dimensions stable / No defects', phOrderNo:'e.g. PO12345', phLotNo:'e.g. 2025-09-A', phMaterial:'e.g. SCM435', phSpec:'e.g. M8 x 30', phCategory:'e.g. Bolt',
-        phCode:'e.g. A1 or D2-1', phName:'e.g. Head thickness', phStd:'e.g. 3.000', phTolMinus:'e.g. -0.100', phTolPlus:'e.g. 0.100',
+        phName:'e.g. Head thickness', phNominal:'e.g. 3.000', phTolMinus:'e.g. -0.100', phTolPlus:'e.g. 0.100',
         phM1:'Sample1', phM2:'Sample2', phM3:'Sample3', phM4:'Sample4', phM5:'Sample5',
         login_msg_need:'Please enter account & password', login_msg_auto:'Auto checking...', login_msg_wrong:'❌ Wrong account or password', login_verifying:'Verifying...',
         save_saving:'Saving...', save_ok:'✅ Saved (check the report page to view/print)', save_fail:'❌ Save failed: ',
@@ -460,43 +459,41 @@ function fillCategorySelect(){
 
 
     // 表格建置
-function ensureAppearanceRow(){
-  if (!tbody.querySelector('tr[data-type="appearance"]')){
-    const tr = document.createElement('tr');
-    tr.setAttribute('data-type','appearance');
-    tr.innerHTML = `
-      <td></td>
-      <td><strong data-i18n="appearanceTitle">外觀檢查</strong></td>
-      <td colspan="3" class="muted">（可留空）</td>
-      <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-      <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-      <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-      <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-      <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-      <td></td>`;
-    tbody.appendChild(tr);
-    updateDecisionForRow(tr);
-  }
-}
-
-function addMeasureRow(){
-  const tr = document.createElement('tr');
-  tr.setAttribute('data-type','measure');
-  tr.innerHTML = `
-    <td><input class="code" placeholder="${t('phCode')}" /></td>
-    <td><input class="name" placeholder="${t('phName')}" /></td>
-    <td><input class="nom" type="number" step="0.001" placeholder="${t('phStd')}" /></td>
-    <td><input class="lo"  type="number" step="0.001" placeholder="${t('phTolMinus')}" /></td>
-    <td><input class="hi"  type="number" step="0.001" placeholder="${t('phTolPlus')}" /></td>
-    <td><input class="m m1" type="number" step="0.001" placeholder="${t('phM1')}" /></td>
-    <td><input class="m m2" type="number" step="0.001" placeholder="${t('phM2')}" /></td>
-    <td><input class="m m3" type="number" step="0.001" placeholder="${t('phM3')}" /></td>
-    <td><input class="m m4" type="number" step="0.001" placeholder="${t('phM4')}" /></td>
-    <td><input class="m m5" type="number" step="0.001" placeholder="${t('phM5')}" /></td>
-    <td></td>`;
-  tbody.appendChild(tr);
-  updateDecisionForRow(tr);
-}
+    const tbody = document.getElementById('tbody');
+    function ensureAppearanceRow(){
+      if (!tbody.querySelector('tr[data-type="appearance"]')){
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-type','appearance');
+        tr.innerHTML = `
+          <td><strong data-i18n="appearanceTitle">外觀檢查</strong></td>
+          <td colspan="3" class="muted">（可留空）</td>
+          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+          <td></td>`;
+        tbody.appendChild(tr);
+      updateDecisionForRow(tr);
+      }
+    }
+    function addMeasureRow(){
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-type','measure');
+      tr.innerHTML = `
+        <td><input class="name" placeholder="${t('phName')}" /></td>
+        <td><input class="nom" type="number" step="0.001" placeholder="${t('phNominal')}" /></td>
+        <td><input class="lo"  type="number" step="0.001" placeholder="${t('phTolMinus')}" /></td>
+        <td><input class="hi"  type="number" step="0.001" placeholder="${t('phTolPlus')}" /></td>
+        <td><input class="m m1" type="number" step="0.001" placeholder="${t('phM1')}" /></td>
+        <td><input class="m m2" type="number" step="0.001" placeholder="${t('phM2')}" /></td>
+        <td><input class="m m3" type="number" step="0.001" placeholder="${t('phM3')}" /></td>
+        <td><input class="m m4" type="number" step="0.001" placeholder="${t('phM4')}" /></td>
+        <td><input class="m m5" type="number" step="0.001" placeholder="${t('phM5')}" /></td>
+        <td></td
+      updateDecisionForRow(tr);>`;
+      tbody.appendChild(tr);
+    }
     function countMeasureRows(){ return tbody.querySelectorAll('tr[data-type="measure"]').length; }
     function ensureMeasureRows(n){
       while (countMeasureRows() < n) addMeasureRow();
@@ -571,85 +568,78 @@ function addMeasureRow(){
 }
     // 建立要儲存的紀錄
     function buildRecord(){
-  const user = localStorage.getItem('qci_user') || '';
-  const pass = localStorage.getItem('qci_pass') || '';
-  if (!user || !pass){ alert(t('login_msg_need')); return null; }
-  const sSel = document.getElementById('supplier');
-  const sOpt = sSel.options[sSel.selectedIndex] || { value:'', dataset:{ zh:'', en:'' } };
+      const user = localStorage.getItem('qci_user') || '';
+      const pass = localStorage.getItem('qci_pass') || '';
+      if (!user || !pass){ alert(t('login_msg_need')); return null; }
 
-  const supplier = sOpt.dataset.zh || sOpt.value || '';
-  const supplierEn = sOpt.dataset.en || '';
-  const orderNo = document.getElementById('orderNo').value.trim();
-  const lotNo = document.getElementById('lotNo').value.trim();
-  const partNo = document.getElementById('partNo').value.trim();
-  const drawingNo = document.getElementById('drawingNo').value.trim();
-  const material = document.getElementById('material').value.trim();
-  const spec = document.getElementById('spec').value.trim();
-  const category = document.getElementById('category').value.trim();
-  const process = document.getElementById('process').value.trim();
-  const notes = document.getElementById('notes').value.trim();
-  if (!supplier || !partNo){ alert(t('need_supplier_part')); return null; }
+      const orderNo = document.getElementById('orderNo').value.trim();
+      const lotNo = document.getElementById('lotNo').value.trim();
+      const partNo = document.getElementById('partNo').value.trim();
+      const drawingNo = document.getElementById('drawingNo').value.trim();
+      const material = document.getElementById('material').value.trim();
+      const spec = document.getElementById('spec').value.trim();
+      const category = document.getElementById('category').value.trim();
+      const notes = document.getElementById('notes').value.trim();
 
-  // 外觀
-  const appearance = [];
-  const ap = document.querySelectorAll('tr[data-type="appearance"] select.ap');
-  ap.forEach((sel, idx) => {
-    const v = (sel.value||'').toUpperCase();
-    if (v==='OK' || v==='NG'){ appearance.push({ sample: 'Sample'+(idx+1), result: v }); }
-  });
+      const selS = document.getElementById('supplier');
+      const sOpt = selS.options[selS.selectedIndex];
+      const selP = document.getElementById('process');
+      const pOpt = selP.options[selP.selectedIndex];
 
-  // 尺寸
-  const tbody = document.getElementById('tbody');
-  const measurements = Array.from(tbody.querySelectorAll('tr[data-type="measure"]')).map(tr => {
-    const code = tr.querySelector('.code')?.value.trim() || '';
-    const name = tr.querySelector('.name')?.value.trim() || '';
-    const nom  = tr.querySelector('.nom')?.value ?? '';
-    const lo   = tr.querySelector('.lo')?.value ?? '';
-    const hi   = tr.querySelector('.hi')?.value ?? '';
-    const ms = [1,2,3,4,5].map(i => {
-      const v = tr.querySelector('.m'+i)?.value;
-      return (v==='' || v===undefined) ? null : Number(v);
-    });
-    const pass = decidePass(nom, lo, hi, ms);
-    return {
-      code, name,
-      nominal: nom===''?null:Number(nom),
-      tolMinus: lo===''?null:Number(lo),
-      tolPlus:  hi===''?null:Number(hi),
-      measured: ms,
-      pass: (typeof pass==='boolean') ? pass : undefined
-    };
-  });
+      if (!sOpt || !partNo){ alert(t('need_supplier_part')); return null; }
 
-  function calcOverall(){
-    const apOK = !appearance.length || appearance.every(a => String(a.result||'').toUpperCase()==='OK');
-    const msOK = measurements.every(m => {
-      if (typeof m.pass === 'boolean') return m.pass;
-      const min = (m.nominal??0) + (m.tolMinus??0);
-      const max = (m.nominal??0) + (m.tolPlus??0);
-      const arr = Array.isArray(m.measured) ? m.measured : [];
-      const vals = arr.filter(v => v===0 || v).map(Number);
-      return vals.length===0 || vals.every(v => v>=min && v<=max);
-    });
-    return (apOK && msOK) ? 'PASS' : 'FAIL';
-  }
+      // 外觀
+      const apSel = Array.from(tbody.querySelectorAll('tr[data-type="appearance"] select.ap'));
+      const apHas = apSel.some(x => x.value);
+      const appearance = apHas ? apSel.map((s,i)=>({ sample:`樣品${i+1}`, result: s.value||'' })) : [];
 
-  const now = new Date();
-  const id = `INS-${now.toISOString().replace(/[-:T]/g,'').slice(0,14)}-${Math.floor(100+Math.random()*900)}`;
+      // 尺寸
+      const rows = Array.from(tbody.querySelectorAll('tr[data-type="measure"]'));
+      const measurements = rows.map(tr => {
+        const name = tr.querySelector('.name').value.trim();
+        const nom = tr.querySelector('.nom').value;
+        const lo  = tr.querySelector('.lo').value;
+        const hi  = tr.querySelector('.hi').value;
+        const ms = [1,2,3,4,5].map(i => {
+          const v = tr.querySelector('.m'+i).value;
+          return v==='' ? null : Number(v);
+        });
+        return {
+          name,
+          nominal: nom===''?null:Number(nom),
+          tolMinus: lo===''?null:Number(lo),
+          tolPlus: hi===''?null:Number(hi),
+          measured: ms,
+          pass: decidePass(nom, lo, hi, ms)
+        };
+      });
 
-  return {
-    id, timestamp: now.toISOString(),
-    inspector: user,
-    supplier, supplierEn, supplierCode: sOpt.value,
-    orderNo, lotNo, partNo, drawingNo, material, spec, category, revision:'',
-    process, notes,
-    appearance,
-    measurements,
-    overall: calcOverall()
-  };
-});
+      // 整體結果
+      function calcOverall(){
+        const apOK = !appearance.length || appearance.every(a => String(a.result||'').toUpperCase()==='OK');
+        const msOK = !measurements.length || measurements.every(m => {
+          const nom = Number(m.nominal); const lo=Number(m.tolMinus); const hi=Number(m.tolPlus);
+          if (isNaN(nom) || isNaN(lo) || isNaN(hi)) return true;
+          const min = nom + lo, max = nom + hi;
+          const arr = Array.isArray(m.measured)?m.measured:[];
+          const vals = arr.filter(v=>v===0 || v).map(Number);
+          return vals.length===0 || vals.every(v => v>=min && v<=max);
+        });
+        return (apOK && msOK) ? 'PASS' : 'FAIL';
+      }
 
-      
+      const now = new Date();
+      const id = `INS-${now.toISOString().replace(/[-:T]/g,'').slice(0,14)}-${Math.floor(100+Math.random()*900)}`;
+
+      return {
+        id, timestamp: now.toISOString(),
+        inspector: user,
+        supplier: sOpt.dataset.zh, supplierEn: sOpt.dataset.en, supplierCode: sOpt.value,
+        orderNo, lotNo, partNo, drawingNo, material, spec, category, revision: '', // 相容舊欄位存在，但不使用
+        process: pOpt ? pOpt.value : '', processLabel: pOpt ? (pOpt.dataset.zh + ' (' + pOpt.dataset.en + ')') : '',
+        notes, appearance, measurements,
+        overallResult: calcOverall()
+      };
     }
 
     // 儲存
