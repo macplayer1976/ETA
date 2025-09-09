@@ -467,15 +467,14 @@ function fillCategorySelect(){
         tr.setAttribute('data-type','appearance');
         tr.innerHTML = `
           <td></td>
-          <td></td>
-          <td><strong data-i18n="appearanceTitle">外觀檢查</strong></td>
-          <td colspan="3" class="muted">（可留空）</td>
-          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-          <td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-          <td></td>`;
+<td><strong data-i18n="appearanceTitle">外觀檢查</strong></td>
+<td colspan="3" class="muted">（可留空）</td>
+<td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+<td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+<td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+<td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+<td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+<td></td>`;
         tbody.appendChild(tr);
       updateDecisionForRow(tr);
       }
