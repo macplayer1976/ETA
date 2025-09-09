@@ -420,6 +420,7 @@ function getSketchFileForCategory(code){
     case 'FINAL':
     default:            return 'final_finished.jpg';
   }
+}
 function updateSketchByCategory(){
   const sel  = document.getElementById('category');
   const img  = document.getElementById('sketchImg');
@@ -435,63 +436,24 @@ function updateSketchByCategory(){
   }
 }
 
-function getSketchFileForCategory(code){
-  switch(String(code||'').toUpperCase()){
-    case 'PLUG': return 'plug.jpg';
-    case 'SLEEVE_A': return 'sleeve_a.jpg';
-    case 'SLEEVE_B': return 'sleeve_b.jpg';
-    case 'SLEEVE_H': return 'sleeve_h.jpg';
-    case 'FINISHED_A': return 'finished_a.jpg';
-    case 'FINISHED_B': return 'finished_b.jpg';
-    case 'FINISHED_H': return 'finished_h.jpg';
-    case 'TOOL': return 'tool.jpg';
-    case 'FINAL':
-    default: return 'final_finished.jpg';
-  }
-function updateSketchByCategory(){
-  const sel = document.getElementById('category');
-  const img = document.getElementById('sketchImg');
-  const note = document.querySelector('.sketch-note');
-  if (!img) return;
-  const file = getSketchFileForCategory(sel ? sel.value : '');
-  img.src = file;
-  if (note){
-    // Use i18n text and fill in {file}
-    const base = t('sketchHint');
-    note.innerHTML = String(base || '').replace('{file}', file);
-  }
-}
-// 產品類別下拉（雙語選單）
-const CATEGORIES = [
-  { code:'PLUG',        zh:'塞子',         cn:'塞子',       en:'plug' },
-  { code:'SLEEVE_A',    zh:'管子_A type',  cn:'管子_A type', en:'sleeve_A type' },
-  { code:'SLEEVE_B',    zh:'管子_B type',  cn:'管子_B type', en:'sleeve_B type' },
-  { code:'SLEEVE_H',    zh:'管子_H type',  cn:'管子_H type', en:'sleeve_H type' },
-  { code:'FINISHED_A',  zh:'成品_A type',  cn:'成品_A type', en:'Finished_A type' },
-  { code:'FINISHED_B',  zh:'成品_B type',  cn:'成品_B type', en:'Finished_B type' },
-  { code:'FINISHED_H',  zh:'成品_H type',  cn:'成品_H type', en:'Finished_H type' },
-  { code:'TOOL',        zh:'內迫工具',     cn:'内迫工具',    en:'special tool' }
-];
-function _categoryLabel(code){
-  const lang = getLang() || 'zh-TW';
-  const c = CATEGORIES.find(x => x.code === String(code||'').toUpperCase());
-  if (!c) return String(code||'');
-  if (lang==='en') return c.en;
-  if (lang==='zh-CN') return `${c.cn} (${c.en})`;
-  return `${c.zh} (${c.en})`;
-}
 function fillCategorySelect(){
   const sel = document.getElementById('category');
   if (!sel) return;
+  const CATEGORIES = [
+    { code:'PLUG',        zh:'塞子',         en:'plug' },
+    { code:'SLEEVE_A',    zh:'管子_A type',  en:'sleeve_A type' },
+    { code:'SLEEVE_B',    zh:'管子_B type',  en:'sleeve_B type' },
+    { code:'SLEEVE_H',    zh:'管子_H type',  en:'sleeve_H type' },
+    { code:'FINISHED_A',  zh:'成品_A type',  en:'Finished_A type' },
+    { code:'FINISHED_B',  zh:'成品_B type',  en:'Finished_B type' },
+    { code:'FINISHED_H',  zh:'成品_H type',  en:'Finished_H type' },
+    { code:'TOOL',        zh:'內迫工具',     en:'special tool' },
+    { code:'FINAL',       zh:'最終成品',     en:'FINAL FINISHED' }
+  ];
   sel.innerHTML = '<option value=""></option>' + CATEGORIES.map(c=>`<option value="${c.code}" data-zh="${c.zh}" data-en="${c.en}">${c.zh} (${c.en})</option>`).join('');
-  if (!sel.onchange) sel.onchange = updateSketchByCategory;
-}" data-zh="${c.zh}" data-en="${c.en}">${c.zh} (${c.en})</option>`).join('');
   sel.onchange = updateSketchByCategory;
 }
-
-
-
-    // 表格建置
+// 表格建置
     const tbody = document.getElementById('tbody');
     
     function ensureAppearanceRow(){
