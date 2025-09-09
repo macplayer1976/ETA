@@ -78,6 +78,7 @@
     const I18N = {
       'zh-TW': {
 
+
         reportTitle:'品檢報告（安拓）',
         filterPh:'關鍵字（供應商/料號/圖號/檢驗人員）',
         btnReload:'重新載入', btnClear:'清除關鍵字', btnReset:'重設帳號', btnDiag:'診斷資料', btnRepair:'一鍵修復',
@@ -97,6 +98,7 @@
       },
       'zh-CN': {
 
+
         reportTitle:'品检报告（安拓）',
         filterPh:'关键字（供应商/料号/图号/检验人员）',
         btnReload:'重新载入', btnClear:'清除关键字', btnReset:'重设帐号', btnDiag:'诊断资料', btnRepair:'一键修复',
@@ -108,6 +110,7 @@
         labelOverall:'整体结果：', btnPrintOne:'单笔打印', btnDelete:'删除此笔',
         msgNoPerm:'您的账号没有检视报告的权限（input）。', msgVerify:'验证中...', msgLoading:'载入中...',
         msgLoadFail:'❌ 载入失败：', msgEmpty:'目前没有可显示的资料。', msgCount:'共 {n
+      
       } 笔。可用关键字快速过滤。',
         msgDeleting:'删除中...', msgDeleted:'✅ 已删除 1 笔。', msgDeleteFail:'❌ 删除失败：', msgReLogin:'❌ 登录已过期，请重新登录再试。',
         theadItem:'项目 / 尺寸', theadNom:'名义', theadLo:'下限公差', theadHi:'上限公差',
@@ -115,6 +118,7 @@
         appearance:'外观'
       },
       'en': {
+
 
         reportTitle:'QC Reports (Anchor)',
         filterPh:'Keyword (supplier/part/drawing/inspector)',
@@ -297,7 +301,8 @@ function showCategory(v){
       const L = getLang();
       const th = `
         <thead><tr>
-          <th>${t('theadItem')}</th>
+          <th>${t('theadCode')||'項目代號'}</th>
+          <th>${t('theadName')||'項目名稱'}</th>
           <th>${t('theadNom')}</th>
           <th>${t('theadLo')}</th>
           <th>${t('theadHi')}</th>
@@ -323,6 +328,7 @@ function showCategory(v){
       }
       const apRow = Object.keys(apMap).length ? `
         <tr>
+          <td></td>
           <td><strong>${t('appearance')}</strong></td>
           <td></td><td></td><td></td>
           <td>${escapeHtml(apMap[1]||'')}</td>
@@ -497,7 +503,7 @@ function showCategory(v){
           const dec = (typeof m.pass==='boolean') ? (m.pass ? 'PASS' : 'FAIL') : '';
           rows.push(
             `<Row>` +
-            cell(m.code||'') + cell(m.name||'') + cell(m.nominal, 'Number', 'sNum3') +
+            cell(m.code||'') + cell(m.code||'') + cell(m.name||'') +  cell(m.nominal, 'Number', 'sNum3') +
             cell(m.tolMinus, 'Number', 'sNum3') +
             cell(m.tolPlus, 'Number', 'sNum3') +
             cell(c[0], 'Number', 'sNum3') +
