@@ -158,7 +158,7 @@
         f_id: "報告編號：", f_time: "檢驗時間：", f_inspector: "檢驗人員：", f_overall: "檢驗結果：",
         f_supplier: "供應商：", f_order:"訂單號碼：", f_lot:"生產批號：", f_partno: "料號 Part No.：", f_drawing: "圖號 Drawing No.：", f_material:"材質：", f_spec:"規格：", f_category:"產品類別：",
         f_revision: "版次 Revision：", f_process: "製程 Process：", f_notes: "備註：",
-        col_item: "項目 / 尺寸", col_nominal: "名目", col_tol_minus: "下限公差", col_tol_plus: "上限公差",
+        col_code: "代號", col_code: "代號", col_item: "項目 / 尺寸", col_nominal: "名目", col_tol_minus: "下限公差", col_tol_plus: "上限公差",
         col_m1: "樣品/實測1", col_m2: "樣品/實測2", col_m3: "樣品/實測3", col_m4: "樣品/實測4", col_m5: "樣品/實測5", col_judgement: "判定",
         appearance: "外觀",
         lang_title: "選擇語言", lang_tip: "請選擇顯示語言（之後可再更改）："
@@ -178,7 +178,7 @@
         f_id: "报告编号：", f_time: "检验时间：", f_inspector: "检验人员：", f_overall: "检验结果：",
         f_supplier: "供应商：", f_order:"订单号码：", f_lot:"生产批号：", f_partno: "料号 Part No.：", f_drawing: "图号 Drawing No.：", f_material:"材质：", f_spec:"规格：", f_category:"产品类别：",
         f_revision: "版次 Revision：", f_process: "制程 Process：", f_notes: "备注：",
-        col_item: "项目 / 尺寸", col_nominal: "名义", col_tol_minus: "下限公差", col_tol_plus: "上限公差",
+        col_code: "代号", col_code: "代号", col_item: "项目 / 尺寸", col_nominal: "名义", col_tol_minus: "下限公差", col_tol_plus: "上限公差",
         col_m1: "样品/实测1", col_m2: "样品/实测2", col_m3: "样品/实测3", col_m4: "样品/实测4", col_m5: "样品/实测5", col_judgement: "判定",
         appearance: "外观",
         lang_title: "选择语言", lang_tip: "请选择显示语言（之后可再更改）："
@@ -198,7 +198,7 @@
         f_id: "Report ID: ", f_time: "Time: ", f_inspector: "Inspector: ", f_overall: "Overall: ",
         f_supplier: "Supplier: ", f_order:"Order No.: ", f_lot:"Lot No.: ", f_partno: "Part No.: ", f_drawing: "Drawing No.: ", f_material:"Material: ", f_spec:"Spec: ", f_category:"Category: ",
         f_revision: "Revision: ", f_process: "Process: ", f_notes: "Notes: ",
-        col_item: "Item / Dim.", col_nominal: "Nominal", col_tol_minus: "Lower Tol.", col_tol_plus: "Upper Tol.",
+        col_code: "Code", col_code: "Code", col_item: "Item / Dim.", col_nominal: "Nominal", col_tol_minus: "Lower Tol.", col_tol_plus: "Upper Tol.",
         col_m1: "Sample/Meas.1", col_m2: "Sample/Meas.2", col_m3: "Sample/Meas.3", col_m4: "Sample/Meas.4", col_m5: "Sample/Meas.5", col_judgement: "Judgement",
         appearance: "Appearance",
         lang_title: "Choose language", lang_tip: "Pick a display language (you can change it later):"
@@ -252,6 +252,8 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
     function buildUnifiedTable(appearance, measurements){
       const th = `
         <thead><tr>
+          <th>${t('col_code')}</th>
+          <th>${t('col_code')}</th>
           <th>${t('col_item')}</th>
           <th>${t('col_nominal')}</th>
           <th>${t('col_tol_minus')}</th>
@@ -276,6 +278,8 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
       }
       const apRow = Object.keys(apMap).length ? `
         <tr>
+          <td></td>
+          <td></td>
           <td><strong>${t('appearance')}</strong></td>
           <td></td><td></td><td></td>
           <td>${escapeHtml(apMap[1]||'')}</td>
@@ -291,6 +295,8 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
         const c = [0,1,2,3,4].map(i => (arr[i]===0||arr[i]) ? Number(arr[i]).toFixed(3) : '');
         const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : '';
         return `<tr>
+          <td>${escapeHtml(m.code||'')}</td>
+          <td>${escapeHtml(m.code||'')}</td>
           <td>${escapeHtml(m.name||'')}</td>
           <td>${num(m.nominal)}</td>
           <td>${num(m.tolMinus)}</td>
