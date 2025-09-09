@@ -330,9 +330,7 @@ let _afterPick = null;
         btnSave:'Save to cloud', btnGoReport:'View/Print Reports',
         viewOnlyTip:'Your role is <strong>viewer</strong> (view/print only). Go to <a href="report.html">Reports</a>.',
         langTitle:'Choose language', langHint:'Select UI language:',
-        sketchTitle:'Reference Sketch', sketchHint:'For quick reference to key dimensions and shapes (file: {file
-      
-      }).',
+        sketchTitle:'Reference Sketch', sketchHint:'For quick reference to key dimensions and shapes (file: {file}).',
 
         phAccount:'e.g. boss / worker1 / qa1', phPassword:'e.g. admin123 / in1111 / view2222',
         phSupplier:'e.g. Anchor / AKF', phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6', phRevision:'e.g. Rev.B', phNotes:'e.g. Dimensions stable / No defects', phOrderNo:'e.g. PO12345', phLotNo:'e.g. 2025-09-A', phMaterial:'e.g. SCM435', phSpec:'e.g. M8 x 30', phCategory:'e.g. Bolt',
@@ -412,15 +410,17 @@ let _afterPick = null;
 function getSketchFileForCategory(code){
   switch(String(code||'').toUpperCase()){
     case 'PLUG': return 'plug.jpg';
-    case 'TOOL': return 'special_tool.jpg';
-    case 'SLEEVE_A': return 'sleeve_A.jpg';
-    case 'SLEEVE_B': return 'sleeve_B.jpg';
-    case 'SLEEVE_H': return 'sleeve_H.jpg';
-    case 'FINISHED_A': return 'finish_A.jpg';
-    case 'FINISHED_B': return 'finish_A.jpg';
-    case 'FINISHED_H': return 'finish_H.jpg';
-    default:     return 'final_finished.jpg';
+    case 'SLEEVE_A': return 'sleeve_a.jpg';
+    case 'SLEEVE_B': return 'sleeve_b.jpg';
+    case 'SLEEVE_H': return 'sleeve_h.jpg';
+    case 'FINISHED_A': return 'finished_a.jpg';
+    case 'FINISHED_B': return 'finished_b.jpg';
+    case 'FINISHED_H': return 'finished_h.jpg';
+    case 'TOOL': return 'tool.jpg';
+    case 'FINAL':
+    default: return 'final_finished.jpg';
   }
+}
 }
 function updateSketchByCategory(){
   const sel = document.getElementById('category');
@@ -457,16 +457,8 @@ function _categoryLabel(code){
 function fillCategorySelect(){
   const sel = document.getElementById('category');
   if (!sel) return;
-  const prev = sel.value;
-  // 先放一個空白選項（可保持舊邏輯允許空白）
-  sel.innerHTML = '<option value=""></option>' + CATEGORIES.map(c => 
-    `<option value="${c.code}">${c.zh} (${c.en})</option>`
-  ).join('');
-  if (prev) sel.value = prev;
-  // 綁定事件並立即套用一次
-  sel.removeEventListener('change', updateSketchByCategory);
-  sel.addEventListener('change', updateSketchByCategory);
-  updateSketchByCategory();
+  sel.innerHTML = '<option value=""></option>' + CATEGORIES.map(c=>`<option value="${c.code}" data-zh="${c.zh}" data-en="${c.en}">${c.zh} (${c.en})</option>`).join('');
+  sel.onchange = updateSketchByCategory;
 }
 
 
