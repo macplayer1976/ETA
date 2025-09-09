@@ -198,7 +198,7 @@
         f_id: "Report ID: ", f_time: "Time: ", f_inspector: "Inspector: ", f_overall: "Overall: ",
         f_supplier: "Supplier: ", f_order:"Order No.: ", f_lot:"Lot No.: ", f_partno: "Part No.: ", f_drawing: "Drawing No.: ", f_material:"Material: ", f_spec:"Spec: ", f_category:"Category: ",
         f_revision: "Revision: ", f_process: "Process: ", f_notes: "Notes: ",
-        col_item: "Item / Dim.", col_nominal: "Nominal", col_tol_minus: "Lower Tol.", col_tol_plus: "Upper Tol.",
+        col_code: "Item Code", col_name: "Item Name", col_std: "Standard", col_tol_minus: "Lower Tol.", col_tol_plus: "Upper Tol.",
         col_m1: "Sample/Meas.1", col_m2: "Sample/Meas.2", col_m3: "Sample/Meas.3", col_m4: "Sample/Meas.4", col_m5: "Sample/Meas.5", col_judgement: "Judgement",
         appearance: "Appearance",
         lang_title: "Choose language", lang_tip: "Pick a display language (you can change it later):"
@@ -251,18 +251,7 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
 
     function buildUnifiedTable(appearance, measurements){
       const th = `
-        <thead><tr>
-          <th>${t('col_item')}</th>
-          <th>${t('col_nominal')}</th>
-          <th>${t('col_tol_minus')}</th>
-          <th>${t('col_tol_plus')}</th>
-          <th>${t('col_m1')}</th>
-          <th>${t('col_m2')}</th>
-          <th>${t('col_m3')}</th>
-          <th>${t('col_m4')}</th>
-          <th>${t('col_m5')}</th>
-          <th>${t('col_judgement')}</th>
-        </tr></thead>`;
+        <thead><tr><th>${t('col_code')}</th><th>${t('col_name')}</th><th>${t('col_std')}</th><th>${t('col_tol_minus')}</th><th>${t('col_tol_plus')}</th><th>${t('col_m1')}</th><th>${t('col_m2')}</th><th>${t('col_m3')}</th><th>${t('col_m4')}</th><th>${t('col_m5')}</th><th>${t('col_judgement')}</th></tr></thead>`;
 
       const apMap = {};
       if (Array.isArray(appearance)){
@@ -276,6 +265,7 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
       }
       const apRow = Object.keys(apMap).length ? `
         <tr>
+          <td></td>
           <td><strong>${t('appearance')}</strong></td>
           <td></td><td></td><td></td>
           <td>${escapeHtml(apMap[1]||'')}</td>
@@ -291,6 +281,7 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
         const c = [0,1,2,3,4].map(i => (arr[i]===0||arr[i]) ? Number(arr[i]).toFixed(3) : '');
         const dec = (typeof m.pass==='boolean') ? (m.pass?'PASS':'FAIL') : '';
         return `<tr>
+          <td>${escapeHtml(m.code||'')}</td>
           <td>${escapeHtml(m.name||'')}</td>
           <td>${num(m.nominal)}</td>
           <td>${num(m.tolMinus)}</td>
