@@ -484,8 +484,7 @@ function fillCategorySelect(){
       tr.setAttribute('data-type','measure');
       tr.innerHTML = `
         <td><input class="code" placeholder="${t('phCode')}" /></td>
-        <td><input class="code" placeholder="${t('phCode')||'例如 A1 / H1'}" /></td>
-        <td><input class="name" placeholder="${t('phName')}" /></td>
+        <td><input class="name" placeholder="${phName}" /></td>
         <td><input class="nom" type="number" step="0.001" placeholder="${t('phNominal')}" /></td>
         <td><input class="lo"  type="number" step="0.001" placeholder="${t('phTolMinus')}" /></td>
         <td><input class="hi"  type="number" step="0.001" placeholder="${t('phTolPlus')}" /></td>
@@ -494,7 +493,7 @@ function fillCategorySelect(){
         <td><input class="m m3" type="number" step="0.001" placeholder="${t('phM3')}" /></td>
         <td><input class="m m4" type="number" step="0.001" placeholder="${t('phM4')}" /></td>
         <td><input class="m m5" type="number" step="0.001" placeholder="${t('phM5')}" /></td>
-        <td></td
+        <td></td>
       updateDecisionForRow(tr);>`;
       tbody.appendChild(tr);
     }
