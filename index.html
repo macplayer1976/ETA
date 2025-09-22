@@ -590,7 +590,12 @@ function fillCategorySelect(){
       const selP = document.getElementById('process');
       const pOpt = selP.options[selP.selectedIndex];
 
-      if (!sOpt || !partNo){ alert(t('need_supplier_part')); return null; }
+      // 允許儲存空白報告（無供應商或料號），詢問確認
+if (!sOpt || !partNo) {
+  const go = confirm(t('confirm_save_empty') || '偵測到未填供應商/料號，是否仍要儲存為「空白報告」？');
+  if (!go) return null;
+}
+
 
       // 外觀
       const apSel = Array.from(tbody.querySelectorAll('tr[data-type="appearance"] select.ap'));
@@ -643,7 +648,7 @@ function fillCategorySelect(){
       return {
         id, timestamp: now.toISOString(),
         inspector: user,
-        supplier: sOpt.dataset.zh, supplierEn: sOpt.dataset.en, supplierCode: sOpt.value,
+        supplier: (sOpt ? sOpt.dataset.zh : ''), supplierEn: (sOpt ? sOpt.dataset.en : ''), supplierCode: (sOpt ? sOpt.value : ''),
         orderNo, lotNo, partNo, drawingNo, material, spec, category, revision: '', // 相容舊欄位存在，但不使用
         process: pOpt ? pOpt.value : '', processLabel: pOpt ? (pOpt.dataset.zh + ' (' + pOpt.dataset.en + ')') : '',
         notes, appearance, measurements,
