@@ -218,7 +218,8 @@ function sanitizeRecord(r, who){
       material: r.material || '',
       spec: r.spec || '',
       category: r.category || '',
-      notes: r.notes || '',
+      heatNo: r.heatNo || '',
+    notes: r.notes || '',
       appearance: Array.isArray(r.appearance) ? r.appearance : [],
       measurements: Array.isArray(r.measurements) ? r.measurements : [],
       overallResult: r.overallResult || ''
