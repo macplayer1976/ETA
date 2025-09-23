@@ -1,29 +1,25 @@
 // netlify/functions/inspections.js
-// 說明：
-// 1) 支援「帳號模式」與舊「團隊通關碼 PASSCODE」模式（雙軌相容）。
-// 2) 修正 buildAccounts 拼寫錯誤（.admins → ...admins）導致函式崩潰。
-// 3) ACCOUNT_JSON / ACCOUNTS_JSON 皆可（避免環境變數名稱不一致造成無法登入）。
-// 4) CORS + 簡易健康檢查、診斷、修復工具。
-
+// 擴充帳號模式 + 舊通關碼相容；GET 列表、POST 新增、DELETE 刪除（boss+admin）。
 exports.handler = async (event) => {
   const ENV = process.env || {};
-  const API_KEY  = ENV.JSONBIN_API_KEY;
-  const BIN_ID   = ENV.JSONBIN_BIN_ID;
-  const PASSCODE = ENV.PASSCODE;
+  const API_KEY   = ENV.JSONBIN_API_KEY;
+  const BIN_ID    = ENV.JSONBIN_BIN_ID;
+  const PASSCODE  = ENV.PASSCODE;
 
-  // 解析 ACCOUNTS_JSON / ACCOUNT_JSON（舊機制）
-  const BASE_ACCOUNTS = parseAccounts(ENV.ACCOUNTS_JSON || ENV.ACCOUNT_JSON);
+  // 解析 ACCOUNTS_JSON（舊機制）
+  const BASE_ACCOUNTS = parseAccounts(ENV.ACCOUNTS_JSON);
 
   // 依環境變數擴充 input/viewer（新機制）
   const ACCOUNTS = buildAccounts(BASE_ACCOUNTS, {
-    INPUT_USERS_CSV:  ENV.INPUT_USERS_CSV  || '',
-    INPUT_FIXED_PWD:  ENV.INPUT_FIXED_PWD  || '',
-    VIEWER_USERS_CSV: ENV.VIEWER_USERS_CSV || '',
-    VIEWER_FIXED_PWD: ENV.VIEWER_FIXED_PWD || '',
+    INPUT_USERS_CSV:   ENV.INPUT_USERS_CSV || '',
+    INPUT_FIXED_PWD:   ENV.INPUT_FIXED_PWD || '',
+    VIEWER_USERS_CSV:  ENV.VIEWER_USERS_CSV || '',
+    VIEWER_FIXED_PWD:  ENV.VIEWER_FIXED_PWD || '',
   });
 
-  // Preflight
+  // CORS
   if (event.httpMethod === 'OPTIONS') return text(200, 'OK');
+
   const qs = event.queryStringParameters || {};
 
   // 健康檢查（不需登入）
@@ -32,7 +28,7 @@ exports.handler = async (event) => {
   }
 
   if (!API_KEY || !BIN_ID) {
-    return json(500, { ok:false, error: 'Missing env: JSONBIN_API_KEY / JSONBIN_BIN_ID' });
+    return json(500, { error: 'Missing env: JSONBIN_API_KEY / JSONBIN_BIN_ID' });
   }
 
   // --- 驗證 ---
@@ -41,20 +37,20 @@ exports.handler = async (event) => {
 
   // 回傳身份（前端登入檢查用）
   if (event.httpMethod === 'GET' && (qs.auth === '1' || qs.auth === 'true')) {
-    return json(200, { ok:true, mode: auth.mode, role: auth.role, user: auth.user || '' });
+    return json(200, { ok: true, mode: auth.mode, role: auth.role, user: auth.user || '' });
   }
 
   // 診斷資料（admin/viewer）
   if (event.httpMethod === 'GET' && (qs.diag === '1' || qs.diag === 'true')) {
-    if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error:'Forbidden' });
+    if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error: 'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
-    if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
+    if (!g.ok) return json(g.status || 500, { ok:false, error: 'JSONBIN GET failed', detail: g.text });
     const list = listFromJson(g.json);
     const last = list.length ? list[list.length-1] : null;
-    return json(200, { ok:true, count:list.length, last: last ? { id:last.id, timestamp:last.timestamp, inspector:last.inspector, hasMeasurements:Array.isArray(last.measurements) } : null });
+    return json(200, { ok:true, count:list.length, last: last ? { id:last.id, timestamp:last.timestamp, inspector:last.inspector, hasMeasurements: Array.isArray(last.measurements) } : null });
   }
 
-  // 修復（admin）— 去重並覆寫
+  // 修復（admin）
   if (event.httpMethod === 'GET' && (qs.repair === '1' || qs.repair === 'true')) {
     if (!allow(auth.role, ['admin'])) return json(403, { ok:false, error:'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
@@ -82,7 +78,7 @@ exports.handler = async (event) => {
 
     const rec = sanitizeRecord(body.record, auth.user);
     const result = await saveWithRetry(BIN_ID, API_KEY, rec, 5);
-    if (!result.ok) return json(500, { ok:false, error:'Failed to save after retries', lastStatus:result.lastStatus, lastText:result.lastText });
+    if (!result.ok) return json(500, { ok:false, error: 'Failed to save after retries', lastStatus: result.lastStatus, lastText: result.lastText });
     return json(200, { ok:true, id: rec.id });
   }
 
@@ -109,8 +105,8 @@ exports.handler = async (event) => {
       'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     };
   }
-  function json(code, obj){ return { statusCode: code, headers: headers(), body: JSON.stringify(obj) }; }
-  function text(code, s)   { return { statusCode: code, headers: headers(), body: s }; }
+  function json(code, obj) { return { statusCode: code, headers: headers(), body: JSON.stringify(obj) }; }
+  function text(code, s)    { return { statusCode: code, headers: headers(), body: s }; }
 };
 
 /* ======= 帳號擴充 ======= */
@@ -123,11 +119,10 @@ function buildAccounts(baseAccounts, env) {
   const inputPwd    = String(env.INPUT_FIXED_PWD || '');
   const viewerPwd   = String(env.VIEWER_FIXED_PWD || '');
   if ((inputUsers.length && inputPwd) || (viewerUsers.length && viewerPwd)) {
-    const out = [...admins]; // ← 修正
+    const out = [...admins];
     for (const u of inputUsers)  out.push({ user: u, pwd: inputPwd,  role: 'input'  });
     for (const u of viewerUsers) out.push({ user: u, pwd: viewerPwd, role: 'viewer' });
-    // 去重（以 role+user 作為 key）
-    const seen = new Set(), uniq = [];
+    const seen = new Set(); const uniq = [];
     for (const a of out){ const k = (a.role||'').toLowerCase()+'::'+String(a.user||''); if (!seen.has(k)){ seen.add(k); uniq.push(a); } }
     return uniq;
   }
@@ -135,67 +130,71 @@ function buildAccounts(baseAccounts, env) {
 }
 
 /* ======= 驗證與授權 ======= */
-function parseAccounts(raw){
-  try{
+function parseAccounts(raw) {
+  try {
     if (!raw) return [];
     let s = String(raw);
     if (/^base64:/i.test(s)) s = Buffer.from(s.slice(7), 'base64').toString('utf8');
     const arr = JSON.parse(s);
     return Array.isArray(arr) ? arr : [];
-  }catch{ return []; }
+  } catch { return []; }
 }
-function authenticate(accounts, passcodeEnv, headers){
+function authenticate(accounts, passcodeEnv, headers) {
   const h = headers || {};
   const user = (h['x-user'] || h['X-User'] || '').trim();
   const pass = (h['x-pass'] || h['X-Pass'] || '').trim();
   const team = (h['x-passcode'] || h['X-Passcode'] || '').trim();
 
-  // 帳號模式
-  if (accounts && accounts.length){
+  if (accounts && accounts.length) {
     const found = accounts.find(a => String(a.user) === user && String(a.pwd) === pass);
     if (!found) return { ok:false, status:401, error:'Unauthorized' };
     const role = (found.role || 'input').toLowerCase();
     return { ok:true, mode:'accounts', role, user };
   }
-  // 舊 PASSCODE 模式（全 admin）
-  if (!passcodeEnv || team !== passcodeEnv){
+  if (!passcodeEnv || team !== passcodeEnv) {
     return { ok:false, status:401, error:'Unauthorized' };
   }
-  return { ok:true, mode:'passcode', role:'admin', user: user || '' };
+  return { ok:true, mode:'passcode', role:'admin', user:user || '' };
 }
-function allow(role, list){ return list.includes((role||'').toLowerCase()); }
+function allow(role, list) { return list.includes((role || '').toLowerCase()); }
 
 /* ======= JSONBIN I/O ======= */
-async function jsonbinGet(binId, apiKey){
-  try{
-    const r = await fetch('https://api.jsonbin.io/v3/b/'+binId+'/latest', { headers:{ 'X-Master-Key': apiKey } });
+async function jsonbinGet(binId, apiKey) {
+  try {
+    const r = await fetch('https://api.jsonbin.io/v3/b/' + binId + '/latest', {
+      headers: { 'X-Master-Key': apiKey },
+    });
     const text = await r.text();
-    let json = null; try{ json = JSON.parse(text); }catch{ json = null; }
-    return { ok:r.ok, status:r.status, text, json };
-  }catch(e){ return { ok:false, status:0, text:String(e) }; }
+    let json = null; try { json = JSON.parse(text); } catch (e) { json = null; }
+    return { ok: r.ok, status: r.status, text, json };
+  } catch (e) {
+    return { ok: false, status: 0, text: String(e) };
+  }
 }
-async function jsonbinPut(binId, apiKey, list){
-  try{
-    const r = await fetch('https://api.jsonbin.io/v3/b/'+binId, {
+async function jsonbinPut(binId, apiKey, list) {
+  try {
+    const r = await fetch('https://api.jsonbin.io/v3/b/' + binId, {
       method:'PUT', headers:{ 'Content-Type':'application/json', 'X-Master-Key': apiKey },
-      body: JSON.stringify({ record:list })
+      body: JSON.stringify({ record: list })
     });
     const text = await r.text();
     return { ok:r.ok, status:r.status, text };
-  }catch(e){ return { ok:false, status:0, text:String(e) }; }
+  } catch (e) {
+    return { ok:false, status:0, text:String(e) };
+  }
 }
 
 /* ======= 資料處理 ======= */
 function listFromJson(data){
   if (!data) return [];
   if (Array.isArray(data)) return data;
-  if (data.record)  return listFromJson(data.record);
+  if (data.record) return listFromJson(data.record);
   if (data.records) return listFromJson(data.records);
   if (data.id && data.timestamp) return [data];
   return [];
 }
 function dedupById(arr){
-  const seen = new Set(), out = [];
+  const seen = new Set(); const out = [];
   for (const x of arr){
     const id = String(x && x.id || '');
     if (!id || seen.has(id)) continue;
@@ -220,7 +219,7 @@ function sanitizeRecord(r, who){
       spec: r.spec || '',
       category: r.category || '',
       heatNo: r.heatNo || '',
-      notes: r.notes || '',
+    notes: r.notes || '',
       appearance: Array.isArray(r.appearance) ? r.appearance : [],
       measurements: Array.isArray(r.measurements) ? r.measurements : [],
       overallResult: r.overallResult || ''
