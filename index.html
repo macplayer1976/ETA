@@ -458,7 +458,7 @@ function fillCategorySelect(){
   if (prev) sel.value = prev;
   // 綁定事件並立即套用一次
   sel.removeEventListener('change', updateSketchByCategory);
-  sel.addEventListener('change', function(){ updateSketchByCategory(); onProcessChanged(); });
+  sel.addEventListener('change', updateSketchByCategory);
   updateSketchByCategory();
 }
 
@@ -536,21 +536,6 @@ function fillCategorySelect(){
       tr.querySelector('.name').value = nameText || '';
       updateDecisionForRow(tr);
     }
-    
-    function applyPlugFormingTemplate(){
-      // 1) Ensure appearance row and leave code blank
-      ensureAppearanceRow();
-      setAppearanceCode('');
-      // 2) Clear existing measure rows then add required five items
-      clearMeasureRows();
-      // Appearance row already present; now dimensions with codes: d1, d2, a1, L
-      addMeasureRowWith('d1', _i18nText('大外徑', '大外径', 'Major OD'));
-      addMeasureRowWith('d2', _i18nText('小外徑', '小外径', 'Minor OD'));
-      addMeasureRowWith('a1', _i18nText('角度',   '角度',   'Angle'));
-      addMeasureRowWith('L',  _i18nText('總長',   '总长',   'Overall length'));
-      updateAllDecisions();
-    }
-    
     function applyWireTemplate(){
       // 1) 外觀列 + 設定代號 A
       ensureAppearanceRow();
@@ -561,24 +546,12 @@ function fillCategorySelect(){
       addMeasureRowWith('C', _i18nText('硬度(HRB)', '硬度(HRB)', 'Hardness (HRB)'));
       updateAllDecisions();
     }
-    
     function onProcessChanged(){
-      const selP = document.getElementById('process');
-      const selC = document.getElementById('category');
-      const proc = String(selP && selP.value || '').toUpperCase();
-      const cat  = String(selC && selC.value || '').toUpperCase();
-      // New rule: PLUG + FORMING -> prefill appearance + d1/d2/a1/L
-      if (cat === 'PLUG' && proc === 'FORMING'){
-        applyPlugFormingTemplate();
-        return;
-      }
-      // Existing rule: WIRE -> wire template
-      if (proc === 'WIRE'){
+      const sel = document.getElementById('process');
+      const val = String(sel && sel.value || '').toUpperCase();
+      if (val === 'WIRE'){
         applyWireTemplate();
-        return;
       }
-    }
-    
     }
 
 // 判定單列 PASS/FAIL（有名目 & 公差 & 至少一筆實測才判）
@@ -806,7 +779,6 @@ if (!sOpt || !partNo) {
       // 製程選擇改變 → 若為 WIRE，套用預設模板
       const _procSel = document.getElementById('process');
       if (_procSel){
-        _procSel.addEventListener('change', onProcessChanged);
         _procSel.removeEventListener('change', onProcessChanged);
         _procSel.addEventListener('change', onProcessChanged);
       }
