@@ -86,6 +86,7 @@
 </div>
 <div class="row">
   <div><strong data-i18n="f_process">製程 Process：</strong><span id="f-process"></span></div>
+  <div id="row-heatno" style="display:none;"><strong data-i18n="f_heatno">爐號：</strong><span id="f-heatno"></span></div>
 </div>
 
       <div style="margin-top:8px"><strong data-i18n="f_notes">備註：</strong><span id="f-notes"></span></div>
@@ -335,6 +336,8 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
         document.getElementById('f-draw').textContent = curr.drawingNo || '';
         const _revEl = document.getElementById('f-rev'); if (_revEl) _revEl.textContent = curr.revision || '';
         document.getElementById('f-process').textContent = mapProcess(curr.process||'');
+        const hn = (curr.heatNo||'').trim();
+        if (hn){ document.getElementById('f-heatno').textContent = hn; document.getElementById('row-heatno').style.display='block'; }
         document.getElementById('f-notes').textContent = curr.notes || '';
         document.getElementById('sig-inspector').textContent = curr.inspector || '';
         document.getElementById('unified').innerHTML = buildUnifiedTable(curr.appearance||[], curr.measurements||[]);

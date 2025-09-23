@@ -84,7 +84,7 @@
         debugTip:'提示：網址加上 ?debug=1 可顯示伺服器原始回應；網址加 #resetpass 可清除通關碼。',
         thBasic:'基本資訊', thPart:'料件資訊', thUnified:'外觀與量測明細', thResultOps:'結果 / 操作',
         labelID:'ID：', labelTime:'時間：', labelInspector:'人員：', labelSupplier:'供應商：',
-        labelOrderNo:'訂單號碼：', labelLotNo:'生產批號：', labelPartNo:'料號：', labelDrawingNo:'圖號：', labelRevision:'版次：', labelMaterial:'材質：', labelSpec:'規格：', labelCategory:'產品類別：', labelProcess:'製程：', labelNotes:'備註：',
+        labelOrderNo:'訂單號碼：', labelLotNo:'生產批號：', labelPartNo:'料號：', labelDrawingNo:'圖號：', labelRevision:'版次：', labelMaterial:'材質：', labelSpec:'規格：', labelCategory:'產品類別：', labelProcess:'製程：', labelHeatNo:'爐號：', labelNotes:'備註：',
         labelOverall:'整體結果：', btnPrintOne:'單筆列印', btnDelete:'刪除此筆',
         msgNoPerm:'您的帳號沒有檢視報告的權限（input）。', msgVerify:'驗證中...', msgLoading:'載入中...',
         msgLoadFail:'❌ 載入失敗：', msgEmpty:'目前沒有可顯示的資料。', msgCount:'共 {n} 筆。可用關鍵字快速過濾。',
@@ -101,7 +101,7 @@
         debugTip:'提示：网址加上 ?debug=1 可显示服务器原始回应；网址加 #resetpass 可清除通关码。',
         thBasic:'基本资讯', thPart:'料件资讯', thUnified:'外观与量测明细', thResultOps:'结果 / 操作',
         labelID:'ID：', labelTime:'时间：', labelInspector:'人员：', labelSupplier:'供应商：',
-        labelOrderNo:'订单号码：', labelLotNo:'生产批号：', labelPartNo:'料号：', labelDrawingNo:'图号：', labelRevision:'版次：', labelMaterial:'材质：', labelSpec:'规格：', labelCategory:'产品类别：', labelProcess:'制程：', labelNotes:'备注：',
+        labelOrderNo:'订单号码：', labelLotNo:'生产批号：', labelPartNo:'料号：', labelDrawingNo:'图号：', labelRevision:'版次：', labelMaterial:'材质：', labelSpec:'规格：', labelCategory:'产品类别：', labelProcess:'制程：', labelHeatNo:'炉号：', labelNotes:'备注：',
         labelOverall:'整体结果：', btnPrintOne:'单笔打印', btnDelete:'删除此笔',
         msgNoPerm:'您的账号没有检视报告的权限（input）。', msgVerify:'验证中...', msgLoading:'载入中...',
         msgLoadFail:'❌ 载入失败：', msgEmpty:'目前没有可显示的资料。', msgCount:'共 {n} 笔。可用关键字快速过滤。',
@@ -118,7 +118,7 @@
         debugTip:'Tip: add ?debug=1 to show raw response; add #resetpass to clear pass.',
         thBasic:'Basic Info', thPart:'Part Info', thUnified:'Appearance & Measurements', thResultOps:'Result / Actions',
         labelID:'ID: ', labelTime:'Time: ', labelInspector:'Inspector: ', labelSupplier:'Supplier: ',
-        labelOrderNo:'Order No.: ', labelLotNo:'Lot No.: ', labelPartNo:'Part No.: ', labelDrawingNo:'Drawing No.: ', labelRevision:'Revision: ', labelMaterial:'Material: ', labelSpec:'Spec: ', labelCategory:'Category: ', labelProcess:'Process: ', labelNotes:'Notes: ',
+        labelOrderNo:'Order No.: ', labelLotNo:'Lot No.: ', labelPartNo:'Part No.: ', labelDrawingNo:'Drawing No.: ', labelRevision:'Revision: ', labelMaterial:'Material: ', labelSpec:'Spec: ', labelCategory:'Category: ', labelProcess:'Process: ', labelHeatNo:'Heat No.: ', labelNotes:'Notes: ',
         labelOverall:'Overall: ', btnPrintOne:'Print single', btnDelete:'Delete',
         msgNoPerm:'Your account has no view permission (input).', msgVerify:'Verifying...', msgLoading:'Loading...',
         msgLoadFail:'❌ Load failed: ', msgEmpty:'No data to display.', msgCount:'Total {n}. Use keyword to filter.',
@@ -371,6 +371,7 @@ function showCategory(v){
             <div>${t('labelCategory')}${escapeHtml(showCategory(r.category||''))}</div>
             <div>${t('labelDrawingNo')}${escapeHtml(r.drawingNo||'')}</div>
             <div>${t('labelProcess')}${escapeHtml(mapProcess(r.process||r.processCode||''))}</div>
+            ${r.heatNo?`<div>${t('labelHeatNo')}${escapeHtml(r.heatNo||'')}</div>`:''}
             <div>${t('labelNotes')}${escapeHtml(r.notes||'')}</div>
           </td>
           <td>${buildUnifiedTable(r)}</td>
