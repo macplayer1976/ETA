@@ -546,12 +546,39 @@ function fillCategorySelect(){
       addMeasureRowWith('C', _i18nText('硬度(HRB)', '硬度(HRB)', 'Hardness (HRB)'));
       updateAllDecisions();
     }
-    function onProcessChanged(){
-      const sel = document.getElementById('process');
-      const val = String(sel && sel.value || '').toUpperCase();
-      if (val === 'WIRE'){
+
+    // === New: Template for Category=PLUG & Process=FORMING ===
+    function applyPlugFormingTemplate(){
+      // 1) 外觀列 + 代號空白（依需求：外觀代號留空）
+      ensureAppearanceRow();
+      setAppearanceCode('');
+      // 2) 清空既有尺寸列，依序加入 d1 / d2 / a1 / L
+      clearMeasureRows();
+      addMeasureRowWith('d1', _i18nText('大外徑', '大外径', 'Major OD'));
+      addMeasureRowWith('d2', _i18nText('小外徑', '小外径', 'Minor OD'));
+      addMeasureRowWith('a1', _i18nText('角度',   '角度',   'Angle'));
+      addMeasureRowWith('L',  _i18nText('總長',   '总长',   'Overall length'));
+      updateAllDecisions();
+    }
+
+    function onCategoryOrProcessChanged(){
+      const procSel = document.getElementById('process');
+      const catSel  = document.getElementById('category');
+      const proc = String(procSel && procSel.value || '').toUpperCase();
+      const cat  = String(catSel && catSel.value || '').toUpperCase();
+      // 先套用原有 WIRE 規則
+      if (proc === 'WIRE'){
         applyWireTemplate();
+        return;
       }
+      // 新增規則：產品類別=PLUG 且 製程=FORMING
+      if (cat === 'PLUG' && proc === 'FORMING'){
+        applyPlugFormingTemplate();
+        return;
+      }
+      // 其他情況：維持外觀列與至少一列空白尺寸
+      ensureMeasurementTemplate();
+    }
     }
 
 // 判定單列 PASS/FAIL（有名目 & 公差 & 至少一筆實測才判）
@@ -723,7 +750,7 @@ if (!sOpt || !partNo) {
         msg.textContent = t('save_ok');
         // 清空尺寸列（保留外觀）
         clearMeasureRows(); ensureMeasurementTemplate();
-        onProcessChanged();
+        onCategoryOrProcessChanged();
       }catch(e){
         msg.textContent = t('save_fail') + (e.message||e);
       }finally{
@@ -744,7 +771,7 @@ if (!sOpt || !partNo) {
       document.getElementById('loginMsg').textContent = '';
       showByRole(info.role);
       ensureMeasurementTemplate();
-        onProcessChanged();
+        onCategoryOrProcessChanged();
     }
 
     // 初始外觀 + 至少 1 列尺寸
@@ -768,6 +795,18 @@ if (!sOpt || !partNo) {
     document.getElementById('btnClearRows').addEventListener('click', ()=>{ clearMeasureRows(); });
 
     
+    // 綁定：當「製程」或「產品類別」改變 → 套用對應模板
+      const _procSel = document.getElementById('process');
+      if (_procSel){
+        _procSel.removeEventListener('change', onCategoryOrProcessChanged);
+        _procSel.addEventListener('change', onCategoryOrProcessChanged);
+      }
+      const _catSel = document.getElementById('category');
+      if (_catSel){
+        _catSel.removeEventListener('change', onCategoryOrProcessChanged);
+        _catSel.addEventListener('change', onCategoryOrProcessChanged);
+      }
+
     // 及時判定：輸入/變更時重新計算 PASS/FAIL
     tbody.addEventListener('input', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
     tbody.addEventListener('change', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
@@ -792,7 +831,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
       if (u && p){
         showByRole(localStorage.getItem('qci_role') || 'input');
         ensureMeasurementTemplate();
-        onProcessChanged();
+        onCategoryOrProcessChanged();
       }
     });
   </script>
