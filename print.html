@@ -145,6 +145,7 @@
 
     const I18N = {
       'zh-TW': {
+        f_heatno: "爐號：",
         title_print: "余姚市安可紧固件有限公司｜品檢報告（單筆）",
         title_print_inner: "品檢報告 Inspection Report",
         btn_print: "列印 / 下載 PDF",
@@ -165,6 +166,7 @@
         lang_title: "選擇語言", lang_tip: "請選擇顯示語言（之後可再更改）："
       },
       'zh-CN': {
+        f_heatno: "炉号：",
         title_print: "余姚市安可紧固件有限公司｜品检报告（单笔）",
         title_print_inner: "品检报告 Inspection Report",
         btn_print: "打印 / 下载 PDF",
@@ -185,6 +187,7 @@
         lang_title: "选择语言", lang_tip: "请选择显示语言（之后可再更改）："
       },
       'en': {
+        f_heatno: "Heat No.: ",
         title_print: "YUYAO AKF FASTENERS CO.,LTD | Inspection Report (Single)",
         title_print_inner: "Inspection Report",
         btn_print: "Print / Download PDF",
@@ -336,6 +339,8 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;
         document.getElementById('f-draw').textContent = curr.drawingNo || '';
         const _revEl = document.getElementById('f-rev'); if (_revEl) _revEl.textContent = curr.revision || '';
         document.getElementById('f-process').textContent = mapProcess(curr.process||'');
+        const _hn = (curr.heatNo||'').trim();
+        if (_hn){ document.getElementById('f-heatno').textContent = _hn; document.getElementById('row-heatno').style.display = 'block'; }
         const hn = (curr.heatNo||'').trim();
         if (hn){ document.getElementById('f-heatno').textContent = hn; document.getElementById('row-heatno').style.display='block'; }
         document.getElementById('f-notes').textContent = curr.notes || '';
