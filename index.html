@@ -508,7 +508,48 @@ function fillCategorySelect(){
     function clearMeasureRows(){
       tbody.querySelectorAll('tr[data-type="measure"]').forEach(tr=>tr.remove());
     }
-    // 判定單列 PASS/FAIL（有名目 & 公差 & 至少一筆實測才判）
+    
+
+    // === Auto template for Process ===
+    function _i18nText(keyZhTW, keyZhCN, keyEN){
+      const lang = getLang() || 'zh-TW';
+      if (lang === 'en') return keyEN;
+      if (lang === 'zh-CN') return keyZhCN;
+      return keyZhTW;
+    }
+    function setAppearanceCode(codeText){
+      const row = tbody.querySelector('tr[data-type="appearance"]');
+      if (!row) return;
+      const codeCell = row.querySelector('td:first-child');
+      if (codeCell) codeCell.textContent = codeText || '';
+    }
+    function addMeasureRowWith(code, nameText){
+      addMeasureRow();
+      const rows = tbody.querySelectorAll('tr[data-type="measure"]');
+      const tr = rows[rows.length - 1];
+      tr.querySelector('.code').value = code || '';
+      tr.querySelector('.name').value = nameText || '';
+      updateDecisionForRow(tr);
+    }
+    function applyWireTemplate(){
+      // 1) 外觀列 + 設定代號 A
+      ensureAppearanceRow();
+      setAppearanceCode('A');
+      // 2) 清空既有尺寸列後放入 B/C
+      clearMeasureRows();
+      addMeasureRowWith('B', _i18nText('外徑', '外径', 'Outer diameter'));
+      addMeasureRowWith('C', _i18nText('硬度(HRB)', '硬度(HRB)', 'Hardness (HRB)'));
+      updateAllDecisions();
+    }
+    function onProcessChanged(){
+      const sel = document.getElementById('process');
+      const val = String(sel && sel.value || '').toUpperCase();
+      if (val === 'WIRE'){
+        applyWireTemplate();
+      }
+    }
+
+// 判定單列 PASS/FAIL（有名目 & 公差 & 至少一筆實測才判）
     function decidePass(nom, lo, hi, measured){
       const hasNom = (nom===0 || nom) && !isNaN(Number(nom));
       const hasLo  = (lo===0  || lo)  && !isNaN(Number(lo));
@@ -675,6 +716,7 @@ if (!sOpt || !partNo) {
         msg.textContent = t('save_ok');
         // 清空尺寸列（保留外觀）
         clearMeasureRows(); ensureMeasurementTemplate();
+        onProcessChanged();
       }catch(e){
         msg.textContent = t('save_fail') + (e.message||e);
       }finally{
@@ -695,6 +737,7 @@ if (!sOpt || !partNo) {
       document.getElementById('loginMsg').textContent = '';
       showByRole(info.role);
       ensureMeasurementTemplate();
+        onProcessChanged();
     }
 
     // 初始外觀 + 至少 1 列尺寸
@@ -724,6 +767,15 @@ if (!sOpt || !partNo) {
 
     // 綁定儲存
     document.getElementById('btnSave').addEventListener('click', save);
+
+
+      // 製程選擇改變 → 若為 WIRE，套用預設模板
+      const _procSel = document.getElementById('process');
+      if (_procSel){
+        _procSel.removeEventListener('change', onProcessChanged);
+        _procSel.addEventListener('change', onProcessChanged);
+      }
+
 window.addEventListener('DOMContentLoaded', ()=>{
       // 首次渲染 i18n 與選單
       applyI18n();
@@ -733,6 +785,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
       if (u && p){
         showByRole(localStorage.getItem('qci_role') || 'input');
         ensureMeasurementTemplate();
+        onProcessChanged();
       }
     });
   </script>
