@@ -795,6 +795,52 @@ window.addEventListener('DOMContentLoaded', ()=>{
         onProcessChanged();
       }
     });
-  </script>
+  
+// 預設規則：塞子 + 成形
+function applyPlugFormingDefaults() {
+  const category = document.getElementById('category').value;
+  const process = document.getElementById('process').value;
+
+  if (category === 'PLUG' && process === 'FORMING') {
+    clearRowsKeepAppearance();
+    const defaults = [
+      { code:'',  item:'外觀檢查' },
+      { code:'d1', item:'大外徑' },
+      { code:'d2', item:'小外徑' },
+      { code:'a1', item:'角度' },
+      { code:'L',  item:'總長' }
+    ];
+    defaults.forEach(d => addRow(d.code, d.item));
+  }
+}
+
+document.getElementById('category').addEventListener('change', applyPlugFormingDefaults);
+document.getElementById('process').addEventListener('change', applyPlugFormingDefaults);
+
+function clearRowsKeepAppearance() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+}
+
+function addRow(code, item) {
+  const tbody = document.getElementById('tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input value="${code||''}" /></td>
+    <td><input value="${item||''}" /></td>
+    <td><input /></td>
+    <td><input /></td>
+    <td><input /></td>
+    <td><input /></td>
+    <td><input /></td>
+    <td><input /></td>
+    <td><input /></td>
+    <td><input /></td>
+    <td><select><option value="OK">O.K</option><option value="NG">NG</option></select></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+</script>
 </body>
 </html>
