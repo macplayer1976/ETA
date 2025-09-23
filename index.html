@@ -814,14 +814,7 @@ if (!sOpt || !partNo) {
     document.getElementById('btnSave').addEventListener('click', save);
 
 
-      // 製程選擇改變 → 若為 WIRE，套用預設模板
-      const _procSel = document.getElementById('process');
-      if (_procSel){
-        _procSel.removeEventListener('change', onProcessChanged);
-        _procSel.addEventListener('change', onProcessChanged);
-      }
-
-window.addEventListener('DOMContentLoaded', ()=>{
+      window.addEventListener('DOMContentLoaded', ()=>{
       // 首次渲染 i18n 與選單
       applyI18n();
       // 若曾經登入過，自動顯示表單
