@@ -144,12 +144,7 @@
     <select id="process"></select>
   </div>
   <div>
-    
-  <div>
-    <label data-i18n="labelHeatNo">爐號</label>
-    <input id="heatNo" />
-  </div>
-<label data-i18n="labelNotes">備註</label>
+    <label data-i18n="labelNotes">備註</label>
     <textarea id="notes" rows="2"></textarea>
   </div>
 </div>
@@ -195,9 +190,6 @@
       <div class="toolbar">
         <button class="btn btn-primary" id="btnSave" data-i18n="btnSave">儲存到雲端</button>
         <a class="btn btn-secondary" href="report.html" id="btnGoReport" data-i18n="btnGoReport">查看/列印報告</a>
-        <button class="btn btn-outline" id="btnSaveTemplate" data-i18n="btnSaveTemplate">預設版型儲存</button>
-        <button class="btn" id="btnManageTemplates" data-i18n="btnTplManage">模板管理</button>
-    
       </div>
 
       <p id="msg" class="muted" style="margin-top:8px"></p>
@@ -232,13 +224,14 @@ let _afterPick = null;
 /* ============ I18N 字典（補上 labelProcess，避免顯示 key 本身） ============ */
     const I18N = {
       'zh-TW': {
+          btnSaveTpl: '預設版型儲存', tpl_saving:'儲存預設版型中…', tpl_saved_ok:'✅ 預設版型已儲存。', tpl_saved_fail:'❌ 預設版型儲存失敗：', tpl_applied:'🧩 已自動套用預設版型。',
 
         title:'現場品檢（AKF）',
         loginPrompt:'請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。',
         labelAccount:'帳號（檢驗人員）', labelPassword:'密碼（通關碼/密碼）',
         btnLogin:'登入', btnReset:'清除本機記錄', btnHealth:'健康檢查',
         labelSupplier:'供應商', labelPartNo:'料號 (Part No.)', labelDrawingNo:'圖號 (Drawing No.)',
-        labelRevision:'版次 (Revision)', labelProcess:'製程 (Process)', labelHeatNo:'爐號', labelNotes:'備註',
+        labelRevision:'版次 (Revision)', labelProcess:'製程 (Process)', labelNotes:'備註',
         labelOrderNo:'訂單號碼',
         labelLotNo:'生產批號',
         labelMaterial:'材質',
@@ -266,31 +259,16 @@ let _afterPick = null;
         need_supplier_part:'請輸入供應商與料號',
         appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c3\u8003\u7c21\u5716", sketchHint:"\u4f9b\u6aa2\u9a57\u6642\u5feb\u901f\u53c3\u8003\u4e3b\u8981\u5c3a\u5bf8\u8207\u5f62\u72c0\uff08\u5716\u6a94\uff1afinal_finished.jpg\uff09\u3002"
-        btnSaveTemplate:'預設版型儲存',
-        btnTplManage:'模板管理',
-        tpl_title:'模板管理',
-        tpl_hint:'雲端共用模板（需登入）。可套用或刪除（刪除僅限 boss/admin）。',
-        tpl_refresh:'重新整理',
-        tpl_close:'關閉',
-        tpl_col_keys:'關鍵條件',
-        tpl_col_dims:'尺寸筆數',
-        tpl_col_owner:'建立者',
-        tpl_col_time:'時間',
-        tpl_col_actions:'操作',
-        tpl_apply:'套用',
-        tpl_delete:'刪除',
-        tpl_empty:'目前沒有模板',
-        tpl_needEnv:'尚未在 Netlify 設定 JSONBIN_TPL_BIN_ID，無法啟用模板雲端共用。',
-        tmplSavedCloud:'已儲存為模板（雲端）。',
       },
-      'zh-CN': { thCode:'代号', phCode:'例如 A1 / H1', thCode:'代号', phCode:'例如 A1 / H1',
+      'zh-CN': {
+          btnSaveTpl: '预设版型保存', tpl_saving:'正在保存预设版型…', tpl_saved_ok:'✅ 预设版型已保存。', tpl_saved_fail:'❌ 保存预设版型失败：', tpl_applied:'🧩 已自动套用预设版型。', thCode:'代号', phCode:'例如 A1 / H1', thCode:'代号', phCode:'例如 A1 / H1',
 
         title:'现场品检（AKF）',
         loginPrompt:'请输入「账号（检验人员）」与「密码（通关码/密码）」。',
         labelAccount:'账号（检验人员）', labelPassword:'密码（通关码/密码）',
         btnLogin:'登录', btnReset:'清除本机记录', btnHealth:'健康检查',
         labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)',
-        labelRevision:'版次 (Revision)', labelProcess:'制程 (Process)', labelHeatNo:'炉号', labelNotes:'备注', labelOrderNo:'订单号码', labelLotNo:'生产批号', labelMaterial:'材质', labelSpec:'规格', labelCategory:'产品类别',
+        labelRevision:'版次 (Revision)', labelProcess:'制程 (Process)', labelNotes:'备注', labelOrderNo:'订单号码', labelLotNo:'生产批号', labelMaterial:'材质', labelSpec:'规格', labelCategory:'产品类别',
         labelOrderNo:'訂單號碼',
         labelLotNo:'生產批號',
         labelMaterial:'材質',
@@ -318,30 +296,15 @@ let _afterPick = null;
         need_supplier_part:'请输入供应商与料号',
         appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c2\u8003\u7b80\u56fe", sketchHint:"\u4fbf\u4e8e\u68c0\u9a8c\u65f6\u5feb\u901f\u53c2\u8003\u4e3b\u8981\u5c3a\u5bf8\u4e0e\u5f62\u72b6\uff08\u56fe\u6863\uff1afinal_finished.jpg\uff09\u3002"
-        btnSaveTemplate:'预设版型保存',
-        btnTplManage:'模板管理',
-        tpl_title:'模板管理',
-        tpl_hint:'云端共享模板（需登录）。可套用或删除（删除仅限 boss/admin）。',
-        tpl_refresh:'重新整理',
-        tpl_close:'关闭',
-        tpl_col_keys:'关键条件',
-        tpl_col_dims:'尺寸笔数',
-        tpl_col_owner:'建立者',
-        tpl_col_time:'时间',
-        tpl_col_actions:'操作',
-        tpl_apply:'套用',
-        tpl_delete:'删除',
-        tpl_empty:'目前没有模板',
-        tpl_needEnv:'尚未在 Netlify 设定 JSONBIN_TPL_BIN_ID，无法启用模板云端共享。',
-        tmplSavedCloud:'已保存为模板（云端）。',
       },
-      'en': { thCode:'Code', phCode:'e.g. A1 / H1', thCode:'Code', phCode:'e.g. A1 / H1',
+      'en': {
+          btnSaveTpl: 'Save as Template', tpl_saving:'Saving template…', tpl_saved_ok:'✅ Template saved.', tpl_saved_fail:'❌ Failed to save template: ', tpl_applied:'🧩 Applied template.', thCode:'Code', phCode:'e.g. A1 / H1', thCode:'Code', phCode:'e.g. A1 / H1',
         title:'On-site QC (Anchor)',
         loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
         labelAccount:'Account (Inspector)', labelPassword:'Password',
         btnLogin:'Sign in', btnReset:'Clear local data', btnHealth:'Health Check',
         labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.',
-        labelRevision:'Revision', labelProcess:'Process', labelHeatNo:'Heat No.', labelNotes:'Notes', labelOrderNo:'Order No.', labelLotNo:'Lot No.', labelMaterial:'Material', labelSpec:'Spec', labelCategory:'Product Category',
+        labelRevision:'Revision', labelProcess:'Process', labelNotes:'Notes', labelOrderNo:'Order No.', labelLotNo:'Lot No.', labelMaterial:'Material', labelSpec:'Spec', labelCategory:'Product Category',
         labelOrderNo:'訂單號碼',
         labelLotNo:'生產批號',
         labelMaterial:'材質',
@@ -370,22 +333,6 @@ let _afterPick = null;
         save_saving:'Saving...', save_ok:'✅ Saved (check the report page to view/print)', save_fail:'❌ Save failed: ',
         need_supplier_part:'Enter supplier & part no.',
         appearanceTitle:'Appearance', optionDash:'—', optionOK:'O.K', optionNG:'NG'
-        btnSaveTemplate:'Save as Template',
-        btnTplManage:'Template Manager',
-        tpl_title:'Template Manager',
-        tpl_hint:'Shared cloud templates (login required). Apply or delete (delete = boss/admin only).',
-        tpl_refresh:'Refresh',
-        tpl_close:'Close',
-        tpl_col_keys:'Key Conditions',
-        tpl_col_dims:'#Dims',
-        tpl_col_owner:'Owner',
-        tpl_col_time:'Time',
-        tpl_col_actions:'Actions',
-        tpl_apply:'Apply',
-        tpl_delete:'Delete',
-        tpl_empty:'No templates yet',
-        tpl_needEnv:'JSONBIN_TPL_BIN_ID is not set on Netlify; cloud templates are disabled.',
-        tmplSavedCloud:'Saved to cloud templates.',
       }
     };
 
@@ -564,98 +511,7 @@ function fillCategorySelect(){
     function clearMeasureRows(){
       tbody.querySelectorAll('tr[data-type="measure"]').forEach(tr=>tr.remove());
     }
-    
-
-    // === Auto template for Process ===
-    function _i18nText(keyZhTW, keyZhCN, keyEN){
-      const lang = getLang() || 'zh-TW';
-      if (lang === 'en') return keyEN;
-      if (lang === 'zh-CN') return keyZhCN;
-      return keyZhTW;
-    }
-    function setAppearanceCode(codeText){
-      const row = tbody.querySelector('tr[data-type="appearance"]');
-      if (!row) return;
-      const codeCell = row.querySelector('td:first-child');
-      if (codeCell) codeCell.textContent = codeText || '';
-    }
-    function addMeasureRowWith(code, nameText){
-      addMeasureRow();
-      const rows = tbody.querySelectorAll('tr[data-type="measure"]');
-      const tr = rows[rows.length - 1];
-      tr.querySelector('.code').value = code || '';
-      tr.querySelector('.name').value = nameText || '';
-      updateDecisionForRow(tr);
-    }
-    function applyWireTemplate(){
-      // 1) 外觀列 + 設定代號 A
-      ensureAppearanceRow();
-      setAppearanceCode('A');
-      // 2) 清空既有尺寸列後放入 B/C
-      clearMeasureRows();
-      addMeasureRowWith('B', _i18nText('外徑', '外径', 'Outer diameter'));
-      addMeasureRowWith('C', _i18nText('硬度(HRB)', '硬度(HRB)', 'Hardness (HRB)'));
-      updateAllDecisions();
-    }
-
-    // === New: Template for Category=PLUG & Process=FORMING ===
-    function applyPlugFormingTemplate(){
-      // 1) 外觀列 + 代號空白（依需求：外觀代號留空）
-      ensureAppearanceRow();
-      setAppearanceCode('');
-      // 2) 清空既有尺寸列，依序加入 d1 / d2 / a1 / L
-      clearMeasureRows();
-      addMeasureRowWith('d1', _i18nText('大外徑', '大外径', 'Major OD'));
-      addMeasureRowWith('d2', _i18nText('小外徑', '小外径', 'Minor OD'));
-      addMeasureRowWith('a1', _i18nText('角度',   '角度',   'Angle'));
-      addMeasureRowWith('L',  _i18nText('總長',   '总长',   'Overall length'));
-      updateAllDecisions();
-    }
-
-    // === New: Template for Material=STEEL & Category=PLUG & Process=PLATING ===
-    function applySteelPlugPlatingTemplate(){
-      // 1) 外觀列 + 代號空白（依需求：外觀代號留空）
-      ensureAppearanceRow();
-      setAppearanceCode('');
-      // 2) 清空既有尺寸列，加入「電鍍膜厚 5um min.」代號 A
-      clearMeasureRows();
-      addMeasureRowWith('A', _i18nText('電鍍膜厚 5um min.', '电镀膜厚 5um min.', 'Plating thickness 5µm min.'));
-      updateAllDecisions();
-    }
-
-    
-    function onCategoryOrProcessChanged(){
-      const procSel = document.getElementById('process');
-      const catSel  = document.getElementById('category');
-      const matSel  = document.getElementById('material');
-      const proc = String(procSel && procSel.value || '').toUpperCase();
-      const cat  = String(catSel && catSel.value || '').toUpperCase();
-      const mat  = String(matSel && matSel.value || '').toUpperCase();
-
-      // 先套用原有 WIRE 規則
-      if (proc === 'WIRE'){
-        applyWireTemplate();
-        return;
-      }
-
-      // 新增規則：材質=STEEL 且 產品類別=PLUG 且 製程=PLATING
-      if (mat === 'STEEL' && cat === 'PLUG' && proc === 'PLATING'){
-        applySteelPlugPlatingTemplate();
-        return;
-      }
-
-      // 既有規則：產品類別=PLUG 且 製程=FORMING
-      if (cat === 'PLUG' && proc === 'FORMING'){
-        applyPlugFormingTemplate();
-        return;
-      }
-
-      // 其他情況：維持外觀列與至少一列空白尺寸
-      ensureMeasurementTemplate();
-    }
-    
-
-// 判定單列 PASS/FAIL（有名目 & 公差 & 至少一筆實測才判）
+    // 判定單列 PASS/FAIL（有名目 & 公差 & 至少一筆實測才判）
     function decidePass(nom, lo, hi, measured){
       const hasNom = (nom===0 || nom) && !isNaN(Number(nom));
       const hasLo  = (lo===0  || lo)  && !isNaN(Number(lo));
@@ -729,7 +585,6 @@ function fillCategorySelect(){
       const material = document.getElementById('material').value.trim();
       const spec = document.getElementById('spec').value.trim();
       const category = document.getElementById('category').value.trim();
-      const heatNo = (document.getElementById('heatNo')?.value || '').trim();
       const notes = document.getElementById('notes').value.trim();
 
       const selS = document.getElementById('supplier');
@@ -798,7 +653,6 @@ if (!sOpt || !partNo) {
         supplier: (sOpt ? sOpt.dataset.zh : ''), supplierEn: (sOpt ? sOpt.dataset.en : ''), supplierCode: (sOpt ? sOpt.value : ''),
         orderNo, lotNo, partNo, drawingNo, material, spec, category, revision: '', // 相容舊欄位存在，但不使用
         process: pOpt ? pOpt.value : '', processLabel: pOpt ? (pOpt.dataset.zh + ' (' + pOpt.dataset.en + ')') : '',
-        heatNo: heatNo,
         notes, appearance, measurements,
         overallResult: calcOverall()
       };
@@ -824,7 +678,6 @@ if (!sOpt || !partNo) {
         msg.textContent = t('save_ok');
         // 清空尺寸列（保留外觀）
         clearMeasureRows(); ensureMeasurementTemplate();
-        onCategoryOrProcessChanged();
       }catch(e){
         msg.textContent = t('save_fail') + (e.message||e);
       }finally{
@@ -845,7 +698,8 @@ if (!sOpt || !partNo) {
       document.getElementById('loginMsg').textContent = '';
       showByRole(info.role);
       ensureMeasurementTemplate();
-        onCategoryOrProcessChanged();
+      bindAutoTplListeners();
+      tryAutoApplyTemplate();
     }
 
     // 初始外觀 + 至少 1 列尺寸
@@ -865,180 +719,213 @@ if (!sOpt || !partNo) {
     document.getElementById('btnLang').addEventListener('click', ()=>{ _afterPick = applyI18n; openLangModal(); });
     document.getElementById('btnLang2').addEventListener('click', ()=>{ _afterPick = applyI18n; openLangModal(); });
     document.getElementById('btnAdd').addEventListener('click', addMeasureRow);
+    const _btnTpl = document.getElementById('btnSaveTpl'); if (_btnTpl) _btnTpl.addEventListener('click', saveTemplate);
     document.getElementById('btnRemove').addEventListener('click', removeLastMeasureRow);
     document.getElementById('btnClearRows').addEventListener('click', ()=>{ clearMeasureRows(); });
 
     
-    // 綁定：當「製程」或「產品類別」改變 → 套用對應模板
-      const _procSel = document.getElementById('process');
-      if (_procSel){
-        _procSel.removeEventListener('change', onCategoryOrProcessChanged);
-        _procSel.addEventListener('change', onCategoryOrProcessChanged);
-      }
-      const _catSel = document.getElementById('category');
-      if (_catSel){
-        _catSel.removeEventListener('change', onCategoryOrProcessChanged);
-        _catSel.addEventListener('change', onCategoryOrProcessChanged);
-      }
+    
+// ==== 預設版型（Template）功能 ====
+let _TEMPLATES = null; // 快取
 
+function normalize(s){ return String(s||'').trim().toUpperCase(); }
+function computeTemplateKey(obj){
+  // 可自由調整組合；愈完整愈精準
+  const parts = [
+    normalize(obj.supplierCode),
+    normalize(obj.partNo),
+    normalize(obj.spec),
+    normalize(obj.category),
+    normalize(obj.process)
+  ].filter(Boolean);
+  return parts.join(' | ');
+}
 
-      const _matSel = document.getElementById('material');
-      if (_matSel){
-        _matSel.removeEventListener('change', onCategoryOrProcessChanged);
-        _matSel.addEventListener('change', onCategoryOrProcessChanged);
+function buildTemplateRecord(){
+  const rec = buildRecord();
+  if (!rec) return null;
+  // 移除量測值與判定，保留規格模板
+  const ms = Array.isArray(rec.measurements) ? rec.measurements.map(m => ({
+    code: m.code || '',
+    name: m.name || '',
+    nominal: (m.nominal===0||m.nominal) ? Number(m.nominal) : null,
+    tolMinus: (m.tolMinus===0||m.tolMinus) ? Number(m.tolMinus) : null,
+    tolPlus:  (m.tolPlus===0||m.tolPlus) ? Number(m.tolPlus) : null,
+    measured: [],
+    pass: undefined
+  })) : [];
+
+  const now = new Date();
+  const id = `TPL-${now.toISOString().replace(/[-:T]/g,'').slice(0,14)}-${Math.floor(100+Math.random()*900)}`;
+
+  const tpl = {
+    id,
+    timestamp: now.toISOString(),
+    inspector: rec.inspector,
+    supplier: rec.supplier, supplierEn: rec.supplierEn, supplierCode: rec.supplierCode,
+    orderNo: rec.orderNo, lotNo: rec.lotNo,
+    partNo: rec.partNo, drawingNo: rec.drawingNo,
+    material: rec.material, spec: rec.spec,
+    category: rec.category, revision: rec.revision||'',
+    process: rec.process, processLabel: rec.processLabel||'',
+    notes: rec.notes,
+    appearance: [], // 外觀 NG/OK 不保存於模板
+    measurements: ms,
+    overallResult: '', // 模板不計算
+    kind: 'template',
+    templateKey: computeTemplateKey(rec),
+    templateMeta: { byUser: rec.inspector||'', at: now.toISOString(), matchFields:['supplierCode','partNo','spec','category','process'] }
+  };
+  return tpl;
+}
+
+async function saveTemplate(){
+  const btn = document.getElementById('btnSaveTpl');
+  const msgEl = document.getElementById('msg');
+  btn.disabled = true; msgEl.textContent = t('tpl_saving') || '儲存預設版型中…';
+  const tpl = buildTemplateRecord();
+  if (!tpl){ btn.disabled = false; return; }
+  const u = localStorage.getItem('qci_user') || '';
+  const p = localStorage.getItem('qci_pass') || '';
+  try{
+    const r = await fetch('/api/inspections', {
+      method:'POST',
+      headers: { 'Content-Type':'application/json', 'x-user':u, 'x-pass':p, 'x-passcode':p },
+      body: JSON.stringify({ record: tpl })
+    });
+    const tt = await r.text(); let j={}; try{ j=JSON.parse(tt);}catch{}
+    if (!r.ok || (j && j.error)) throw new Error(j.error || tt);
+    msgEl.textContent = t('tpl_saved_ok') || '✅ 預設版型已儲存。';
+    _TEMPLATES = null; // 下次重新抓
+  }catch(e){
+    msgEl.textContent = (t('tpl_saved_fail') || '❌ 預設版型儲存失敗：') + (e.message||e);
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+async function loadTemplatesOnce(){
+  if (_TEMPLATES) return _TEMPLATES;
+  const u = localStorage.getItem('qci_user') || '';
+  const p = localStorage.getItem('qci_pass') || '';
+  try{
+    const r = await fetch('/api/inspections?templates=1', { headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p } });
+    const tt = await r.text(); let j=[]; try{ j=JSON.parse(tt);}catch{}
+    if (!r.ok || !Array.isArray(j)) throw new Error('HTTP '+r.status);
+    _TEMPLATES = j;
+  }catch{
+    _TEMPLATES = [];
+  }
+  return _TEMPLATES;
+}
+
+function scoreMatch(tpl, curr){
+  let s = 0;
+  if (normalize(tpl.supplierCode) && normalize(tpl.supplierCode) === normalize(curr.supplierCode)) s += 2;
+  if (normalize(tpl.partNo) && normalize(tpl.partNo) === normalize(curr.partNo)) s += 2;
+  if (normalize(tpl.process) && normalize(tpl.process) === normalize(curr.process)) s += 1;
+  if (normalize(tpl.category) && normalize(tpl.category) === normalize(curr.category)) s += 1;
+  if (normalize(tpl.spec) && normalize(curr.spec) && normalize(tpl.spec).includes(normalize(curr.spec))) s += 1;
+  return s;
+}
+
+function applyTemplate(tpl){
+  if (!tpl) return;
+  const fillIfEmpty = (id, val) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'SELECT'){
+      if (!el.value && val){
+        const opt = Array.from(el.options).find(o => String(o.value) === String(val));
+        if (opt){ el.value = val; el.dispatchEvent(new Event('change')); }
       }
+    }else{
+      if (!el.value && (val || val===0)) { el.value = val; el.dispatchEvent(new Event('input')); }
+    }
+  };
+
+  fillIfEmpty('material', tpl.material||'');
+  fillIfEmpty('spec', tpl.spec||'');
+  fillIfEmpty('category', tpl.category||'');
+  fillIfEmpty('notes', tpl.notes||'');
+
+  // process (select)
+  if (tpl.process){ fillIfEmpty('process', tpl.process); }
+
+  // measurement rows: 使用模板建立規格（不帶量測值）
+  try{
+    clearMeasureRows();
+    const ms = Array.isArray(tpl.measurements) ? tpl.measurements : [];
+    for (const m of ms){
+      addMeasureRow();
+      const rows = Array.from(document.querySelectorAll('tbody tr[data-type="measure"]'));
+      const tr = rows[rows.length-1];
+      if (!tr) continue;
+      const set = (sel, v) => { const el = tr.querySelector(sel); if (el){ el.value = (v||v===0) ? v : ''; el.dispatchEvent(new Event('input')); } };
+      set('.code1', (m.code||'').split('/')[0] || '');
+      set('.code2', (m.code||'').split('/')[1] || '');
+      set('.name', m.name || '');
+      set('.nom',  (m.nominal===0||m.nominal) ? Number(m.nominal) : '');
+      set('.lo',   (m.tolMinus===0||m.tolMinus) ? Number(m.tolMinus) : '');
+      set('.hi',   (m.tolPlus===0||m.tolPlus) ? Number(m.tolPlus) : '');
+      // measured 留空
+      ['.m1','.m2','.m3','.m4','.m5'].forEach(sel => { const el = tr.querySelector(sel); if (el){ el.value=''; el.dispatchEvent(new Event('input')); } });
+    }
+    updateAllDecisions();
+  }catch(e){ console.warn('applyTemplate rows failed', e); }
+
+  const msgEl = document.getElementById('msg');
+  if (msgEl) msgEl.textContent = (t('tpl_applied') || '🧩 已自動套用預設版型。') + ' ' + (tpl.templateKey||'');
+}
+
+let _listenTplBound = false;
+async function tryAutoApplyTemplate(){
+  // 僅在登入可輸入的情況
+  const role = (localStorage.getItem('qci_role')||'').toLowerCase();
+  if (role === 'viewer') return;
+
+  const selS = document.getElementById('supplier');
+  const sOpt = selS ? selS.options[selS.selectedIndex] : null;
+  const curr = {
+    supplierCode: sOpt ? sOpt.value : '',
+    partNo: (document.getElementById('partNo')?.value||'').trim(),
+    spec: (document.getElementById('spec')?.value||'').trim(),
+    category: (document.getElementById('category')?.value||'').trim(),
+    process: (document.getElementById('process')?.value||'').trim()
+  };
+  const list = await loadTemplatesOnce();
+  if (!list || !list.length) return;
+  // 選分數最高且 >=2 的模板
+  let best=null, score=-1;
+  for (const t of list){
+    const s = scoreMatch(t, curr);
+    if (s > score){ score=s; best=t; }
+  }
+  if (score >= 2){ applyTemplate(best); }
+}
+
+function bindAutoTplListeners(){
+  if (_listenTplBound) return;
+  const ids = ['supplier','partNo','spec','category','process'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el){
+      const evt = el.tagName === 'SELECT' ? 'change' : 'input';
+      el.addEventListener(evt, () => { tryAutoApplyTemplate(); });
+    }
+  });
+  _listenTplBound = True;
+}
+
     // 及時判定：輸入/變更時重新計算 PASS/FAIL
     tbody.addEventListener('input', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
     tbody.addEventListener('change', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
+    bindAutoTplListeners();
+    tryAutoApplyTemplate();
 
     // 綁定儲存
-    
-    // === Templates: Cloud Save + Manage ===
-    function _authHeaders(){
-      const u = localStorage.getItem('qci_user') || '';
-      const p = localStorage.getItem('qci_pass') || '';
-      return { 'Content-Type':'application/json', 'x-user':u, 'x-pass':p, 'x-passcode':p };
-    }
-    function _keySummary(k){
-      const parts = [];
-      if (k.supplierCode) parts.push('SUP:'+k.supplierCode);
-      if (k.partNo) parts.push('PN:'+k.partNo);
-      if (k.drawingNo) parts.push('DRW:'+k.drawingNo);
-      if (k.spec) parts.push('SPEC:'+k.spec);
-      if (k.process) parts.push('PROC:'+k.process);
-      if (k.material) parts.push('MAT:'+k.material);
-      if (k.category) parts.push('CAT:'+k.category);
-      return parts.join(' | ');
-    }
-    function collectTemplateFromUI(){
-      const sSel = document.getElementById('supplier');
-      const pSel = document.getElementById('process');
-      const keys = {
-        supplierCode: sSel && sSel.value || '',
-        partNo: (document.getElementById('partNo')||{}).value || '',
-        drawingNo: (document.getElementById('drawingNo')||{}).value || '',
-        spec: (document.getElementById('spec')||{}).value || '',
-        process: pSel && pSel.value || '',
-        material: (document.getElementById('material')||{}).value || '',
-        category: (document.getElementById('category')||{}).value || ''
-      };
-      // measures
-      const tbody = document.getElementById('tbody');
-      const trs = Array.from(tbody.querySelectorAll('tr')).filter(tr => !tr.dataset.appearance);
-      const measures = trs.map(tr => ({
-        code: tr.querySelector('.c-code')?.value || '',
-        name: tr.querySelector('.c-name')?.value || '',
-        nominal: parseFloat(tr.querySelector('.c-nom')?.value || '') || '',
-        tolMinus: parseFloat(tr.querySelector('.c-tol-minus')?.value || '') || '',
-        tolPlus: parseFloat(tr.querySelector('.c-tol-plus')?.value || '') || ''
-      }));
-      return { keys, measures };
-    }
-    async function saveTemplateCloud(){
-      const btn = document.getElementById('btnSaveTemplate');
-      const msg = document.getElementById('msg');
-      try{
-        btn.disabled = true; msg.textContent = t('save_saving');
-        const tpl = collectTemplateFromUI();
-        const r = await fetch('/api/inspections?template=1', { method:'POST', headers:_authHeaders(), body: JSON.stringify({ template: tpl }) });
-        const ttxt = await r.text(); let j={}; try{ j=JSON.parse(ttxt);}catch(e){}
-        if (!r.ok || (j && j.error)) throw new Error(j.error || ttxt);
-        msg.textContent = t('tmplSavedCloud');
-      }catch(e){
-        msg.textContent = (e && e.message && e.message.includes('JSONBIN_TPL_BIN_ID')) ? t('tpl_needEnv') : ('Template save failed: ' + (e.message||e));
-      }finally{
-        btn.disabled = false;
-      }
-    }
-    function openTplModal(){
-      const m = document.getElementById('tplModal');
-      if (m) { m.style.display = 'flex'; refreshTplList(); }
-    }
-    function closeTplModal(){
-      const m = document.getElementById('tplModal');
-      if (m) m.style.display = 'none';
-    }
-    async function refreshTplList(){
-      const tbody = document.getElementById('tplTableBody');
-      if (!tbody) return;
-      tbody.innerHTML = '<tr><td colspan="5">...</td></tr>';
-      try{
-        const r = await fetch('/api/inspections?template=1', { headers:_authHeaders() });
-        const ttxt = await r.text(); let j={}; try{ j=JSON.parse(ttxt);}catch(e){}
-        if (!r.ok || (j && j.error)) throw new Error(j.error || ttxt);
-        const list = Array.isArray(j.templates) ? j.templates : (Array.isArray(j) ? j : []);
-        if (!list.length){
-          tbody.innerHTML = '<tr><td colspan="5" data-i18n="tpl_empty">'+t('tpl_empty')+'</td></tr>';
-          return;
-        }
-        const role = localStorage.getItem('qci_role') || '';
-        const user = localStorage.getItem('qci_user') || '';
-        tbody.innerHTML = '';
-        for (const it of list){
-          const tr = document.createElement('tr');
-          const dims = Array.isArray(it.measures) ? it.measures.length : 0;
-          const keys = _keySummary(it.keys||{});
-          const time = it.savedAt ? new Date(it.savedAt).toLocaleString() : '';
-          const owner = it.createdBy || '';
-          const tdKeys = document.createElement('td'); tdKeys.textContent = keys;
-          const tdDims = document.createElement('td'); tdDims.textContent = String(dims);
-          const tdOwner = document.createElement('td'); tdOwner.textContent = owner;
-          const tdTime = document.createElement('td'); tdTime.textContent = time;
-          const tdAct = document.createElement('td');
-          const btnApply = document.createElement('button'); btnApply.className='btn btn-secondary'; btnApply.textContent = t('tpl_apply');
-          btnApply.addEventListener('click', ()=>applyTemplateToUI(it));
-          tdAct.appendChild(btnApply);
-          if (role==='admin' || owner===user){
-            const btnDel = document.createElement('button'); btnDel.className='btn'; btnDel.style.marginLeft='6px'; btnDel.textContent = t('tpl_delete');
-            btnDel.addEventListener('click', async()=>{ await deleteTemplateCloud(it.id); refreshTplList(); });
-            tdAct.appendChild(btnDel);
-          }
-          tr.appendChild(tdKeys); tr.appendChild(tdDims); tr.appendChild(tdOwner); tr.appendChild(tdTime); tr.appendChild(tdAct);
-          tbody.appendChild(tr);
-        }
-      }catch(e){
-        tbody.innerHTML = '<tr><td colspan="5">'+ (e.message || e) + '</td></tr>';
-      }
-    }
-    async function deleteTemplateCloud(id){
-      const r = await fetch('/api/inspections?template=1&id='+encodeURIComponent(id), { method:'DELETE', headers:_authHeaders() });
-      const ttxt = await r.text(); let j={}; try{ j=JSON.parse(ttxt);}catch(e){}
-      if (!r.ok || (j && j.error)) throw new Error(j.error || ttxt);
-      return true;
-    }
-    function applyTemplateToUI(tpl){
-      if (!tpl || !tpl.measures) return;
-      const targetCount = Number(tpl.measures.length||0);
-      if (targetCount>0){ ensureMeasureRows(targetCount); }
-      const tbody = document.getElementById('tbody');
-      const trs = Array.from(tbody.querySelectorAll('tr')).filter(tr => !tr.dataset.appearance);
-      trs.forEach((tr, idx)=>{
-        const m = tpl.measures[idx] || {};
-        const set = (sel, val) => { const el = tr.querySelector(sel); if (!el) return; if (!el.value) el.value = (val===0||val)?val:''; };
-        set('.c-code', m.code);
-        set('.c-name', m.name);
-        set('.c-nom', m.nominal);
-        set('.c-tol-minus', m.tolMinus);
-        set('.c-tol-plus', m.tolPlus);
-        updateDecisionForRow(tr);
-      });
-      document.getElementById('msg').textContent = t('appliedTemplate') || '已套用模板';
-    }
-
-    // Bind buttons
-    const _btnSaveTpl = document.getElementById('btnSaveTemplate');
-    if (_btnSaveTpl){ _btnSaveTpl.addEventListener('click', saveTemplateCloud); }
-    const _btnTplMgr = document.getElementById('btnManageTemplates');
-    if (_btnTplMgr){ _btnTplMgr.addEventListener('click', openTplModal); }
-    const _btnTplRefresh = document.getElementById('btnTplRefresh');
-    if (_btnTplRefresh){ _btnTplRefresh.addEventListener('click', refreshTplList); }
-    const _btnTplClose = document.getElementById('btnTplClose');
-    if (_btnTplClose){ _btnTplClose.addEventListener('click', closeTplModal); }
-
-document.getElementById('btnSave').addEventListener('click', save);
-
-
-      window.addEventListener('DOMContentLoaded', ()=>{
+    document.getElementById('btnSave').addEventListener('click', save);
+window.addEventListener('DOMContentLoaded', ()=>{
       // 首次渲染 i18n 與選單
       applyI18n();
       // 若曾經登入過，自動顯示表單
@@ -1047,35 +934,8 @@ document.getElementById('btnSave').addEventListener('click', save);
       if (u && p){
         showByRole(localStorage.getItem('qci_role') || 'input');
         ensureMeasurementTemplate();
-        onCategoryOrProcessChanged();
       }
     });
   </script>
-
-  <!-- Templates Modal -->
-  <div class="modal-backdrop" id="tplModal" style="display:none;">
-    <div class="modal">
-      <h3 data-i18n="tpl_title">模板管理</h3>
-      <div class="muted" style="margin-bottom:8px;" data-i18n="tpl_hint">雲端共用模板（需登入）。可套用或刪除（刪除僅限 boss/admin）。</div>
-      <div class="toolbar" style="margin:8px 0;">
-        <button class="btn btn-secondary" id="btnTplRefresh" data-i18n="tpl_refresh">重新整理</button>
-        <button class="btn" id="btnTplClose" data-i18n="tpl_close">關閉</button>
-      </div>
-      <div style="max-height:50vh; overflow:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th data-i18n="tpl_col_keys">關鍵條件</th>
-              <th data-i18n="tpl_col_dims">尺寸筆數</th>
-              <th data-i18n="tpl_col_owner">建立者</th>
-              <th data-i18n="tpl_col_time">時間</th>
-              <th data-i18n="tpl_col_actions">操作</th>
-            </tr>
-          </thead>
-          <tbody id="tplTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
