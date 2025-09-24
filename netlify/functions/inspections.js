@@ -4,6 +4,7 @@ exports.handler = async (event) => {
   const ENV = process.env || {};
   const API_KEY   = ENV.JSONBIN_API_KEY;
   const BIN_ID    = ENV.JSONBIN_BIN_ID;
+  const TPL_BIN_ID = ENV.JSONBIN_TPL_BIN_ID;
   const PASSCODE  = ENV.PASSCODE;
 
   // 解析 ACCOUNTS_JSON（舊機制）
@@ -38,6 +39,48 @@ exports.handler = async (event) => {
   // 回傳身份（前端登入檢查用）
   if (event.httpMethod === 'GET' && (qs.auth === '1' || qs.auth === 'true')) {
     return json(200, { ok: true, mode: auth.mode, role: auth.role, user: auth.user || '' });
+  }
+
+
+  // ==== 模板（雲端共用）API ====
+  // GET /api/inspections?template=1        列表（admin/input/viewer）
+  // POST /api/inspections?template=1       新增（admin/input）
+  // DELETE /api/inspections?template=1&id= 刪除（boss+admin）
+  if ((qs.template === '1' || qs.template === 'true')) {
+    if (!TPL_BIN_ID) return json(500, { ok:false, error:'Missing JSONBIN_TPL_BIN_ID' });
+
+    if (event.httpMethod === 'GET') {
+      if (!allow(auth.role, ['admin','input','viewer'])) return json(403, { ok:false, error:'Forbidden' });
+      const g = await jsonbinGet(TPL_BIN_ID, API_KEY);
+      if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail: g.text });
+      const list = listFromJson(g.json);
+      return json(200, { ok:true, templates:list });
+    }
+
+    if (event.httpMethod === 'POST') {
+      if (!allow(auth.role, ['admin','input'])) return json(403, { ok:false, error:'Forbidden' });
+      let body = {}; try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
+      const tpl = body && body.template || null;
+      if (!tpl) return json(400, { ok:false, error:'Missing template' });
+      // sanitize & attach owner
+      tpl.id = tpl.id || ('TPL-' + Date.now());
+      tpl.savedAt = tpl.savedAt || Date.now();
+      tpl.owner = String(auth.user||'');
+      // save (append)
+      const result = await saveTplWithRetry(TPL_BIN_ID, API_KEY, tpl, 5);
+      if (!result.ok) return json(500, { ok:false, error:'Failed to save template', lastStatus: result.lastStatus, lastText: result.lastText });
+      return json(200, { ok:true, id: tpl.id });
+    }
+
+    if (event.httpMethod === 'DELETE') {
+      const id = (qs.id || '').trim();
+      if (!id) return json(400, { ok:false, error:'Missing id' });
+      const isBoss = (String(auth.user || '').toLowerCase() === 'boss') && allow(auth.role, ['admin']);
+      if (!isBoss) return json(403, { ok:false, error:'Forbidden' });
+      const result = await deleteTplWithRetry(TPL_BIN_ID, API_KEY, id, 5);
+      if (!result.ok) return json(result.lastStatus || 500, { ok:false, error:'Failed to delete template', lastStatus: result.lastStatus, lastText: result.lastText });
+      return json(200, { ok:true, deleted: result.deleted ? 1 : 0, id });
+    }
   }
 
   // 診斷資料（admin/viewer）
@@ -243,6 +286,42 @@ async function saveWithRetry(binId, apiKey, record, maxTry){
   }
   return { ok:false, lastStatus, lastText };
 }
+
+async function saveTplWithRetry(binId, apiKey, tpl, maxTry){
+  let tries=0, lastStatus=0, lastText='';
+  while (tries < (maxTry||3)){
+    tries++;
+    const g = await jsonbinGet(binId, apiKey);
+    let list = [];
+    if (g.ok){
+      list = listFromJson(g.json);
+      list.push(tpl);
+    } else {
+      lastStatus = g.status; lastText = g.text;
+    }
+    const p = await jsonbinPut(binId, apiKey, list);
+    if (p.ok) return { ok:true };
+    lastStatus = p.status; lastText = p.text;
+    await new Promise(r => setTimeout(r, 250*tries));
+  }
+  return { ok:false, lastStatus, lastText };
+}
+
+async function deleteTplWithRetry(binId, apiKey, id, maxTry){
+  let tries=0, lastStatus=0, lastText='';
+  while (tries < (maxTry||3)){
+    tries++;
+    const g = await jsonbinGet(binId, apiKey);
+    if (!g.ok){ lastStatus=g.status; lastText=g.text; continue; }
+    const list = listFromJson(g.json).filter(x => x && x.id !== id);
+    const p = await jsonbinPut(binId, apiKey, list);
+    if (p.ok) return { ok:true, deleted:true };
+    lastStatus = p.status; lastText = p.text;
+    await new Promise(r => setTimeout(r, 250*tries));
+  }
+  return { ok:false, lastStatus, lastText };
+}
+
 async function deleteWithRetry(binId, apiKey, id, maxTry){
   let tries=0, lastStatus=0, lastText='';
   while (tries < (maxTry||3)){
