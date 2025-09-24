@@ -7,7 +7,7 @@ exports.handler = async (event) => {
   const PASSCODE  = ENV.PASSCODE;
 
   // 解析 ACCOUNTS_JSON（舊機制）
-  const BASE_ACCOUNTS = parseAccounts(ENV.ACCOUNTS_JSON || ENV.ACCOUNT_JSON);
+  const BASE_ACCOUNTS = parseAccounts(ENV.ACCOUNTS_JSON);
 
   // 依環境變數擴充 input/viewer（新機制）
   const ACCOUNTS = buildAccounts(BASE_ACCOUNTS, {
