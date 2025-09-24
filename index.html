@@ -55,10 +55,19 @@
           <input id="inspector" />
         </div>
         <div>
-          <label data-i18n="labelPassword">密碼（通關碼/密碼）</label>
+          <label data-i18n="labelPassword">密碼（角色密碼）</label>
           <input id="passcode" type="password" />
         </div>
       </div>
+<div class="row">
+  <div>
+    <label data-i18n="labelCompanyPass">公司通關碼（PASSCODE）</label>
+    <input id="companyPasscode" type="password" />
+    <div class="hint muted">例如：AnchorADA（請向公司索取）</div>
+  </div>
+  <div></div>
+</div>
+
       <div class="toolbar">
         <button class="btn btn-primary" id="btnLogin" data-i18n="btnLogin">登入</button>
         <button class="btn btn-ghost" id="btnResetPass" data-i18n="btnReset">清除本機記錄</button>
@@ -263,7 +272,11 @@ let _afterPick = null;
         need_supplier_part:'請輸入供應商與料號',
         appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c3\u8003\u7c21\u5716", sketchHint:"\u4f9b\u6aa2\u9a57\u6642\u5feb\u901f\u53c3\u8003\u4e3b\u8981\u5c3a\u5bf8\u8207\u5f62\u72c0\uff08\u5716\u6a94\uff1afinal_finished.jpg\uff09\u3002"
-      },
+      ,
+        'labelCompanyPass':'公司通關碼（PASSCODE）'
+    ,
+        'login_msg_need2':'請輸入角色密碼與公司通關碼'
+    },
       'zh-CN': { thCode:'代号', phCode:'例如 A1 / H1', thCode:'代号', phCode:'例如 A1 / H1',
 
         title:'现场品检（AKF）',
@@ -299,7 +312,11 @@ let _afterPick = null;
         need_supplier_part:'请输入供应商与料号',
         appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c2\u8003\u7b80\u56fe", sketchHint:"\u4fbf\u4e8e\u68c0\u9a8c\u65f6\u5feb\u901f\u53c2\u8003\u4e3b\u8981\u5c3a\u5bf8\u4e0e\u5f62\u72b6\uff08\u56fe\u6863\uff1afinal_finished.jpg\uff09\u3002"
-      },
+      ,
+        'labelCompanyPass':'公司通关码（PASSCODE）'
+    ,
+        'login_msg_need2':'请输入角色密码与公司通关码'
+    },
       'en': { thCode:'Code', phCode:'e.g. A1 / H1', thCode:'Code', phCode:'e.g. A1 / H1',
         title:'On-site QC (Anchor)',
         loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
@@ -335,7 +352,11 @@ let _afterPick = null;
         save_saving:'Saving...', save_ok:'✅ Saved (check the report page to view/print)', save_fail:'❌ Save failed: ',
         need_supplier_part:'Enter supplier & part no.',
         appearanceTitle:'Appearance', optionDash:'—', optionOK:'O.K', optionNG:'NG'
-      }
+      ,
+        'labelCompanyPass':'Company passcode (PASSCODE)'
+    ,
+        'login_msg_need2':'Enter role password and company passcode'
+    }
     };
 
     // 語言工具
@@ -723,9 +744,9 @@ function onCategoryOrProcessChanged(){
     
 
     // 登入與權限（與後端 inspections.js 相容）
-    async function authCheck(u,p){
+    async function authCheck(u,rolePass,companyPass){
       try{
-        const r = await fetch('/api/inspections?auth=1', { headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p }});
+        const r = await fetch('/api/inspections?auth=1', { headers:{ 'x-user':u, 'x-pass':rolePass, 'x-passcode':companyPass }});
         const t = await r.text(); let j={}; try{ j=JSON.parse(t);}catch{}
         return (r.ok && j && j.ok!==false) ? { ok:true, role:j.role||'input' } : { ok:false };
       }catch{ return { ok:false }; }
@@ -842,7 +863,7 @@ if (!sOpt || !partNo) {
       try{
         const r = await fetch('/api/inspections', {
           method:'POST',
-          headers: { 'Content-Type':'application/json', 'x-user':u, 'x-pass':p, 'x-passcode':p },
+          headers: { 'Content-Type':'application/json', 'x-user':u, 'x-pass':p, 'x-passcode':(localStorage.getItem('qci_company_pass')||'') },
           body: JSON.stringify({ record: rec })
         });
         const ttxt = await r.text(); let j={}; try{ j=JSON.parse(ttxt);}catch{}
@@ -864,7 +885,7 @@ if (!sOpt || !partNo) {
       const p = document.getElementById('passcode').value.trim();
       if (!u || !p){ document.getElementById('loginMsg').textContent = t('login_msg_need'); return; }
       const info = await authCheck(u,p);
-      if (!info.ok){ document.getElementById('loginMsg').textContent = t('login_msg_wrong'); return; }
+      if (!info.ok){ document.getElementById('loginMsg').textContent = t('login_msg_wrong') + (info.msg? (' - ' + info.msg):''); return; }
       localStorage.setItem('qci_user', u);
       localStorage.setItem('qci_pass', p);
       localStorage.setItem('qci_role', info.role || '');
