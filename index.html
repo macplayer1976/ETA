@@ -196,7 +196,8 @@
         <button class="btn btn-primary" id="btnSave" data-i18n="btnSave">儲存到雲端</button>
         <a class="btn btn-secondary" href="report.html" id="btnGoReport" data-i18n="btnGoReport">查看/列印報告</a>
         <button class="btn btn-outline" id="btnSaveTemplate" data-i18n="btnSaveTemplate">預設版型儲存</button>
-        <button class="btn btn-ghost" id="btnManageTemplates" data-i18n="btnTplManage">模板管理</button>
+        <button class="btn" id="btnManageTemplates" data-i18n="btnTplManage">模板管理</button>
+    
       </div>
 
       <p id="msg" class="muted" style="margin-top:8px"></p>
@@ -265,7 +266,23 @@ let _afterPick = null;
         need_supplier_part:'請輸入供應商與料號',
         appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c3\u8003\u7c21\u5716", sketchHint:"\u4f9b\u6aa2\u9a57\u6642\u5feb\u901f\u53c3\u8003\u4e3b\u8981\u5c3a\u5bf8\u8207\u5f62\u72c0\uff08\u5716\u6a94\uff1afinal_finished.jpg\uff09\u3002"
-      , btnTplManage:"模板管理", tpl_title:"模板管理", tpl_hint:"雲端共用模板（需登入）。可套用或刪除（刪除僅限 boss+admin）。", tpl_refresh:"重新整理", tpl_close:"關閉", tpl_apply:"套用", tpl_delete:"刪除", tpl_col_keys:"關鍵條件", tpl_col_dims:"尺寸筆數", tpl_col_owner:"建立者", tpl_col_time:"時間", tpl_col_actions:"操作", tmplSavedCloud:"✅ 已儲存到雲端模板", tpl_needEnv:"⚠️ 未設定 JSONBIN_TPL_BIN_ID，無法使用雲端模板功能" },
+        btnSaveTemplate:'預設版型儲存',
+        btnTplManage:'模板管理',
+        tpl_title:'模板管理',
+        tpl_hint:'雲端共用模板（需登入）。可套用或刪除（刪除僅限 boss/admin）。',
+        tpl_refresh:'重新整理',
+        tpl_close:'關閉',
+        tpl_col_keys:'關鍵條件',
+        tpl_col_dims:'尺寸筆數',
+        tpl_col_owner:'建立者',
+        tpl_col_time:'時間',
+        tpl_col_actions:'操作',
+        tpl_apply:'套用',
+        tpl_delete:'刪除',
+        tpl_empty:'目前沒有模板',
+        tpl_needEnv:'尚未在 Netlify 設定 JSONBIN_TPL_BIN_ID，無法啟用模板雲端共用。',
+        tmplSavedCloud:'已儲存為模板（雲端）。',
+      },
       'zh-CN': { thCode:'代号', phCode:'例如 A1 / H1', thCode:'代号', phCode:'例如 A1 / H1',
 
         title:'现场品检（AKF）',
@@ -301,7 +318,23 @@ let _afterPick = null;
         need_supplier_part:'请输入供应商与料号',
         appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c2\u8003\u7b80\u56fe", sketchHint:"\u4fbf\u4e8e\u68c0\u9a8c\u65f6\u5feb\u901f\u53c2\u8003\u4e3b\u8981\u5c3a\u5bf8\u4e0e\u5f62\u72b6\uff08\u56fe\u6863\uff1afinal_finished.jpg\uff09\u3002"
-      , btnTplManage:"模板管理", tpl_title:"模板管理", tpl_hint:"云端共享模板（需登录）。可套用或删除（删除仅限 boss+admin）。", tpl_refresh:"重新整理", tpl_close:"关闭", tpl_apply:"套用", tpl_delete:"删除", tpl_col_keys:"关键条件", tpl_col_dims:"尺寸笔数", tpl_col_owner:"建立者", tpl_col_time:"时间", tpl_col_actions:"操作", tmplSavedCloud:"✅ 已保存到云端模板", tpl_needEnv:"⚠️ 未设置 JSONBIN_TPL_BIN_ID，无法使用云端模板功能" },
+        btnSaveTemplate:'预设版型保存',
+        btnTplManage:'模板管理',
+        tpl_title:'模板管理',
+        tpl_hint:'云端共享模板（需登录）。可套用或删除（删除仅限 boss/admin）。',
+        tpl_refresh:'重新整理',
+        tpl_close:'关闭',
+        tpl_col_keys:'关键条件',
+        tpl_col_dims:'尺寸笔数',
+        tpl_col_owner:'建立者',
+        tpl_col_time:'时间',
+        tpl_col_actions:'操作',
+        tpl_apply:'套用',
+        tpl_delete:'删除',
+        tpl_empty:'目前没有模板',
+        tpl_needEnv:'尚未在 Netlify 设定 JSONBIN_TPL_BIN_ID，无法启用模板云端共享。',
+        tmplSavedCloud:'已保存为模板（云端）。',
+      },
       'en': { thCode:'Code', phCode:'e.g. A1 / H1', thCode:'Code', phCode:'e.g. A1 / H1',
         title:'On-site QC (Anchor)',
         loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
@@ -337,6 +370,22 @@ let _afterPick = null;
         save_saving:'Saving...', save_ok:'✅ Saved (check the report page to view/print)', save_fail:'❌ Save failed: ',
         need_supplier_part:'Enter supplier & part no.',
         appearanceTitle:'Appearance', optionDash:'—', optionOK:'O.K', optionNG:'NG'
+        btnSaveTemplate:'Save as Template',
+        btnTplManage:'Template Manager',
+        tpl_title:'Template Manager',
+        tpl_hint:'Shared cloud templates (login required). Apply or delete (delete = boss/admin only).',
+        tpl_refresh:'Refresh',
+        tpl_close:'Close',
+        tpl_col_keys:'Key Conditions',
+        tpl_col_dims:'#Dims',
+        tpl_col_owner:'Owner',
+        tpl_col_time:'Time',
+        tpl_col_actions:'Actions',
+        tpl_apply:'Apply',
+        tpl_delete:'Delete',
+        tpl_empty:'No templates yet',
+        tpl_needEnv:'JSONBIN_TPL_BIN_ID is not set on Netlify; cloud templates are disabled.',
+        tmplSavedCloud:'Saved to cloud templates.',
       }
     };
 
@@ -843,7 +892,150 @@ if (!sOpt || !partNo) {
     tbody.addEventListener('change', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
 
     // 綁定儲存
-    document.getElementById('btnSave').addEventListener('click', save);
+    
+    // === Templates: Cloud Save + Manage ===
+    function _authHeaders(){
+      const u = localStorage.getItem('qci_user') || '';
+      const p = localStorage.getItem('qci_pass') || '';
+      return { 'Content-Type':'application/json', 'x-user':u, 'x-pass':p, 'x-passcode':p };
+    }
+    function _keySummary(k){
+      const parts = [];
+      if (k.supplierCode) parts.push('SUP:'+k.supplierCode);
+      if (k.partNo) parts.push('PN:'+k.partNo);
+      if (k.drawingNo) parts.push('DRW:'+k.drawingNo);
+      if (k.spec) parts.push('SPEC:'+k.spec);
+      if (k.process) parts.push('PROC:'+k.process);
+      if (k.material) parts.push('MAT:'+k.material);
+      if (k.category) parts.push('CAT:'+k.category);
+      return parts.join(' | ');
+    }
+    function collectTemplateFromUI(){
+      const sSel = document.getElementById('supplier');
+      const pSel = document.getElementById('process');
+      const keys = {
+        supplierCode: sSel && sSel.value || '',
+        partNo: (document.getElementById('partNo')||{}).value || '',
+        drawingNo: (document.getElementById('drawingNo')||{}).value || '',
+        spec: (document.getElementById('spec')||{}).value || '',
+        process: pSel && pSel.value || '',
+        material: (document.getElementById('material')||{}).value || '',
+        category: (document.getElementById('category')||{}).value || ''
+      };
+      // measures
+      const tbody = document.getElementById('tbody');
+      const trs = Array.from(tbody.querySelectorAll('tr')).filter(tr => !tr.dataset.appearance);
+      const measures = trs.map(tr => ({
+        code: tr.querySelector('.c-code')?.value || '',
+        name: tr.querySelector('.c-name')?.value || '',
+        nominal: parseFloat(tr.querySelector('.c-nom')?.value || '') || '',
+        tolMinus: parseFloat(tr.querySelector('.c-tol-minus')?.value || '') || '',
+        tolPlus: parseFloat(tr.querySelector('.c-tol-plus')?.value || '') || ''
+      }));
+      return { keys, measures };
+    }
+    async function saveTemplateCloud(){
+      const btn = document.getElementById('btnSaveTemplate');
+      const msg = document.getElementById('msg');
+      try{
+        btn.disabled = true; msg.textContent = t('save_saving');
+        const tpl = collectTemplateFromUI();
+        const r = await fetch('/api/inspections?template=1', { method:'POST', headers:_authHeaders(), body: JSON.stringify({ template: tpl }) });
+        const ttxt = await r.text(); let j={}; try{ j=JSON.parse(ttxt);}catch(e){}
+        if (!r.ok || (j && j.error)) throw new Error(j.error || ttxt);
+        msg.textContent = t('tmplSavedCloud');
+      }catch(e){
+        msg.textContent = (e && e.message && e.message.includes('JSONBIN_TPL_BIN_ID')) ? t('tpl_needEnv') : ('Template save failed: ' + (e.message||e));
+      }finally{
+        btn.disabled = false;
+      }
+    }
+    function openTplModal(){
+      const m = document.getElementById('tplModal');
+      if (m) { m.style.display = 'flex'; refreshTplList(); }
+    }
+    function closeTplModal(){
+      const m = document.getElementById('tplModal');
+      if (m) m.style.display = 'none';
+    }
+    async function refreshTplList(){
+      const tbody = document.getElementById('tplTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '<tr><td colspan="5">...</td></tr>';
+      try{
+        const r = await fetch('/api/inspections?template=1', { headers:_authHeaders() });
+        const ttxt = await r.text(); let j={}; try{ j=JSON.parse(ttxt);}catch(e){}
+        if (!r.ok || (j && j.error)) throw new Error(j.error || ttxt);
+        const list = Array.isArray(j.templates) ? j.templates : (Array.isArray(j) ? j : []);
+        if (!list.length){
+          tbody.innerHTML = '<tr><td colspan="5" data-i18n="tpl_empty">'+t('tpl_empty')+'</td></tr>';
+          return;
+        }
+        const role = localStorage.getItem('qci_role') || '';
+        const user = localStorage.getItem('qci_user') || '';
+        tbody.innerHTML = '';
+        for (const it of list){
+          const tr = document.createElement('tr');
+          const dims = Array.isArray(it.measures) ? it.measures.length : 0;
+          const keys = _keySummary(it.keys||{});
+          const time = it.savedAt ? new Date(it.savedAt).toLocaleString() : '';
+          const owner = it.createdBy || '';
+          const tdKeys = document.createElement('td'); tdKeys.textContent = keys;
+          const tdDims = document.createElement('td'); tdDims.textContent = String(dims);
+          const tdOwner = document.createElement('td'); tdOwner.textContent = owner;
+          const tdTime = document.createElement('td'); tdTime.textContent = time;
+          const tdAct = document.createElement('td');
+          const btnApply = document.createElement('button'); btnApply.className='btn btn-secondary'; btnApply.textContent = t('tpl_apply');
+          btnApply.addEventListener('click', ()=>applyTemplateToUI(it));
+          tdAct.appendChild(btnApply);
+          if (role==='admin' || owner===user){
+            const btnDel = document.createElement('button'); btnDel.className='btn'; btnDel.style.marginLeft='6px'; btnDel.textContent = t('tpl_delete');
+            btnDel.addEventListener('click', async()=>{ await deleteTemplateCloud(it.id); refreshTplList(); });
+            tdAct.appendChild(btnDel);
+          }
+          tr.appendChild(tdKeys); tr.appendChild(tdDims); tr.appendChild(tdOwner); tr.appendChild(tdTime); tr.appendChild(tdAct);
+          tbody.appendChild(tr);
+        }
+      }catch(e){
+        tbody.innerHTML = '<tr><td colspan="5">'+ (e.message || e) + '</td></tr>';
+      }
+    }
+    async function deleteTemplateCloud(id){
+      const r = await fetch('/api/inspections?template=1&id='+encodeURIComponent(id), { method:'DELETE', headers:_authHeaders() });
+      const ttxt = await r.text(); let j={}; try{ j=JSON.parse(ttxt);}catch(e){}
+      if (!r.ok || (j && j.error)) throw new Error(j.error || ttxt);
+      return true;
+    }
+    function applyTemplateToUI(tpl){
+      if (!tpl || !tpl.measures) return;
+      const targetCount = Number(tpl.measures.length||0);
+      if (targetCount>0){ ensureMeasureRows(targetCount); }
+      const tbody = document.getElementById('tbody');
+      const trs = Array.from(tbody.querySelectorAll('tr')).filter(tr => !tr.dataset.appearance);
+      trs.forEach((tr, idx)=>{
+        const m = tpl.measures[idx] || {};
+        const set = (sel, val) => { const el = tr.querySelector(sel); if (!el) return; if (!el.value) el.value = (val===0||val)?val:''; };
+        set('.c-code', m.code);
+        set('.c-name', m.name);
+        set('.c-nom', m.nominal);
+        set('.c-tol-minus', m.tolMinus);
+        set('.c-tol-plus', m.tolPlus);
+        updateDecisionForRow(tr);
+      });
+      document.getElementById('msg').textContent = t('appliedTemplate') || '已套用模板';
+    }
+
+    // Bind buttons
+    const _btnSaveTpl = document.getElementById('btnSaveTemplate');
+    if (_btnSaveTpl){ _btnSaveTpl.addEventListener('click', saveTemplateCloud); }
+    const _btnTplMgr = document.getElementById('btnManageTemplates');
+    if (_btnTplMgr){ _btnTplMgr.addEventListener('click', openTplModal); }
+    const _btnTplRefresh = document.getElementById('btnTplRefresh');
+    if (_btnTplRefresh){ _btnTplRefresh.addEventListener('click', refreshTplList); }
+    const _btnTplClose = document.getElementById('btnTplClose');
+    if (_btnTplClose){ _btnTplClose.addEventListener('click', closeTplModal); }
+
+document.getElementById('btnSave').addEventListener('click', save);
 
 
       window.addEventListener('DOMContentLoaded', ()=>{
@@ -860,31 +1052,30 @@ if (!sOpt || !partNo) {
     });
   </script>
 
-<!-- Templates Modal -->
-<div class="modal-backdrop" id="tplModal" style="display:none;">
-  <div class="modal">
-    <h3 data-i18n="tpl_title">模板管理</h3>
-    <div class="muted" style="margin-bottom:8px;" data-i18n="tpl_hint">雲端共用模板（需登入）。可套用或刪除（刪除僅限 boss+admin）。</div>
-    <div class="toolbar" style="margin:8px 0;">
-      <button class="btn btn-secondary" id="btnTplRefresh" data-i18n="tpl_refresh">重新整理</button>
-      <button class="btn" id="btnTplClose" data-i18n="tpl_close">關閉</button>
-    </div>
-    <div style="max-height:50vh; overflow:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th data-i18n="tpl_col_keys">關鍵條件</th>
-            <th data-i18n="tpl_col_dims">尺寸筆數</th>
-            <th data-i18n="tpl_col_owner">建立者</th>
-            <th data-i18n="tpl_col_time">時間</th>
-            <th data-i18n="tpl_col_actions">操作</th>
-          </tr>
-        </thead>
-        <tbody id="tplTableBody"></tbody>
-      </table>
+  <!-- Templates Modal -->
+  <div class="modal-backdrop" id="tplModal" style="display:none;">
+    <div class="modal">
+      <h3 data-i18n="tpl_title">模板管理</h3>
+      <div class="muted" style="margin-bottom:8px;" data-i18n="tpl_hint">雲端共用模板（需登入）。可套用或刪除（刪除僅限 boss/admin）。</div>
+      <div class="toolbar" style="margin:8px 0;">
+        <button class="btn btn-secondary" id="btnTplRefresh" data-i18n="tpl_refresh">重新整理</button>
+        <button class="btn" id="btnTplClose" data-i18n="tpl_close">關閉</button>
+      </div>
+      <div style="max-height:50vh; overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="tpl_col_keys">關鍵條件</th>
+              <th data-i18n="tpl_col_dims">尺寸筆數</th>
+              <th data-i18n="tpl_col_owner">建立者</th>
+              <th data-i18n="tpl_col_time">時間</th>
+              <th data-i18n="tpl_col_actions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tplTableBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
-
 </body>
 </html>
