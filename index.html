@@ -561,24 +561,48 @@ function fillCategorySelect(){
       updateAllDecisions();
     }
 
+    // === New: Template for Material=STEEL & Category=PLUG & Process=PLATING ===
+    function applySteelPlugPlatingTemplate(){
+      // 1) 外觀列 + 代號空白（依需求：外觀代號留空）
+      ensureAppearanceRow();
+      setAppearanceCode('');
+      // 2) 清空既有尺寸列，加入「電鍍膜厚 5um min.」代號 A
+      clearMeasureRows();
+      addMeasureRowWith('A', _i18nText('電鍍膜厚 5um min.', '电镀膜厚 5um min.', 'Plating thickness 5µm min.'));
+      updateAllDecisions();
+    }
+
+    
     function onCategoryOrProcessChanged(){
       const procSel = document.getElementById('process');
       const catSel  = document.getElementById('category');
+      const matSel  = document.getElementById('material');
       const proc = String(procSel && procSel.value || '').toUpperCase();
       const cat  = String(catSel && catSel.value || '').toUpperCase();
+      const mat  = String(matSel && matSel.value || '').toUpperCase();
+
       // 先套用原有 WIRE 規則
       if (proc === 'WIRE'){
         applyWireTemplate();
         return;
       }
-      // 新增規則：產品類別=PLUG 且 製程=FORMING
+
+      // 新增規則：材質=STEEL 且 產品類別=PLUG 且 製程=PLATING
+      if (mat === 'STEEL' && cat === 'PLUG' && proc === 'PLATING'){
+        applySteelPlugPlatingTemplate();
+        return;
+      }
+
+      // 既有規則：產品類別=PLUG 且 製程=FORMING
       if (cat === 'PLUG' && proc === 'FORMING'){
         applyPlugFormingTemplate();
         return;
       }
+
       // 其他情況：維持外觀列與至少一列空白尺寸
       ensureMeasurementTemplate();
     }
+    
 
 // 判定單列 PASS/FAIL（有名目 & 公差 & 至少一筆實測才判）
     function decidePass(nom, lo, hi, measured){
@@ -806,6 +830,12 @@ if (!sOpt || !partNo) {
         _catSel.addEventListener('change', onCategoryOrProcessChanged);
       }
 
+
+      const _matSel = document.getElementById('material');
+      if (_matSel){
+        _matSel.removeEventListener('change', onCategoryOrProcessChanged);
+        _matSel.addEventListener('change', onCategoryOrProcessChanged);
+      }
     // 及時判定：輸入/變更時重新計算 PASS/FAIL
     tbody.addEventListener('input', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
     tbody.addEventListener('change', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
