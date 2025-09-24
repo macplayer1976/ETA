@@ -263,7 +263,7 @@ let _afterPick = null;
         need_supplier_part:'請輸入供應商與料號',
         appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c3\u8003\u7c21\u5716", sketchHint:"\u4f9b\u6aa2\u9a57\u6642\u5feb\u901f\u53c3\u8003\u4e3b\u8981\u5c3a\u5bf8\u8207\u5f62\u72c0\uff08\u5716\u6a94\uff1afinal_finished.jpg\uff09\u3002"
-      },
+      , btnTplManage:"模板管理", tpl_title:"模板管理", tpl_hint:"雲端共用模板（需登入）。可套用或刪除（刪除僅限 boss+admin）。", tpl_refresh:"重新整理", tpl_close:"關閉", tpl_apply:"套用", tpl_delete:"刪除", tpl_col_keys:"關鍵條件", tpl_col_dims:"尺寸筆數", tpl_col_owner:"建立者", tpl_col_time:"時間", tpl_col_actions:"操作", tmplSavedCloud:"✅ 已儲存到雲端模板", tpl_needEnv:"⚠️ 未設定 JSONBIN_TPL_BIN_ID，無法使用雲端模板功能" },
       'zh-CN': { thCode:'代号', phCode:'例如 A1 / H1', thCode:'代号', phCode:'例如 A1 / H1',
 
         title:'现场品检（AKF）',
@@ -299,7 +299,7 @@ let _afterPick = null;
         need_supplier_part:'请输入供应商与料号',
         appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c2\u8003\u7b80\u56fe", sketchHint:"\u4fbf\u4e8e\u68c0\u9a8c\u65f6\u5feb\u901f\u53c2\u8003\u4e3b\u8981\u5c3a\u5bf8\u4e0e\u5f62\u72b6\uff08\u56fe\u6863\uff1afinal_finished.jpg\uff09\u3002"
-      },
+      , btnTplManage:"模板管理", tpl_title:"模板管理", tpl_hint:"云端共享模板（需登录）。可套用或删除（删除仅限 boss+admin）。", tpl_refresh:"重新整理", tpl_close:"关闭", tpl_apply:"套用", tpl_delete:"删除", tpl_col_keys:"关键条件", tpl_col_dims:"尺寸笔数", tpl_col_owner:"建立者", tpl_col_time:"时间", tpl_col_actions:"操作", tmplSavedCloud:"✅ 已保存到云端模板", tpl_needEnv:"⚠️ 未设置 JSONBIN_TPL_BIN_ID，无法使用云端模板功能" },
       'en': { thCode:'Code', phCode:'e.g. A1 / H1', thCode:'Code', phCode:'e.g. A1 / H1',
         title:'On-site QC (Anchor)',
         loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
@@ -857,5 +857,32 @@ if (!sOpt || !partNo) {
       }
     });
   </script>
+
+<!-- Templates Modal -->
+<div class="modal-backdrop" id="tplModal" style="display:none;">
+  <div class="modal">
+    <h3 data-i18n="tpl_title">模板管理</h3>
+    <div class="muted" style="margin-bottom:8px;" data-i18n="tpl_hint">雲端共用模板（需登入）。可套用或刪除（刪除僅限 boss+admin）。</div>
+    <div class="toolbar" style="margin:8px 0;">
+      <button class="btn btn-secondary" id="btnTplRefresh" data-i18n="tpl_refresh">重新整理</button>
+      <button class="btn" id="btnTplClose" data-i18n="tpl_close">關閉</button>
+    </div>
+    <div style="max-height:50vh; overflow:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="tpl_col_keys">關鍵條件</th>
+            <th data-i18n="tpl_col_dims">尺寸筆數</th>
+            <th data-i18n="tpl_col_owner">建立者</th>
+            <th data-i18n="tpl_col_time">時間</th>
+            <th data-i18n="tpl_col_actions">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tplTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
