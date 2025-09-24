@@ -55,19 +55,10 @@
           <input id="inspector" />
         </div>
         <div>
-          <label data-i18n="labelPassword">密碼（角色密碼）</label>
+          <label data-i18n="labelPassword">密碼（通關碼/密碼）</label>
           <input id="passcode" type="password" />
         </div>
       </div>
-<div class="row">
-  <div>
-    <label data-i18n="labelCompanyPass">公司通關碼（PASSCODE）</label>
-    <input id="companyPasscode" type="password" />
-    <div class="hint muted">例如：AnchorADA（請向公司索取）</div>
-  </div>
-  <div></div>
-</div>
-
       <div class="toolbar">
         <button class="btn btn-primary" id="btnLogin" data-i18n="btnLogin">登入</button>
         <button class="btn btn-ghost" id="btnResetPass" data-i18n="btnReset">清除本機記錄</button>
@@ -272,11 +263,7 @@ let _afterPick = null;
         need_supplier_part:'請輸入供應商與料號',
         appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c3\u8003\u7c21\u5716", sketchHint:"\u4f9b\u6aa2\u9a57\u6642\u5feb\u901f\u53c3\u8003\u4e3b\u8981\u5c3a\u5bf8\u8207\u5f62\u72c0\uff08\u5716\u6a94\uff1afinal_finished.jpg\uff09\u3002"
-      ,
-        'labelCompanyPass':'公司通關碼（PASSCODE）'
-    ,
-        'login_msg_need2':'請輸入角色密碼與公司通關碼'
-    },
+      },
       'zh-CN': { thCode:'代号', phCode:'例如 A1 / H1', thCode:'代号', phCode:'例如 A1 / H1',
 
         title:'现场品检（AKF）',
@@ -312,11 +299,7 @@ let _afterPick = null;
         need_supplier_part:'请输入供应商与料号',
         appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c2\u8003\u7b80\u56fe", sketchHint:"\u4fbf\u4e8e\u68c0\u9a8c\u65f6\u5feb\u901f\u53c2\u8003\u4e3b\u8981\u5c3a\u5bf8\u4e0e\u5f62\u72b6\uff08\u56fe\u6863\uff1afinal_finished.jpg\uff09\u3002"
-      ,
-        'labelCompanyPass':'公司通关码（PASSCODE）'
-    ,
-        'login_msg_need2':'请输入角色密码与公司通关码'
-    },
+      },
       'en': { thCode:'Code', phCode:'e.g. A1 / H1', thCode:'Code', phCode:'e.g. A1 / H1',
         title:'On-site QC (Anchor)',
         loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
@@ -352,11 +335,7 @@ let _afterPick = null;
         save_saving:'Saving...', save_ok:'✅ Saved (check the report page to view/print)', save_fail:'❌ Save failed: ',
         need_supplier_part:'Enter supplier & part no.',
         appearanceTitle:'Appearance', optionDash:'—', optionOK:'O.K', optionNG:'NG'
-      ,
-        'labelCompanyPass':'Company passcode (PASSCODE)'
-    ,
-        'login_msg_need2':'Enter role password and company passcode'
-    }
+      }
     };
 
     // 語言工具
@@ -537,82 +516,6 @@ function fillCategorySelect(){
     
 
     // === Auto template for Process ===
-
-// === Data-driven condition → template rules ==========================
-// Helper to localize a label based on current UI language (assumes _i18nText exists).
-// Template actions will:
-//  - ensureAppearanceRow();
-//  - setAppearanceCode(code);
-//  - clearMeasureRows();
-//  - addMeasureRowWith(code, localizedName);
-//  - updateAllDecisions();
-//
-// Conditions compare uppercase of select values.
-const RULES = [
-  // Rule 1: Process = WIRE → 外觀檢查(代號A)、外徑(B)、硬度(HRB)(C)
-  {
-    when: { process: 'WIRE' },
-    template: {
-      appearanceCode: 'A',
-      measures: [
-        { code: 'B', name: ['外徑', '外径', 'Outer diameter'] },
-        { code: 'C', name: ['硬度(HRB)', '硬度(HRB)', 'Hardness (HRB)'] },
-      ]
-    }
-  },
-  // Rule 2: Category = PLUG AND Process = FORMING
-  // → 外觀檢查(代號空白)、大外徑(d1)、小外徑(d2)、角度(a1)、總長(L)
-  {
-    when: { category: 'PLUG', process: 'FORMING' },
-    template: {
-      appearanceCode: '',
-      measures: [
-        { code: 'd1', name: ['大外徑', '大外径', 'Major OD'] },
-        { code: 'd2', name: ['小外徑', '小外径', 'Minor OD'] },
-        { code: 'a1', name: ['角度',   '角度',   'Angle'] },
-        { code: 'L',  name: ['總長',   '总长',   'Overall length'] },
-      ]
-    }
-  },
-  // Rule 3 (新增): Material = STEEL AND Category = PLUG AND Process = PLATING
-  // → 外觀檢查(代號空白)、電鍍膜厚 5um min.（代號A）
-  {
-    when: { material: 'STEEL', category: 'PLUG', process: 'PLATING' },
-    template: {
-      appearanceCode: '',
-      measures: [
-        { code: 'A', name: ['電鍍膜厚 5um min.', '电镀膜厚 5um min.', 'Plating thickness 5 µm min.'] },
-      ]
-    }
-  },
-];
-
-function applyTemplateBySpec(spec){
-  // 1) Appearance
-  ensureAppearanceRow();
-  setAppearanceCode(String(spec.appearanceCode ?? ''));
-  // 2) Measures
-  clearMeasureRows();
-  (spec.measures || []).forEach(m => {
-    addMeasureRowWith(String(m.code), _i18nText(m.name[0], m.name[1], m.name[2]));
-  });
-  updateAllDecisions();
-}
-
-function findMatchingRule({material, category, process}){
-  const mat = String(material||'').toUpperCase();
-  const cat = String(category||'').toUpperCase();
-  const pro = String(process ||'').toUpperCase();
-  return RULES.find(r => {
-    const w = r.when || {};
-    const okMat = !w.material || w.material === mat;
-    const okCat = !w.category || w.category === cat;
-    const okPro = !w.process  || w.process  === pro;
-    return okMat && okCat && okPro;
-  });
-}
-// =====================================================================
-
     function _i18nText(keyZhTW, keyZhCN, keyEN){
       const lang = getLang() || 'zh-TW';
       if (lang === 'en') return keyEN;
@@ -658,41 +561,16 @@ function findMatchingRule({material, category, process}){
       updateAllDecisions();
     }
 
-    
-
-// === New: Template for Material=STEEL & Category=PLUG & Process=PLATING ===
-function applySteelPlugPlatingTemplate(){
-  // 1) 外觀列 + 代號空白（依需求：外觀代號留空）
-  ensureAppearanceRow();
-  setAppearanceCode('');
-  // 2) 清空既有尺寸列，加入「電鍍膜厚 5um min.」（代號 A）
-  clearMeasureRows();
-  addMeasureRowWith('A', _i18nText('電鍍膜厚 5um min.', '电镀膜厚 5um min.', 'Plating thickness 5 µm min.'));
-  updateAllDecisions();
-}
-
-function onCategoryOrProcessChanged(){
-  const procSel = document.getElementById('process');
-  const catSel  = document.getElementById('category');
-  const matSel  = document.getElementById('material');
-  const proc = String(procSel && procSel.value || '').toUpperCase();
-  const cat  = String(catSel  && catSel.value  || '').toUpperCase();
-  const mat  = String(matSel  && matSel.value  || '').toUpperCase();
-
-  const rule = findMatchingRule({ material: mat, category: cat, process: proc });
-  if (rule){
-    applyTemplateBySpec(rule.template || {});
-    return;
-  }
-
-  // 預設：保留外觀列，清空量測列後新增一列空白尺寸
-  ensureAppearanceRow();
-  setAppearanceCode('');
-  clearMeasureRows();
-  addMeasureRowWith('', _i18nText('尺寸/項目', '尺寸/项目', 'Dimension/Item'));
-  updateAllDecisions();
-}
-
+    function onCategoryOrProcessChanged(){
+      const procSel = document.getElementById('process');
+      const catSel  = document.getElementById('category');
+      const proc = String(procSel && procSel.value || '').toUpperCase();
+      const cat  = String(catSel && catSel.value || '').toUpperCase();
+      // 先套用原有 WIRE 規則
+      if (proc === 'WIRE'){
+        applyWireTemplate();
+        return;
+      }
       // 新增規則：產品類別=PLUG 且 製程=FORMING
       if (cat === 'PLUG' && proc === 'FORMING'){
         applyPlugFormingTemplate();
@@ -744,9 +622,9 @@ function onCategoryOrProcessChanged(){
     
 
     // 登入與權限（與後端 inspections.js 相容）
-    async function authCheck(u,rolePass,companyPass){
+    async function authCheck(u,p){
       try{
-        const r = await fetch('/api/inspections?auth=1', { headers:{ 'x-user':u, 'x-pass':rolePass, 'x-passcode':companyPass }});
+        const r = await fetch('/api/inspections?auth=1', { headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p }});
         const t = await r.text(); let j={}; try{ j=JSON.parse(t);}catch{}
         return (r.ok && j && j.ok!==false) ? { ok:true, role:j.role||'input' } : { ok:false };
       }catch{ return { ok:false }; }
@@ -863,7 +741,7 @@ if (!sOpt || !partNo) {
       try{
         const r = await fetch('/api/inspections', {
           method:'POST',
-          headers: { 'Content-Type':'application/json', 'x-user':u, 'x-pass':p, 'x-passcode':(localStorage.getItem('qci_company_pass')||'') },
+          headers: { 'Content-Type':'application/json', 'x-user':u, 'x-pass':p, 'x-passcode':p },
           body: JSON.stringify({ record: rec })
         });
         const ttxt = await r.text(); let j={}; try{ j=JSON.parse(ttxt);}catch{}
@@ -885,7 +763,7 @@ if (!sOpt || !partNo) {
       const p = document.getElementById('passcode').value.trim();
       if (!u || !p){ document.getElementById('loginMsg').textContent = t('login_msg_need'); return; }
       const info = await authCheck(u,p);
-      if (!info.ok){ document.getElementById('loginMsg').textContent = t('login_msg_wrong') + (info.msg? (' - ' + info.msg):''); return; }
+      if (!info.ok){ document.getElementById('loginMsg').textContent = t('login_msg_wrong'); return; }
       localStorage.setItem('qci_user', u);
       localStorage.setItem('qci_pass', p);
       localStorage.setItem('qci_role', info.role || '');
@@ -928,13 +806,7 @@ if (!sOpt || !partNo) {
         _catSel.addEventListener('change', onCategoryOrProcessChanged);
       }
 
-const _matSel = document.getElementById('material');
-if (_matSel){
-  _matSel.removeEventListener('change', onCategoryOrProcessChanged);
-  _matSel.addEventListener('change', onCategoryOrProcessChanged);
-}
-
-// 及時判定：輸入/變更時重新計算 PASS/FAIL
+    // 及時判定：輸入/變更時重新計算 PASS/FAIL
     tbody.addEventListener('input', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
     tbody.addEventListener('change', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
 
