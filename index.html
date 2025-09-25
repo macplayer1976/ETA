@@ -190,6 +190,7 @@
       <div class="toolbar">
         <button class="btn btn-primary" id="btnSave" data-i18n="btnSave">儲存到雲端</button>
         <a class="btn btn-secondary" href="report.html" id="btnGoReport" data-i18n="btnGoReport">查看/列印報告</a>
+        <button class="btn btn-ghost" id="btnSaveTpl" data-i18n="btnSaveTpl">預設版型儲存</button>
       </div>
 
       <p id="msg" class="muted" style="margin-top:8px"></p>
@@ -257,8 +258,9 @@ let _afterPick = null;
         save_saving:'儲存中...', save_ok:'✅ 已儲存到雲端（可到報告頁查看/列印）', save_fail:'❌ 儲存失敗：',
         need_supplier_part:'請輸入供應商與料號',
         appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
-        sketchTitle:"\u53c3\u8003\u7c21\u5716", sketchHint:"\u4f9b\u6aa2\u9a57\u6642\u5feb\u901f\u53c3\u8003\u4e3b\u8981\u5c3a\u5bf8\u8207\u5f62\u72c0\uff08\u5716\u6a94\uff1afinal_finished.jpg\uff09\u3002"
-      },
+        sketchTitle:"\u53c3\u8003\u7c21\u5716", sketchHint:"\u4f9b\u6aa2\u9a57\u6642\u5feb\u901f\u53c3\u8003\u4e3b\u8981\u5c3a\u5bf8\u8207\u5f62\u72c0\uff08\u5716\u6a94\uff1afinal_finished.jpg\uff09\u3002",
+          btnSaveTpl:"預設版型儲存", tplSaving:"儲存版型中…", tplSaved:"✅ 已儲存為預設版型", tplFail:"❌ 版型儲存失敗：", tplApplied:"✅ 已自動套用預設版型", tplNoMatch:"（尚未找到可套用的預設版型）"
+        },
       'zh-CN': { thCode:'代号', phCode:'例如 A1 / H1', thCode:'代号', phCode:'例如 A1 / H1',
 
         title:'现场品检（AKF）',
@@ -293,8 +295,9 @@ let _afterPick = null;
         save_saving:'保存中...', save_ok:'✅ 已保存到云端（可去报告页查看/打印）', save_fail:'❌ 保存失败：',
         need_supplier_part:'请输入供应商与料号',
         appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
-        sketchTitle:"\u53c2\u8003\u7b80\u56fe", sketchHint:"\u4fbf\u4e8e\u68c0\u9a8c\u65f6\u5feb\u901f\u53c2\u8003\u4e3b\u8981\u5c3a\u5bf8\u4e0e\u5f62\u72b6\uff08\u56fe\u6863\uff1afinal_finished.jpg\uff09\u3002"
-      },
+        sketchTitle:"\u53c2\u8003\u7b80\u56fe", sketchHint:"\u4fbf\u4e8e\u68c0\u9a8c\u65f6\u5feb\u901f\u53c2\u8003\u4e3b\u8981\u5c3a\u5bf8\u4e0e\u5f62\u72b6\uff08\u56fe\u6863\uff1afinal_finished.jpg\uff09\u3002",
+          btnSaveTpl:"保存预设版型", tplSaving:"正在保存…", tplSaved:"✅ 已保存为预设版型", tplFail:"❌ 版型保存失败：", tplApplied:"✅ 已自动套用预设版型", tplNoMatch:"（尚未匹配到预设版型）"
+        },
       'en': { thCode:'Code', phCode:'e.g. A1 / H1', thCode:'Code', phCode:'e.g. A1 / H1',
         title:'On-site QC (Anchor)',
         loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
@@ -329,8 +332,9 @@ let _afterPick = null;
         login_msg_need:'Please enter account & password', login_msg_auto:'Auto checking...', login_msg_wrong:'❌ Wrong account or password', login_verifying:'Verifying...',
         save_saving:'Saving...', save_ok:'✅ Saved (check the report page to view/print)', save_fail:'❌ Save failed: ',
         need_supplier_part:'Enter supplier & part no.',
-        appearanceTitle:'Appearance', optionDash:'—', optionOK:'O.K', optionNG:'NG'
-      }
+        appearanceTitle:'Appearance', optionDash:'—', optionOK:'O.K', optionNG:'NG',
+          btnSaveTpl:"Save as Template", tplSaving:"Saving template…", tplSaved:"✅ Template saved", tplFail:"❌ Save template failed: ", tplApplied:"✅ Applied template", tplNoMatch:"(No template matched yet)"
+        }
     };
 
     // 語言工具
@@ -695,6 +699,8 @@ if (!sOpt || !partNo) {
       document.getElementById('loginMsg').textContent = '';
       showByRole(info.role);
       ensureMeasurementTemplate();
+      try{ await loadTemplates(); }catch{}
+      tryAutoApplyTemplate();
     }
 
     // 初始外觀 + 至少 1 列尺寸
@@ -717,11 +723,204 @@ if (!sOpt || !partNo) {
     document.getElementById('btnRemove').addEventListener('click', removeLastMeasureRow);
     document.getElementById('btnClearRows').addEventListener('click', ()=>{ clearMeasureRows(); });
 
+      ;['partNo','drawingNo','material','spec','category','process','orderNo','lotNo','revision','notes'].forEach(id=>{
+        const el = document.getElementById(id);
+        if (el){ el.addEventListener('input', debouncedTryAutoApply); el.addEventListener('change', debouncedTryAutoApply); }
+      });
+      const selSupplier = document.getElementById('supplier');
+      if (selSupplier){ selSupplier.addEventListener('change', debouncedTryAutoApply); }
+
+
     
     // 及時判定：輸入/變更時重新計算 PASS/FAIL
     tbody.addEventListener('input', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
     tbody.addEventListener('change', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
 
+    
+    // ====== 預設版型：儲存與自動套用 ======
+    let _tplCache = [];
+
+    function norm(s){ return String(s||'').trim().toUpperCase(); }
+    function getKeyFromForm(){
+      const supSel = document.getElementById('supplier');
+      const supplier = supSel && supSel.value ? supSel.value : (supSel && supSel.options[supSel.selectedIndex] ? supSel.options[supSel.selectedIndex].value : '');
+      return {
+        supplier: supplier,
+        partNo: document.getElementById('partNo').value,
+        drawingNo: document.getElementById('drawingNo').value,
+        material: document.getElementById('material').value,
+        spec: document.getElementById('spec').value,
+        category: document.getElementById('category').value,
+        process: document.getElementById('process').value
+      };
+    }
+
+    function buildTemplateForSave(){
+      const key = getKeyFromForm();
+      const supSel = document.getElementById('supplier');
+      const supplierText = supSel && supSel.value ? supSel.value : '';
+      const tpl = {
+        key, 
+        basic: { supplier: supplierText },
+        part: {
+          partNo: document.getElementById('partNo').value,
+          drawingNo: document.getElementById('drawingNo').value,
+          material: document.getElementById('material').value,
+          spec: document.getElementById('spec').value,
+          category: document.getElementById('category').value,
+          process: document.getElementById('process').value
+        },
+        rows: []
+      };
+      // appearance row
+      const ap = document.querySelector('tr[data-type="appearance"]');
+      if (ap) tpl.rows.push({ appearance:true });
+      // dimension definitions
+      document.querySelectorAll('#tbody tr[data-type="measure"]').forEach(tr => {
+        const get = sel => (tr.querySelector(sel)?.value || '').trim();
+        const row = {
+          code: get('.code'),
+          item: get('.name'),
+          nominal: get('.nom'),
+          tolMinus: get('.lo'),
+          tolPlus: get('.hi')
+        };
+        // 如果整列皆空，略過
+        if (row.code || row.item || row.nominal || row.tolMinus || row.tolPlus){
+          tpl.rows.push(row);
+        }
+      });
+      return tpl;
+    }
+
+    async function saveTemplate(){
+      const u = localStorage.getItem('qci_user') || '';
+      const p = localStorage.getItem('qci_pass') || '';
+      if (!u || !p){ alert(t('login_msg_need')); return; }
+      const btn = document.getElementById('btnSaveTpl');
+      const msg = document.getElementById('msg');
+      btn.disabled = true; msg.textContent = t('tplSaving');
+      try{
+        const body = { template: buildTemplateForSave() };
+        const r = await fetch('/api/inspections?template=1', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'x-user':u, 'x-pass':p, 'x-passcode':p },
+          body: JSON.stringify(body)
+        });
+        const txt = await r.text(); let j={}; try{ j = JSON.parse(txt);}catch{}
+        if (!r.ok || (j && j.error)) throw new Error(j.error || txt);
+        msg.textContent = t('tplSaved');
+        // 重新載入快取
+        try{ await loadTemplates(); }catch{}
+      }catch(e){
+        msg.textContent = t('tplFail') + (e.message || e);
+      }finally{
+        btn.disabled = false;
+      }
+    }
+
+    async function loadTemplates(){
+      const u = localStorage.getItem('qci_user') || '';
+      const p = localStorage.getItem('qci_pass') || '';
+      if (!u || !p) return;
+      try{
+        const r = await fetch('/api/inspections?templates=1', { headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p } });
+        const txt = await r.text(); let j=[]; try{ j = JSON.parse(txt);}catch{}
+        _tplCache = Array.isArray(j) ? j : (j.records || j.record || []);
+      }catch{ _tplCache = []; }
+    }
+
+    function scoreTemplate(tpl, key){
+      // 計算符合欄位數（至少 2 項才套用，避免誤判）
+      const fields = ['supplier','partNo','drawingNo','material','spec','category','process'];
+      let need = 0, hit = 0;
+      for(const f of fields){
+        const tv = norm(tpl?.key?.[f] || '');
+        if (!tv) continue;
+        need++;
+        const kv = norm(key[f] || '');
+        if (!kv) continue;
+        if (kv === tv || kv.includes(tv) || tv.includes(kv)) hit++;
+      }
+      return { need, hit, score: hit };
+    }
+
+    function applyTemplate(tpl){
+      if (!tpl) return false;
+      // 填基本與料件資訊（只覆蓋空白）
+      const setIfEmpty = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if ((el.tagName==='SELECT' ? el.value : el.value).trim() === '' && String(val||'').trim()!==''){
+          el.value = val;
+        }
+      };
+      const p = tpl.part || {};
+      setIfEmpty('partNo', p.partNo);
+      setIfEmpty('drawingNo', p.drawingNo);
+      setIfEmpty('material', p.material);
+      setIfEmpty('spec', p.spec);
+      setIfEmpty('category', p.category);
+      setIfEmpty('process', p.process);
+
+      // 檢查目前是否已有尺寸列
+      const tbody = document.getElementById('tbody');
+      const hasMeasure = tbody.querySelector('tr[data-type="measure"]');
+      if (!hasMeasure){
+        // 清空（保留外觀列），然後根據模板建立
+        clearMeasureRows(); ensureAppearanceRow();
+        (tpl.rows||[]).forEach(r => {
+          if (r.appearance){
+            ensureAppearanceRow();
+          }else{
+            // 新增一列尺寸定義
+            addMeasureRow();
+            const last = tbody.querySelector('tr[data-type="measure"]:last-child');
+            if (last){
+              if (r.code) last.querySelector('.code').value = r.code;
+              if (r.item) last.querySelector('.name').value = r.item;
+              if (r.nominal) last.querySelector('.nom').value = r.nominal;
+              if (r.tolMinus) last.querySelector('.lo').value = r.tolMinus;
+              if (r.tolPlus) last.querySelector('.hi').value = r.tolPlus;
+              updateDecisionForRow(last);
+            }
+          }
+        });
+        updateAllDecisions();
+      }
+      return true;
+    }
+
+    let _tplAppliedOnce = false;
+    function tryAutoApplyTemplate(){
+      if (!_tplCache || !_tplCache.length) return;
+      const key = getKeyFromForm();
+      let best = null, bestScore = -1, bestNeed = 0;
+      for(const tpl of _tplCache){
+        const s = scoreTemplate(tpl, key);
+        if (s.score > bestScore){ best = tpl; bestScore = s.score; bestNeed = s.need; }
+      }
+      const msg = document.getElementById('msg');
+      if (best && (bestScore >= 2 || bestNeed <= 1 && bestScore >=1)){
+        applyTemplate(best);
+        if (!_tplAppliedOnce){
+          msg.textContent = t('tplApplied');
+          _tplAppliedOnce = true;
+        }
+      }else{
+        if (!_tplAppliedOnce){
+          msg.textContent = t('tplNoMatch');
+        }
+      }
+    }
+
+    // 簡單 debounce，避免每個 keystroke 都觸發
+    function debounce(fn, wait){
+      let timer=null;
+      return function(){ clearTimeout(timer); timer = setTimeout(fn, wait); };
+    }
+    const debouncedTryAutoApply = debounce(tryAutoApplyTemplate, 300);
+    
     // 綁定儲存
     document.getElementById('btnSave').addEventListener('click', save);
 window.addEventListener('DOMContentLoaded', ()=>{
@@ -733,6 +932,8 @@ window.addEventListener('DOMContentLoaded', ()=>{
       if (u && p){
         showByRole(localStorage.getItem('qci_role') || 'input');
         ensureMeasurementTemplate();
+        try{ await loadTemplates(); }catch{}
+        tryAutoApplyTemplate();
       }
     });
   </script>
