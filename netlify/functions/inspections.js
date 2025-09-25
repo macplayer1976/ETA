@@ -62,16 +62,6 @@ exports.handler = async (event) => {
     return json(200, { ok:true, repaired:list.length });
   }
 
-  
-// 列出預設版型（admin/input/viewer）
-if (event.httpMethod === 'GET' && (qs.templates === '1' || qs.templates === 'true')) {
-  if (!allow(auth.role, ['admin','input','viewer'])) return json(403, { ok:false, error:'Forbidden' });
-  const g = await jsonbinGet(BIN_ID, API_KEY);
-  if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
-  const list = listFromJson(g.json).filter(x => x && String(x.kind||'') === 'template');
-  return json(200, list);
-}
-
   // 讀清單（admin/viewer）
   if (event.httpMethod === 'GET') {
     if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error:'Forbidden' });
@@ -231,14 +221,10 @@ function sanitizeRecord(r, who){
       notes: r.notes || '',
       appearance: Array.isArray(r.appearance) ? r.appearance : [],
       measurements: Array.isArray(r.measurements) ? r.measurements : [],
-      overallResult: r.overallResult || '',
-      kind: r.kind || 'record',
-      templateKey: r.templateKey || '',
-      templateMeta: r.templateMeta || null
-    }; 
+      overallResult: r.overallResult || ''
+    };
   }catch{ return r; }
 }
-
 
 /* ======= 儲存/刪除（重試） ======= */
 async function saveWithRetry(binId, apiKey, record, maxTry){
