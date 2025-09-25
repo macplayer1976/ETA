@@ -843,10 +843,12 @@ if (!sOpt || !partNo) {
 
     function applyTemplate(tpl){
       if (!tpl) return false;
+      // 填基本與料件資訊（只覆蓋空白）
       const setIfEmpty = (id, val) => {
         const el = document.getElementById(id);
         if (!el) return;
-        if ((el.tagName==='SELECT' ? el.value : el.value).trim() === '' && String(val||'').trim()!==''){
+        const cur = (el.tagName==='SELECT' ? el.value : el.value).trim();
+        if (cur === '' && String(val||'').trim()!==''){
           el.value = val;
         }
       };
@@ -858,11 +860,18 @@ if (!sOpt || !partNo) {
       setIfEmpty('category', p.category);
       setIfEmpty('process', p.process);
 
+      // 若目前尚未輸入任何尺寸定義（只有空白列），就以模板建立尺寸列
       const tbody = document.getElementById('tbody');
-      const hasMeasure = tbody.querySelector('tr[data-type="measure"]');
-      if (!hasMeasure){
+      const rows = Array.from(tbody.querySelectorAll('tr[data-type="measure"]'));
+      const hasAnyDefinition = rows.some(tr => {
+        const get = sel => (tr.querySelector(sel)?.value || '').trim();
+        return get('.code') || get('.name') || get('.nom') || get('.lo') || get('.hi');
+      });
+
+      if (rows.length === 0 || !hasAnyDefinition){
+        // 清空（保留外觀列），再依模板建立定義
         clearMeasureRows(); ensureAppearanceRow();
-        (tpl.rows||[]).forEach(r => {
+        (tpl.rows || []).forEach(r => {
           if (r.appearance){
             ensureAppearanceRow();
           }else{
