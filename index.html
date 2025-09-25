@@ -190,6 +190,7 @@
       <div class="toolbar">
         <button class="btn btn-primary" id="btnSave" data-i18n="btnSave">儲存到雲端</button>
         <a class="btn btn-secondary" href="report.html" id="btnGoReport" data-i18n="btnGoReport">查看/列印報告</a>
+<button class="btn btn-secondary" id="btnSaveTpl" data-i18n="btnSaveTpl">預設版型儲存</button>
       </div>
 
       <p id="msg" class="muted" style="margin-top:8px"></p>
@@ -224,7 +225,7 @@ let _afterPick = null;
 /* ============ I18N 字典（補上 labelProcess，避免顯示 key 本身） ============ */
     const I18N = {
       'zh-TW': {
-          btnSaveTpl: '預設版型儲存', tpl_saving:'儲存預設版型中…', tpl_saved_ok:'✅ 預設版型已儲存。', tpl_saved_fail:'❌ 預設版型儲存失敗：', tpl_applied:'🧩 已自動套用預設版型。',
+btnSaveTpl: '預設版型儲存', tpl_saving:'儲存預設版型中…', tpl_saved_ok:'✅ 預設版型已儲存。', tpl_saved_fail:'❌ 預設版型儲存失敗：', tpl_applied:'🧩 已自動套用預設版型。',
 
         title:'現場品檢（AKF）',
         loginPrompt:'請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。',
@@ -252,33 +253,28 @@ let _afterPick = null;
         langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：',
         phAccount:'例如：boss / work1 / QC1', phPassword:'例如：admin*** / in*** / view***',
         phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸穩定/外觀無瑕疵',
-        '項目/尺寸名稱':'例：頭部厚度', phCode:'例如 A1 / H1', phCode:'例如 A1 / H1', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
+        '項目/尺寸名稱':'例：頭部厚度', phCode:'例如 A1 / H1', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
         phM1:'實測1', phM2:'實測2', phM3:'實測3', phM4:'實測4', phM5:'實測5',
         login_msg_need:'請輸入帳號與密碼', login_msg_auto:'自動驗證中...', login_msg_wrong:'❌ 帳號或密碼錯誤', login_verifying:'驗證中...',
         save_saving:'儲存中...', save_ok:'✅ 已儲存到雲端（可到報告頁查看/列印）', save_fail:'❌ 儲存失敗：',
         need_supplier_part:'請輸入供應商與料號',
         appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c3\u8003\u7c21\u5716", sketchHint:"\u4f9b\u6aa2\u9a57\u6642\u5feb\u901f\u53c3\u8003\u4e3b\u8981\u5c3a\u5bf8\u8207\u5f62\u72c0\uff08\u5716\u6a94\uff1afinal_finished.jpg\uff09\u3002"
-      },
+},
       'zh-CN': {
-          btnSaveTpl: '预设版型保存', tpl_saving:'正在保存预设版型…', tpl_saved_ok:'✅ 预设版型已保存。', tpl_saved_fail:'❌ 保存预设版型失败：', tpl_applied:'🧩 已自动套用预设版型。', thCode:'代号', phCode:'例如 A1 / H1', thCode:'代号', phCode:'例如 A1 / H1',
+btnSaveTpl: '预设版型保存', tpl_saving:'正在保存预设版型…', tpl_saved_ok:'✅ 预设版型已保存。', tpl_saved_fail:'❌ 保存预设版型失败：', tpl_applied:'🧩 已自动套用预设版型。',
 
         title:'现场品检（AKF）',
         loginPrompt:'请输入「账号（检验人员）」与「密码（通关码/密码）」。',
         labelAccount:'账号（检验人员）', labelPassword:'密码（通关码/密码）',
         btnLogin:'登录', btnReset:'清除本机记录', btnHealth:'健康检查',
         labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)',
-        labelRevision:'版次 (Revision)', labelProcess:'制程 (Process)', labelNotes:'备注', labelOrderNo:'订单号码', labelLotNo:'生产批号', labelMaterial:'材质', labelSpec:'规格', labelCategory:'产品类别',
+        labelRevision:'版次 (Revision)', labelProcess:'制程 (Process)', labelNotes:'备注',
         labelOrderNo:'訂單號碼',
         labelLotNo:'生產批號',
         labelMaterial:'材質',
         labelSpec:'規格',
         labelCategory:'產品類別',
-        phOrderNo:'例如：PO12345',
-        phLotNo:'例如：2025-09-A',
-        phMaterial:'例如：SCM435',
-        phSpec:'例如：M8 x 30',
-        phCategory:'例如：螺栓',
         sectionTitle:'尺寸与外观检验',
         hintAppearance:'第 <strong>1</strong> 行为 <strong>外观检查</strong>（可留空）；第 <strong>2</strong> 行开始为尺寸量测。',
         thItem:'项目 / 尺寸名称', thCode:'代號', thNominal:'标准值', thTolMinus:'下限公差', thTolPlus:'上限公差',
@@ -296,15 +292,15 @@ let _afterPick = null;
         need_supplier_part:'请输入供应商与料号',
         appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
         sketchTitle:"\u53c2\u8003\u7b80\u56fe", sketchHint:"\u4fbf\u4e8e\u68c0\u9a8c\u65f6\u5feb\u901f\u53c2\u8003\u4e3b\u8981\u5c3a\u5bf8\u4e0e\u5f62\u72b6\uff08\u56fe\u6863\uff1afinal_finished.jpg\uff09\u3002"
-      },
+},
       'en': {
-          btnSaveTpl: 'Save as Template', tpl_saving:'Saving template…', tpl_saved_ok:'✅ Template saved.', tpl_saved_fail:'❌ Failed to save template: ', tpl_applied:'🧩 Applied template.', thCode:'Code', phCode:'e.g. A1 / H1', thCode:'Code', phCode:'e.g. A1 / H1',
+btnSaveTpl: 'Save as Template', tpl_saving:'Saving template…', tpl_saved_ok:'✅ Template saved.', tpl_saved_fail:'❌ Failed to save template: ', tpl_applied:'🧩 Applied template.', phCode:'e.g. A1 / H1',
         title:'On-site QC (Anchor)',
         loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
         labelAccount:'Account (Inspector)', labelPassword:'Password',
         btnLogin:'Sign in', btnReset:'Clear local data', btnHealth:'Health Check',
         labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.',
-        labelRevision:'Revision', labelProcess:'Process', labelNotes:'Notes', labelOrderNo:'Order No.', labelLotNo:'Lot No.', labelMaterial:'Material', labelSpec:'Spec', labelCategory:'Product Category',
+        labelRevision:'Revision', labelProcess:'Process', labelNotes:'Notes',
         labelOrderNo:'訂單號碼',
         labelLotNo:'生產批號',
         labelMaterial:'材質',
@@ -323,7 +319,8 @@ let _afterPick = null;
         btnSave:'Save to cloud', btnGoReport:'View/Print Reports',
         viewOnlyTip:'Your role is <strong>viewer</strong> (view/print only). Go to <a href="report.html">Reports</a>.',
         langTitle:'Choose language', langHint:'Select UI language:',
-        sketchTitle:'Reference Sketch', sketchHint:'For quick reference to key dimensions and shapes (file: {file}).',
+        sketchTitle:'Reference Sketch', sketchHint:'For quick reference to key dimensions and shapes (file: {file
+}).',
 
         phAccount:'e.g. boss / work1 / QC1', phPassword:'e.g. admin*** / in*** / view***',
         phSupplier:'e.g. Anchor / AKF', phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6', phRevision:'e.g. Rev.B', phNotes:'e.g. Dimensions stable / No defects', phOrderNo:'e.g. PO12345', phLotNo:'e.g. 2025-09-A', phMaterial:'e.g. SCM435', phSpec:'e.g. M8 x 30', phCategory:'e.g. Bolt',
@@ -697,6 +694,8 @@ if (!sOpt || !partNo) {
       localStorage.setItem('qci_role', info.role || '');
       document.getElementById('loginMsg').textContent = '';
       showByRole(info.role);
+      bindAutoTplListeners();
+      tryAutoApplyTemplate();
       ensureMeasurementTemplate();
       bindAutoTplListeners();
       tryAutoApplyTemplate();
@@ -720,6 +719,7 @@ if (!sOpt || !partNo) {
     document.getElementById('btnLang2').addEventListener('click', ()=>{ _afterPick = applyI18n; openLangModal(); });
     document.getElementById('btnAdd').addEventListener('click', addMeasureRow);
     const _btnTpl = document.getElementById('btnSaveTpl'); if (_btnTpl) _btnTpl.addEventListener('click', saveTemplate);
+const _btnTpl = document.getElementById('btnSaveTpl'); if (_btnTpl) _btnTpl.addEventListener('click', saveTemplate);
     document.getElementById('btnRemove').addEventListener('click', removeLastMeasureRow);
     document.getElementById('btnClearRows').addEventListener('click', ()=>{ clearMeasureRows(); });
 
@@ -920,6 +920,8 @@ function bindAutoTplListeners(){
     // 及時判定：輸入/變更時重新計算 PASS/FAIL
     tbody.addEventListener('input', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
     tbody.addEventListener('change', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
+    bindAutoTplListeners();
+    tryAutoApplyTemplate();
     bindAutoTplListeners();
     tryAutoApplyTemplate();
 
