@@ -14,33 +14,20 @@
     table { width: 100%; border-collapse: collapse; margin-top: 12px; }
     th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; vertical-align: top; }
     th { background: #f7f7f7; }
-    .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
-    .pass { background: #e7f7ec; color: #116329; }
-    .fail { background: #fde8e8; color: #c02020; }
     .btn { padding: 12px 16px; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; }
-    .btn-primary { background: #2563eb; color: white; }
-    .btn-secondary { background: #111827; color: white; }
-    .btn-ghost { background: #f3f4f6; color:#111827; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-secondary { background: #111827; color: #fff; }
+    .btn-ghost { background: #f3f4f6; color: #111827; }
     .muted { color: #6b7280; font-size: 13px; }
-    .error { color: #b91c1c; }
     .hidden { display:none !important; }
     .toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
     a.btn { text-decoration: none; display:inline-block; }
-    .hint { margin: 6px 0 0; color:#6b7280; font-size:13px; }
     td.disabled input { background:#fafafa; color:#9ca3af; }
-    /* 語言選擇彈窗 */
-    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; z-index:9999; }
-    .modal { background:#fff; border-radius:12px; padding:16px; width: min(92vw, 420px); box-shadow:0 10px 30px rgba(0,0,0,.18); }
-    .modal h3 { margin:0 0 8px 0; }
-    .modal .grid { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; margin-top:8px; }
-  
-    /* 參考簡圖區 */
     .sketch-box { margin: 12px 0 6px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 10px; background:#f9fafb; }
     .sketch-box h3 { margin: 0 0 6px 0; font-size: 16px; }
     .sketch-wrap { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
     .sketch-wrap img { max-width: 100%; height: auto; border-radius: 8px; border:1px solid #e5e7eb; }
-    .sketch-note { color:#6b7280; font-size:13px; }
-    </style>
+  </style>
 </head>
 <body>
   <div class="card">
@@ -70,85 +57,82 @@
 
     <!-- 表單區（input/admin 可見） -->
     <div id="formView" class="hidden">
-      
-<div class="row">
-  <div>
-    <label data-i18n="labelSupplier">供應商</label>
-    <select id="supplier"></select>
-    <div class="muted" id="supplierEn"></div>
-  </div>
-  <div>
-    <label data-i18n="labelOrderNo">訂單號碼</label>
-    <input id="orderNo" />
-  </div>
-</div>
-<div class="row">
-  <div>
-    <label data-i18n="labelLotNo">生產批號</label>
-    <input id="lotNo" />
-  </div>
-  <div>
-    <label data-i18n="labelPartNo">料號 (Part No.)</label>
-    <input id="partNo" />
-  </div>
-</div>
-<div class="row">
-  <div>
-    <label data-i18n="labelDrawingNo">圖號 (Drawing No.)</label>
-    <select id="drawingNo">
-  <option value="">請選擇圖號 / Select Drawing</option>
-  <option value="AKF-TOF-GRH2021A-3">AKF-TOF-GRH2021A-3</option>
-  <option value="AKF-TOF-GRH2021B-3">AKF-TOF-GRH2021B-3</option>
-  <option value="AKF-TOF-GRH2021H-4">AKF-TOF-GRH2021H-4</option>
-  <option value="AKF-TOF-WXH2059A-2">AKF-TOF-WXH2059A-2</option>
-  <option value="AKF-TOF-WXH2059B-2">AKF-TOF-WXH2059B-2</option>
-  <option value="AKF-TOF-WXH2059H-2">AKF-TOF-WXH2059H-2</option>
-</select>
-  </div>
-  
-<div>
-  <label data-i18n="labelMaterial">材質</label>
-  <select id="material">
-    <option value="">請選擇材質 / Select Material</option>
-    <option value="STEEL">碳鋼 (STEEL)</option>
-    <option value="STAINLESS STEEL">不鏽鋼 (STAINLESS STEEL)</option>
-  </select>
-</div>
+      <div class="row">
+        <div>
+          <label data-i18n="labelSupplier">供應商</label>
+          <select id="supplier"></select>
+          <div class="muted" id="supplierEn"></div>
+        </div>
+        <div>
+          <label data-i18n="labelOrderNo">訂單號碼</label>
+          <input id="orderNo" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label data-i18n="labelLotNo">生產批號</label>
+          <input id="lotNo" />
+        </div>
+        <div>
+          <label data-i18n="labelPartNo">料號 (Part No.)</label>
+          <input id="partNo" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label data-i18n="labelDrawingNo">圖號 (Drawing No.)</label>
+          <select id="drawingNo">
+            <option value="">請選擇圖號 / Select Drawing</option>
+            <option value="AKF-TOF-GRH2021A-3">AKF-TOF-GRH2021A-3</option>
+            <option value="AKF-TOF-GRH2021B-3">AKF-TOF-GRH2021B-3</option>
+            <option value="AKF-TOF-GRH2021H-4">AKF-TOF-GRH2021H-4</option>
+            <option value="AKF-TOF-WXH2059A-2">AKF-TOF-WXH2059A-2</option>
+            <option value="AKF-TOF-WXH2059B-2">AKF-TOF-WXH2059B-2</option>
+            <option value="AKF-TOF-WXH2059H-2">AKF-TOF-WXH2059H-2</option>
+          </select>
+        </div>
+        <div>
+          <label data-i18n="labelMaterial">材質</label>
+          <select id="material">
+            <option value="">請選擇材質 / Select Material</option>
+            <option value="STEEL">碳鋼 (STEEL)</option>
+            <option value="STAINLESS STEEL">不鏽鋼 (STAINLESS STEEL)</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label data-i18n="labelSpec">規格</label>
+          <select id="spec">
+            <option value="">請選擇規格 / Select Spec</option>
+            <option value="M6X8X25">M6X8X25</option>
+            <option value="M8X10X25">M8X10X25</option>
+            <option value="M8X10X30">M8X10X30</option>
+            <option value="M8X10X40">M8X10X40</option>
+            <option value="M10X12X25">M10X12X25</option>
+            <option value="M10X12X30">M10X12X30</option>
+            <option value="M10X12X40">M10X12X40</option>
+            <option value="M12X15X25">M12X15X25</option>
+            <option value="M12X15X50">M12X15X50</option>
+            <option value="M16X20X65">M16X20X65</option>
+          </select>
+        </div>
+        <div>
+          <label data-i18n="labelCategory">產品類別</label>
+          <select id="category"></select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label data-i18n="labelProcess">製程 (Process)</label>
+          <select id="process"></select>
+        </div>
+        <div>
+          <label data-i18n="labelNotes">備註</label>
+          <textarea id="notes" rows="2"></textarea>
+        </div>
+      </div>
 
-</div>
-<div class="row">
-  <div>
-  <label data-i18n="labelSpec">規格</label>
-  <select id="spec">
-    <option value="">請選擇規格 / Select Spec</option>
-    <option value="M6X8X25">M6X8X25</option>
-    <option value="M8X10X25">M8X10X25</option>
-    <option value="M8X10X30">M8X10X30</option>
-    <option value="M8X10X40">M8X10X40</option>
-    <option value="M10X12X25">M10X12X25</option>
-    <option value="M10X12X30">M10X12X30</option>
-    <option value="M10X12X40">M10X12X40</option>
-    <option value="M12X15X25">M12X15X25</option>
-    <option value="M12X15X50">M12X15X50</option>
-    <option value="M16X20X65">M16X20X65</option>
-  </select>
-</div>
-  <div>
-    <label data-i18n="labelCategory">產品類別</label>
-    <select id="category"></select>
-  </div>
-</div>
-<div class="row">
-  <div>
-    <label data-i18n="labelProcess">製程 (Process)</label>
-    <select id="process"></select>
-  </div>
-  <div>
-    <label data-i18n="labelNotes">備註</label>
-    <textarea id="notes" rows="2"></textarea>
-  </div>
-</div>
-<!-- 參考簡圖（放在基本資料與尺寸表之間） -->
       <div class="sketch-box">
         <h3 data-i18n="sketchTitle">參考簡圖</h3>
         <div class="sketch-wrap">
@@ -157,24 +141,23 @@
         </div>
       </div>
 
-      <!-- 整合表：第1列＝外觀（可略過）；第2列起＝尺寸 -->
       <h3 style="margin-top:20px" data-i18n="sectionTitle">尺寸與外觀檢驗</h3>
       <p class="hint" data-i18n="hintAppearance">第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。</p>
 
       <table id="tbl">
         <thead>
           <tr>
-            <th style="width:8%" data-i18n="thCode">代號</th>
+            <th style="width:8%"  data-i18n="thCode">代號</th>
             <th style="width:14%" data-i18n="thItem">項目 / 尺寸名稱</th>
             <th style="width:10%" data-i18n="thNominal">標準值</th>
             <th style="width:10%" data-i18n="thTolMinus">下限公差</th>
             <th style="width:10%" data-i18n="thTolPlus">上限公差</th>
-            <th style="width:8%" data-i18n="thM1">實測1</th>
-            <th style="width:8%" data-i18n="thM2">實測2</th>
-            <th style="width:8%" data-i18n="thM3">實測3</th>
-            <th style="width:8%" data-i18n="thM4">實測4</th>
-            <th style="width:8%" data-i18n="thM5">實測5</th>
-            <th style="width:8%" data-i18n="thDecision">結果</th>
+            <th style="width:8%"  data-i18n="thM1">實測1</th>
+            <th style="width:8%"  data-i18n="thM2">實測2</th>
+            <th style="width:8%"  data-i18n="thM3">實測3</th>
+            <th style="width:8%"  data-i18n="thM4">實測4</th>
+            <th style="width:8%"  data-i18n="thM5">實測5</th>
+            <th style="width:8%"  data-i18n="thDecision">結果</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -190,23 +173,22 @@
       <div class="toolbar">
         <button class="btn btn-primary" id="btnSave" data-i18n="btnSave">儲存到雲端</button>
         <a class="btn btn-secondary" href="report.html" id="btnGoReport" data-i18n="btnGoReport">查看/列印報告</a>
-      <button class="btn btn-ghost" id="btnSaveTpl" data-i18n="btnSaveTpl">預設版型儲存</button></div>
+        <button class="btn btn-ghost" id="btnSaveTpl" data-i18n="btnSaveTpl">預設版型儲存</button>
+      </div>
 
       <p id="msg" class="muted" style="margin-top:8px"></p>
     </div>
 
-    <!-- viewer 提示 -->
     <p id="viewOnlyTip" class="muted hidden" data-i18n="viewOnlyTip">
       您的角色是 <strong>viewer</strong>（只能看/印報告）。請改到 <a href="report.html">報告頁</a>。
     </p>
   </div>
 
-  <!-- 語言選擇彈窗 -->
-  <div class="modal-backdrop" id="langModal">
-    <div class="modal">
+  <div class="modal-backdrop" id="langModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);align-items:center;justify-content:center;z-index:9999;">
+    <div class="modal" style="background:#fff;border-radius:12px;padding:16px;width:min(92vw,420px);box-shadow:0 10px 30px rgba(0,0,0,.18)">
       <h3 data-i18n="langTitle">選擇語言 / Language</h3>
       <p class="muted" data-i18n="langHint">請選擇介面語言：</p>
-      <div class="grid">
+      <div class="grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
         <button class="btn btn-ghost" onclick="selectLang('zh-TW')">繁體中文</button>
         <button class="btn btn-ghost" onclick="selectLang('zh-CN')">简体中文</button>
         <button class="btn btn-ghost" onclick="selectLang('en')">English</button>
@@ -215,743 +197,71 @@
   </div>
 
   <script>
-    
-// Explicit element lookups to avoid relying on legacy global IDs
-const loginView = document.getElementById('loginView');
-const formView = document.getElementById('formView');
-const viewOnlyTip = document.getElementById('viewOnlyTip');
-let _afterPick = null;
-/* ============ I18N 字典（補上 labelProcess，避免顯示 key 本身） ============ */
-    const I18N = {
-      'zh-TW': {
+  const I18N = {
+    'zh-TW': { title:'現場品檢（AKF）', loginPrompt:'請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。', labelAccount:'帳號（檢驗人員）', labelPassword:'密碼（通關碼/密碼）', btnLogin:'登入', btnReset:'清除本機記錄', btnHealth:'健康檢查', labelSupplier:'供應商', labelPartNo:'料號 (Part No.)', labelDrawingNo:'圖號 (Drawing No.)', labelRevision:'版次 (Revision)', labelProcess:'製程 (Process)', labelNotes:'備註', labelOrderNo:'訂單號碼', labelLotNo:'生產批號', labelMaterial:'材質', labelSpec:'規格', labelCategory:'產品類別', sectionTitle:'尺寸與外觀檢驗', hintAppearance:'第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。', thItem:'項目 / 尺寸名稱', thCode:'代號', thNominal:'標準值', thTolMinus:'下限公差', thTolPlus:'上限公差', thM1:'實測1', thM2:'實測2', thM3:'實測3', thM4:'實測4', thM5:'實測5', thDecision:'結果', btnAdd:'＋新增尺寸', btnRemove:'－刪除最後一列', btnClearRows:'清空尺寸列（保留外觀）', btnSave:'儲存到雲端', btnGoReport:'查看/列印報告', viewOnlyTip:'您的角色是 <strong>viewer</strong>（只能看/印報告）。請改到 <a href="report.html">報告頁</a>。', langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：', btnSaveTpl:'預設版型儲存', tplSaving:'儲存版型中…', tplSaved:'✅ 已儲存為預設版型', tplFail:'❌ 版型儲存失敗：', tplApplied:'✅ 已自動套用預設版型', tplNoMatch:'（尚未找到可套用的預設版型）', appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG', phAccount:'例如：boss / work1 / QC1', phPassword:'例如：admin*** / in*** / view***', phOrderNo:'例如：PO12345', phLotNo:'例如：2025-09-A', phMaterial:'例如：SCM435', phSpec:'例如：M8 x 30', phCategory:'例如：螺栓', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100', phM1:'實測1', phM2:'實測2', phM3:'實測3', phM4:'實測4', phM5:'實測5' },
+    'zh-CN': { title:'现场品检（AKF）', loginPrompt:'请输入「账号（检验人员）」与「密码（通关码/密码）」。', labelAccount:'账号（检验人员）', labelPassword:'密码（通关码/密码）', btnLogin:'登录', btnReset:'清除本机记录', btnHealth:'健康检查', labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)', labelRevision:'版次 (Revision)', labelProcess:'制程 (Process)', labelNotes:'备注', labelOrderNo:'订单号码', labelLotNo:'生产批号', labelMaterial:'材质', labelSpec:'规格', labelCategory:'产品类别', sectionTitle:'尺寸与外观检验', hintAppearance:'第 <strong>1</strong> 行为 <strong>外观检查</strong>（可留空）；第 <strong>2</strong> 行开始为尺寸量测。', thItem:'项目 / 尺寸名称', thCode:'代号', thNominal:'标准值', thTolMinus:'下限公差', thTolPlus:'上限公差', thM1:'实测1', thM2:'实测2', thM3:'实测3', thM4:'实测4', thM5:'实测5', thDecision:'判定', btnAdd:'＋新增尺寸', btnRemove:'－删除最后一行', btnClearRows:'清空尺寸行（保留外观）', btnSave:'保存到云端', btnGoReport:'查看/打印报告', viewOnlyTip:'您的账号是 <strong>viewer</strong>（只能看/打印）。请前往 <a href="report.html">报告页</a>。', langTitle:'选择语言 / Language', langHint:'请选择界面语言：', btnSaveTpl:'预设版型保存', tplSaving:'保存版型中…', tplSaved:'✅ 已保存为预设版型', tplFail:'❌ 版型保存失败：', tplApplied:'✅ 已自动套用预设版型', tplNoMatch:'（尚未找到可套用的预设版型）', appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG', phAccount:'例如：boss / work1 / QC1', phPassword:'例如：admin*** / in*** / view***', phOrderNo:'例如：PO12345', phLotNo:'例如：2025-09-A', phMaterial:'例如：SCM435', phSpec:'例如：M8 x 30', phCategory:'例如：螺栓', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100', phM1:'实测1', phM2:'实测2', phM3:'实测3', phM4:'实测4', phM5:'实测5' },
+    'en':    { title:'On-site QC (Anchor)', loginPrompt:'Please enter “Account (Inspector)” and “Password”.', labelAccount:'Account (Inspector)', labelPassword:'Password', btnLogin:'Sign in', btnReset:'Clear local data', btnHealth:'Health Check', labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.', labelRevision:'Revision', labelProcess:'Process', labelNotes:'Notes', labelOrderNo:'Order No.', labelLotNo:'Lot No.', labelMaterial:'Material', labelSpec:'Spec', labelCategory:'Product Category', sectionTitle:'Appearance & Dimensional Inspection', hintAppearance:'Row <strong>1</strong> is <strong>Appearance</strong> (optional). From row <strong>2</strong> onwards are dimensions.', thItem:'Item / Dimension', thCode:'Code', thNominal:'Nominal', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.', thM1:'Sample1', thM2:'Sample2', thM3:'Sample3', thM4:'Sample4', thM5:'Sample5', thDecision:'Decision', btnAdd:'＋Add dimension', btnRemove:'－Remove last row', btnClearRows:'Clear dimension rows (keep appearance)', btnSave:'Save to cloud', btnGoReport:'View/Print Reports', viewOnlyTip:'Your role is <strong>viewer</strong> (view/print only). Go to <a href="report.html">Reports</a>.', langTitle:'Choose language', langHint:'Select UI language:', btnSaveTpl:'Save as Template', tplSaving:'Saving template…', tplSaved:'✅ Template saved', tplFail:'❌ Template save failed:', tplApplied:'✅ Auto‑applied template', tplNoMatch:'(no matching template yet)', appearanceTitle:'Appearance', optionDash:'—', optionOK:'O.K', optionNG:'NG', phAccount:'e.g. boss / work1 / QC1', phPassword:'e.g. admin*** / in*** / view***', phOrderNo:'e.g. PO12345', phLotNo:'e.g. 2025-09-A', phMaterial:'e.g. SCM435', phSpec:'e.g. M8 x 30', phCategory:'e.g. Bolt', phNominal:'e.g. 3.000', phTolMinus:'e.g. -0.100', phTolPlus:'e.g. 0.100', phM1:'Sample1', phM2:'Sample2', phM3:'Sample3', phM4:'Sample4', phM5:'Sample5' }
+  };
+  function getLang(){ return localStorage.getItem('qci_lang') || 'zh-TW'; }
+  function setLang(lang){ localStorage.setItem('qci_lang', lang); applyI18n(); }
+  function selectLang(lang){ setLang(lang); closeLangModal(); }
+  function openLangModal(){ document.getElementById('langModal').style.display='flex'; }
+  function closeLangModal(){ document.getElementById('langModal').style.display='none'; }
+  function t(key){ const lang = getLang(); const dict = I18N[lang] || I18N['zh-TW']; return dict[key] ?? (I18N['zh-TW'][key] ?? key); }
 
-        title:'現場品檢（AKF）',
-        loginPrompt:'請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。',
-        labelAccount:'帳號（檢驗人員）', labelPassword:'密碼（通關碼/密碼）',
-        btnLogin:'登入', btnReset:'清除本機記錄', btnHealth:'健康檢查',
-        labelSupplier:'供應商', labelPartNo:'料號 (Part No.)', labelDrawingNo:'圖號 (Drawing No.)',
-        labelRevision:'版次 (Revision)', labelProcess:'製程 (Process)', labelNotes:'備註',
-        labelOrderNo:'訂單號碼',
-        labelLotNo:'生產批號',
-        labelMaterial:'材質',
-        labelSpec:'規格',
-        labelCategory:'產品類別',
-        phOrderNo:'例如：PO12345',
-        phLotNo:'例如：2025-09-A',
-        phMaterial:'例如：SCM435',
-        phSpec:'例如：M8 x 30',
-        phCategory:'例如：螺栓',
-        sectionTitle:'尺寸與外觀檢驗',
-        hintAppearance:'第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。',
-        thItem:'項目 / 尺寸名稱', thCode:'代號', thNominal:'標準值', thTolMinus:'下限公差', thTolPlus:'上限公差',
-        thM1:'實測1', thM2:'實測2', thM3:'實測3', thM4:'實測4', thM5:'實測5', thDecision:'結果',
-        btnAdd:'＋新增尺寸', btnRemove:'－刪除最後一列', btnClearRows:'清空尺寸列（保留外觀）',
-        btnSave:'儲存到雲端', btnGoReport:'查看/列印報告',
-        viewOnlyTip:'您的角色是 <strong>viewer</strong>（只能看/印報告）。請改到 <a href="report.html">報告頁</a>。',
-        langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：',
-        phAccount:'例如：boss / work1 / QC1', phPassword:'例如：admin*** / in*** / view***',
-        phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸穩定/外觀無瑕疵',
-        '項目/尺寸名稱':'例：頭部厚度', phCode:'例如 A1 / H1', phCode:'例如 A1 / H1', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
-        phM1:'實測1', phM2:'實測2', phM3:'實測3', phM4:'實測4', phM5:'實測5',
-        login_msg_need:'請輸入帳號與密碼', login_msg_auto:'自動驗證中...', login_msg_wrong:'❌ 帳號或密碼錯誤', login_verifying:'驗證中...',
-        save_saving:'儲存中...', save_ok:'✅ 已儲存到雲端（可到報告頁查看/列印）', save_fail:'❌ 儲存失敗：',
-        need_supplier_part:'請輸入供應商與料號',
-        appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
-        sketchTitle:"\u53c3\u8003\u7c21\u5716", sketchHint:"\u4f9b\u6aa2\u9a57\u6642\u5feb\u901f\u53c3\u8003\u4e3b\u8981\u5c3a\u5bf8\u8207\u5f62\u72c0\uff08\u5716\u6a94\uff1afinal_finished.jpg\uff09\u3002"
-      ,
-          btnSaveTpl:"預設版型儲存", tplSaving:"儲存版型中…", tplSaved:"✅ 已儲存為預設版型", tplFail:"❌ 版型儲存失敗：", tplApplied:"✅ 已自動套用預設版型", tplNoMatch:"（尚未找到可套用的預設版型）"
-        },
-      'zh-CN': { thCode:'代号', phCode:'例如 A1 / H1', thCode:'代号', phCode:'例如 A1 / H1',
+  const SUPPLIERS = [{ code:'安可', zh:'安可', en:'AKF' },{ code:'安拓', zh:'安拓', en:'ANCHOR' }];
+  const PROCESSES = [{ code:'WIRE', zh:'線材', en:'WIRE' },{ code:'FORMING', zh:'成形', en:'FORMING' },{ code:'TAPING', zh:'攻牙', en:'TAPING' },{ code:'CUTTING', zh:'割溝', en:'CUTTING' },{ code:'PLATING', zh:'電鍍', en:'PLATING' },{ code:'FINISHED', zh:'成品', en:'FINISHED' },{ code:'ASSEMBLY', zh:'組立', en:'ASSEMBLY' },{ code:'FINAL', zh:'最終成品', en:'FINAL FINISHED' }];
+  const CATEGORIES = [{ code:'PLUG', zh:'塞子', en:'plug' },{ code:'SLEEVE_A', zh:'管子_A type', en:'sleeve_A type' },{ code:'SLEEVE_B', zh:'管子_B type', en:'sleeve_B type' },{ code:'SLEEVE_H', zh:'管子_H type', en:'sleeve_H type' },{ code:'FINISHED_A', zh:'成品_A type', en:'Finished_A type' },{ code:'FINISHED_B', zh:'成品_B type', en:'Finished_B type' },{ code:'FINISHED_H', zh:'成品_H type', en:'Finished_H type' },{ code:'TOOL', zh:'內迫工具', en:'special tool' }];
 
-        title:'现场品检（AKF）',
-        loginPrompt:'请输入「账号（检验人员）」与「密码（通关码/密码）」。',
-        labelAccount:'账号（检验人员）', labelPassword:'密码（通关码/密码）',
-        btnLogin:'登录', btnReset:'清除本机记录', btnHealth:'健康检查',
-        labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)',
-        labelRevision:'版次 (Revision)', labelProcess:'制程 (Process)', labelNotes:'备注', labelOrderNo:'订单号码', labelLotNo:'生产批号', labelMaterial:'材质', labelSpec:'规格', labelCategory:'产品类别',
-        labelOrderNo:'訂單號碼',
-        labelLotNo:'生產批號',
-        labelMaterial:'材質',
-        labelSpec:'規格',
-        labelCategory:'產品類別',
-        phOrderNo:'例如：PO12345',
-        phLotNo:'例如：2025-09-A',
-        phMaterial:'例如：SCM435',
-        phSpec:'例如：M8 x 30',
-        phCategory:'例如：螺栓',
-        sectionTitle:'尺寸与外观检验',
-        hintAppearance:'第 <strong>1</strong> 行为 <strong>外观检查</strong>（可留空）；第 <strong>2</strong> 行开始为尺寸量测。',
-        thItem:'项目 / 尺寸名称', thCode:'代號', thNominal:'标准值', thTolMinus:'下限公差', thTolPlus:'上限公差',
-        thM1:'实测1', thM2:'实测2', thM3:'实测3', thM4:'实测4', thM5:'实测5', thDecision:'判定',
-        btnAdd:'＋新增尺寸', btnRemove:'－删除最后一行', btnClearRows:'清空尺寸行（保留外观）',
-        btnSave:'保存到云端', btnGoReport:'查看/打印报告',
-        viewOnlyTip:'您的账号是 <strong>viewer</strong>（只能看/打印）。请前往 <a href="report.html">报告页</a>。',
-        langTitle:'选择语言 / Language', langHint:'请选择界面语言：',
-        phAccount:'例如：boss / work1 / QC1', phPassword:'例如：admin*** / in*** / view***',
-        phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸稳定/外观无瑕疵', phOrderNo:'例如：PO12345', phLotNo:'例如：2025-09-A', phMaterial:'例如：SCM435', phSpec:'例如：M8 x 30', phCategory:'例如：螺栓',
-        '項目/尺寸名稱':'例：头部厚度', phCode:'例如 A1 / H1', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
-        phM1:'实测1', phM2:'实测2', phM3:'实测3', phM4:'实测4', phM5:'实测5',
-        login_msg_need:'请输入账号与密码', login_msg_auto:'自动验证中...', login_msg_wrong:'❌ 账号或密码错误', login_verifying:'验证中...',
-        save_saving:'保存中...', save_ok:'✅ 已保存到云端（可去报告页查看/打印）', save_fail:'❌ 保存失败：',
-        need_supplier_part:'请输入供应商与料号',
-        appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
-        sketchTitle:"\u53c2\u8003\u7b80\u56fe", sketchHint:"\u4fbf\u4e8e\u68c0\u9a8c\u65f6\u5feb\u901f\u53c2\u8003\u4e3b\u8981\u5c3a\u5bf8\u4e0e\u5f62\u72b6\uff08\u56fe\u6863\uff1afinal_finished.jpg\uff09\u3002"
-      ,
-          btnSaveTpl:"预设版型保存", tplSaving:"保存版型中…", tplSaved:"✅ 已保存为预设版型", tplFail:"❌ 版型保存失败：", tplApplied:"✅ 已自动套用预设版型", tplNoMatch:"（尚未找到可套用的预设版型）"
-        },
-      'en': { thCode:'Code', phCode:'e.g. A1 / H1', thCode:'Code', phCode:'e.g. A1 / H1',
-        title:'On-site QC (Anchor)',
-        loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
-        labelAccount:'Account (Inspector)', labelPassword:'Password',
-        btnLogin:'Sign in', btnReset:'Clear local data', btnHealth:'Health Check',
-        labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.',
-        labelRevision:'Revision', labelProcess:'Process', labelNotes:'Notes', labelOrderNo:'Order No.', labelLotNo:'Lot No.', labelMaterial:'Material', labelSpec:'Spec', labelCategory:'Product Category',
-        labelOrderNo:'訂單號碼',
-        labelLotNo:'生產批號',
-        labelMaterial:'材質',
-        labelSpec:'規格',
-        labelCategory:'產品類別',
-        phOrderNo:'例如：PO12345',
-        phLotNo:'例如：2025-09-A',
-        phMaterial:'例如：SCM435',
-        phSpec:'例如：M8 x 30',
-        phCategory:'例如：螺栓',
-        sectionTitle:'Appearance & Dimensional Inspection',
-        hintAppearance:'Row <strong>1</strong> is <strong>Appearance</strong> (optional). From row <strong>2</strong> onwards are dimensions.',
-        thItem:'Item / Dimension', thCode:'Code', thNominal:'Nominal', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
-        thM1:'Sample1', thM2:'Sample2', thM3:'Sample3', thM4:'Sample4', thM5:'Sample5', thDecision:'Decision',
-        btnAdd:'＋Add dimension', btnRemove:'－Remove last row', btnClearRows:'Clear dimension rows (keep appearance)',
-        btnSave:'Save to cloud', btnGoReport:'View/Print Reports',
-        viewOnlyTip:'Your role is <strong>viewer</strong> (view/print only). Go to <a href="report.html">Reports</a>.',
-        langTitle:'Choose language', langHint:'Select UI language:',
-        sketchTitle:'Reference Sketch', sketchHint:'For quick reference to key dimensions and shapes (file: {file}).',
-        btnSaveTpl:'Save as Template', tplSaving:'Saving template…', tplSaved:'✅ Template saved', tplFail:'❌ Template save failed:', tplApplied:'✅ Auto‑applied template', tplNoMatch:'(no matching template yet)',phAccount:'e.g. boss / work1 / QC1', phPassword:'e.g. admin*** / in*** / view***',
-        phSupplier:'e.g. Anchor / AKF', phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6', phRevision:'e.g. Rev.B', phNotes:'e.g. Dimensions stable / No defects', phOrderNo:'e.g. PO12345', phLotNo:'e.g. 2025-09-A', phMaterial:'e.g. SCM435', phSpec:'e.g. M8 x 30', phCategory:'e.g. Bolt',
-        '項目/尺寸名稱':'e.g. Head thickness', phCode:'例如 A1 / H1', phNominal:'e.g. 3.000', phTolMinus:'e.g. -0.100', phTolPlus:'e.g. 0.100',
-        phM1:'Sample1', phM2:'Sample2', phM3:'Sample3', phM4:'Sample4', phM5:'Sample5',
-        login_msg_need:'Please enter account & password', login_msg_auto:'Auto checking...', login_msg_wrong:'❌ Wrong account or password', login_verifying:'Verifying...',
-        save_saving:'Saving...', save_ok:'✅ Saved (check the report page to view/print)', save_fail:'❌ Save failed: ',
-        need_supplier_part:'Enter supplier & part no.',
-        appearanceTitle:'Appearance', optionDash:'—', optionOK:'O.K', optionNG:'NG'
-      }
-    };
+  function fillSupplierSelect(){ const sel = document.getElementById('supplier'); if (!sel) return; sel.innerHTML = SUPPLIERS.map(s=>`<option value="${s.code}" data-zh="${s.zh}" data-en="${s.en}">${s.zh} (${s.en})</option>`).join(''); const hint = document.getElementById('supplierEn'); sel.onchange = ()=>{ const opt = sel.options[sel.selectedIndex]; hint.textContent = opt ? `English: ${opt.dataset.en}` : ''; updateSketchByCategory(); tryAutoApply(); }; sel.dispatchEvent(new Event('change')); }
+  function fillProcessSelect(){ const sel = document.getElementById('process'); if (!sel) return; sel.innerHTML = '<option value=""></option>' + PROCESSES.map(p=>`<option value="${p.code}" data-zh="${p.zh}" data-en="${p.en}">${p.zh} (${p.en})</option>`).join(''); }
+  function fillCategorySelect(){ const sel = document.getElementById('category'); if (!sel) return; const prev = sel.value; sel.innerHTML = '<option value=""></option>' + CATEGORIES.map(c=>`<option value="${c.code}">${c.zh} (${c.en})</option>`).join(''); if (prev) sel.value = prev; sel.onchange = ()=>{ updateSketchByCategory(); tryAutoApply(); }; updateSketchByCategory(); }
+  function getSketchFileForCategory(code){ switch(String(code||'').toUpperCase()){ case 'PLUG': return 'plug.jpg'; case 'TOOL': return 'special_tool.jpg'; case 'SLEEVE_A': return 'sleeve_A.jpg'; case 'SLEEVE_B': return 'sleeve_B.jpg'; case 'SLEEVE_H': return 'sleeve_H.jpg'; case 'FINISHED_A': return 'finish_A.jpg'; case 'FINISHED_B': return 'finish_A.jpg'; case 'FINISHED_H': return 'finish_H.jpg'; default: return 'final_finished.jpg'; } }
+  function updateSketchByCategory(){ const sel = document.getElementById('category'); const file = getSketchFileForCategory(sel ? sel.value : ''); const img = document.getElementById('sketchImg'); if (img) img.src = file; const note = document.querySelector('.sketch-note'); if (note){ const base = t('sketchHint'); note.innerHTML = String(base||'').replace('{file}', file); } }
 
-    // 語言工具
-    function getLang(){ return localStorage.getItem('qci_lang') || ''; }
-    function setLang(lang){ localStorage.setItem('qci_lang', lang); applyI18n(); }
-    function selectLang(lang){ setLang(lang); closeLangModal(); if (typeof _afterPick === 'function') _afterPick(); }
-    function openLangModal(){ document.getElementById('langModal').style.display='flex'; }
-    function closeLangModal(){ document.getElementById('langModal').style.display='none'; }
-    function t(key){ const lang = getLang() || 'zh-TW'; const dict = I18N[lang] || I18N['zh-TW']; return dict[key] ?? (I18N['zh-TW'][key] ?? key); }
-    function applyI18n(){
-      // 填選單（會用到語言）
-      fillSupplierSelect(); 
-      fillProcessSelect();
-      fillCategorySelect();
+  const tbody = document.getElementById('tbody');
+  function ensureAppearanceRow(){ if (!tbody.querySelector('tr[data-type="appearance"]')){ const tr = document.createElement('tr'); tr.dataset.type = 'appearance'; tr.innerHTML = `<td></td><td><strong data-i18n="appearanceTitle">${t('appearanceTitle')}</strong></td><td colspan="3" class="muted">（可留空）</td><td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td><td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td><td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td><td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td><td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td><td></td>`; tbody.appendChild(tr); updateDecisionForRow(tr); } }
+  function addMeasureRow(){ const tr = document.createElement('tr'); tr.dataset.type = 'measure'; tr.innerHTML = `<td><input class="code" /></td><td><input class="name" /></td><td><input class="nom" type="number" step="0.001" placeholder="${t('phNominal')}" /></td><td><input class="lo" type="number" step="0.001" placeholder="${t('phTolMinus')}" /></td><td><input class="hi" type="number" step="0.001" placeholder="${t('phTolPlus')}" /></td><td><input class="m m1" type="number" step="0.001" placeholder="${t('phM1')}" /></td><td><input class="m m2" type="number" step="0.001" placeholder="${t('phM2')}" /></td><td><input class="m m3" type="number" step="0.001" placeholder="${t('phM3')}" /></td><td><input class="m m4" type="number" step="0.001" placeholder="${t('phM4')}" /></td><td><input class="m m5" type="number" step="0.001" placeholder="${t('phM5')}" /></td><td></td>`; tbody.appendChild(tr); updateDecisionForRow(tr); }
+  function countMeasureRows(){ return tbody.querySelectorAll('tr[data-type="measure"]').length; }
+  function ensureMeasureRows(n){ while (countMeasureRows() < n) addMeasureRow(); }
+  function clearMeasureRows(){ tbody.querySelectorAll('tr[data-type="measure"]').forEach(tr=>tr.remove()); }
+  function removeLastMeasureRow(){ const rows = tbody.querySelectorAll('tr[data-type="measure"]'); if (rows.length) rows[rows.length-1].remove(); }
 
-      // 文案
-      document.querySelectorAll('[data-i18n]').forEach(el=>{
-        const k = el.getAttribute('data-i18n');
-        if (k) el.innerHTML = t(k);
-      });
-      // placeholder
-      const m = {
-        '#inspector':'phAccount', '#passcode':'phPassword',
-        '#supplier':'phSupplier', '#orderNo':'phOrderNo', '#lotNo':'phLotNo', '#partNo':'phPartNo', '#drawingNo':'phDrawingNo', '#material':'phMaterial', '#spec':'phSpec', '#category':'phCategory', '#notes':'phNotes'
-      };
-      Object.entries(m).forEach(([sel,key])=>{ const el=document.querySelector(sel); if (el) el.placeholder = t(key); });
-      updateSketchByCategory();
-    }
+  function decidePass(nom, lo, hi, measured){ const hasNom = (nom===0 || nom) && !isNaN(Number(nom)); const hasLo = (lo===0 || lo) && !isNaN(Number(lo)); const hasHi = (hi===0 || hi) && !isNaN(Number(hi)); const vals = Array.isArray(measured) ? measured.filter(v => v===0 || v).map(Number) : []; if (!(hasNom && hasLo && hasHi) || vals.length===0) return undefined; const min = Number(nom)+Number(lo), max = Number(nom)+Number(hi); return vals.every(v => v>=min && v<=max); }
+  function updateDecisionForRow(tr){ const type = (tr && tr.dataset.type) || ''; if (type !== 'measure') return; const nom = Number(tr.querySelector('.nom')?.value || ''); const lo = Number(tr.querySelector('.lo')?.value || ''); const hi = Number(tr.querySelector('.hi')?.value || ''); const ms = [...tr.querySelectorAll('.m')].map(i=>i.value).filter(v=>v!==''); const res = decidePass(nom, lo, hi, ms); const td = tr.querySelector('td:last-child'); if (!td) return; td.innerHTML = res===undefined ? '' : `<span class="tag ${res?'pass':'fail'}">${res?'PASS':'FAIL'}</span>`; }
 
-    // 供應商下拉
-    const SUPPLIERS = [
-      { code:'安可', zh:'安可', en:'AKF' },
-      { code:'安拓', zh:'安拓', en:'ANCHOR' }
-    ];
-    function fillSupplierSelect(){
-      const sel = document.getElementById('supplier');
-      if (!sel) return;
-      sel.innerHTML = SUPPLIERS.map(s=>`<option value="${s.code}" data-zh="${s.zh}" data-en="${s.en}">${s.zh} (${s.en})</option>`).join('');
-      const hint = document.getElementById('supplierEn');
-      sel.onchange = ()=>{
-        const opt = sel.options[sel.selectedIndex];
-        hint.textContent = opt ? `English: ${opt.dataset.en}` : '';
-      };
-      sel.dispatchEvent(new Event('change'));
-    }
+  let AUTH = null; let TEMPLATES = [];
+  function headers(){ const h={ 'Content-Type':'application/json' }; if (!AUTH) return h; if (AUTH.mode==='accounts'){ h['x-user']=AUTH.user||''; h['x-pass']=AUTH.pass||''; } if (AUTH.mode==='passcode'){ h['x-passcode']=AUTH.passcode||''; h['x-user']=AUTH.user||''; } return h; }
+  async function loadTemplates(){ try{ const r = await fetch('/api/inspections?templates=1', { headers: headers() }); const j = await r.json().catch(()=>({})); if (j && j.ok && Array.isArray(j.templates)) TEMPLATES = j.templates; }catch(e){ console.warn('loadTemplates failed', e); } }
+  function keyOf(obj){ const fields = ['supplier','partNo','drawingNo','material','spec','category','process']; const out = {}; fields.forEach(k => { const v = String(obj[k]||'').trim(); if (v) out[k]=v; }); return out; }
+  function scoreMatch(tplKey, currentKey){ let s = 0; for (const k of Object.keys(currentKey)){ if (tplKey[k] && String(tplKey[k]).toUpperCase() === String(currentKey[k]).toUpperCase()) s++; } return s; }
+  function hasAnyMeasuredValue(){ return !!tbody.querySelector('tr[data-type="measure"] input.m[value]:not([value=""])'); }
 
-    // 製程下拉
-    const PROCESSES = [
-      { code:'WIRE', zh:'線材', en:'WIRE' },
-      { code:'FORMING', zh:'成形', en:'FORMING' },
-      { code:'TAPING', zh:'攻牙', en:'TAPING' },
-      { code:'CUTTING', zh:'割溝', en:'CUTTING' },
-      { code:'PLATING', zh:'電鍍', en:'PLATING' },
-      { code:'FINISHED', zh:'成品', en:'FINISHED' },
-      { code:'ASSEMBLY', zh:'組立', en:'ASSEMBLY' },
-      { code:'FINAL', zh:'最終成品', en:'FINAL FINISHED' }
-    ];
-    function fillProcessSelect(){
-      const sel = document.getElementById('process');
-      if (!sel) return;
-      sel.innerHTML = '<option value=""></option>' + PROCESSES.map(p=>`<option value="${p.code}" data-zh="${p.zh}" data-en="${p.en}">${p.zh} (${p.en})</option>`).join('');
-    }
+  function applyTemplate(tpl){ if (!tpl) return; ensureAppearanceRow(); if (Array.isArray(tpl.appearance) && tpl.appearance.length){ const aps = tbody.querySelectorAll('tr[data-type="appearance"] select.ap'); aps.forEach((sel, i)=>{ sel.value = tpl.appearance[i] || ''; }); } if (hasAnyMeasuredValue()) return; clearMeasureRows(); const defs = Array.isArray(tpl.measurements) ? tpl.measurements : []; ensureMeasureRows(defs.length || 1); const rows = tbody.querySelectorAll('tr[data-type="measure"]'); defs.forEach((d, idx)=>{ const tr = rows[idx] || rows[rows.length-1]; if (!tr) return; tr.querySelector('.code').value = d.code || ''; tr.querySelector('.name').value = d.name || ''; tr.querySelector('.nom').value = d.nom ?? ''; tr.querySelector('.lo').value = d.lo ?? ''; tr.querySelector('.hi').value = d.hi ?? ''; updateDecisionForRow(tr); }); }
 
+  function tryAutoApply(){ const current = { supplier: document.getElementById('supplier').value, partNo: document.getElementById('partNo').value, drawingNo:document.getElementById('drawingNo').value, material: document.getElementById('material').value, spec: document.getElementById('spec').value, category: document.getElementById('category').value, process: document.getElementById('process').value }; const currentKey = keyOf(current); if (!Object.keys(currentKey).length) return; let best = null, bestScore = 0; for (const t of TEMPLATES){ if (!(Array.isArray(t.measurements) && t.measurements.length)) continue; const s = scoreMatch(t.key || keyOf(t), currentKey); if (s > bestScore){ best = t; bestScore = s; } } if (best && bestScore >= 2){ applyTemplate(best); showMsg(t('tplApplied')); } }
+  function collectRecord(){ ensureAppearanceRow(); const aps = [...tbody.querySelectorAll('tr[data-type="appearance"] select.ap')].map(s=>s.value||''); const ms  = [...tbody.querySelectorAll('tr[data-type="measure"]')].map(tr => ({ code: tr.querySelector('.code')?.value || '', name: tr.querySelector('.name')?.value || '', nom: tr.querySelector('.nom')?.value || '', lo: tr.querySelector('.lo')?.value || '', hi: tr.querySelector('.hi')?.value || '' })); return { supplier: document.getElementById('supplier').value, supplierEn: document.getElementById('supplierEn').textContent || '', partNo: document.getElementById('partNo').value, drawingNo:document.getElementById('drawingNo').value, orderNo: document.getElementById('orderNo').value, lotNo: document.getElementById('lotNo').value, material: document.getElementById('material').value, spec: document.getElementById('spec').value, category: document.getElementById('category').value, process: document.getElementById('process').value, notes: document.getElementById('notes').value, appearance: aps, measurements: ms }; }
+  async function saveTemplate(){ const record = collectRecord(); const tpl = { type:'template', key: keyOf(record), appearance: record.appearance, measurements: record.measurements }; showMsg(t('tplSaving')); const r = await fetch('/api/inspections?template=1', { method:'POST', headers: headers(), body: JSON.stringify({ template: tpl }) }); const j = await r.json().catch(()=>({})); if (j && j.ok){ showMsg(t('tplSaved')); await loadTemplates(); } else { showErr(t('tplFail') + (j && j.error ? j.error : r.status)); } }
 
+  const loginView = document.getElementById('loginView'); const formView  = document.getElementById('formView'); const viewOnlyTip = document.getElementById('viewOnlyTip');
+  function showMsg(s){ const el=document.getElementById('msg'); if (el) el.textContent = s || ''; }
+  function showErr(s){ const el=document.getElementById('msg'); if (el) el.textContent = s || ''; el.classList.add('error'); }
 
-// === Reference sketch switcher ===
-function getSketchFileForCategory(code){
-  switch(String(code||'').toUpperCase()){
-    case 'PLUG': return 'plug.jpg';
-    case 'TOOL': return 'special_tool.jpg';
-    case 'SLEEVE_A': return 'sleeve_A.jpg';
-    case 'SLEEVE_B': return 'sleeve_B.jpg';
-    case 'SLEEVE_H': return 'sleeve_H.jpg';
-    case 'FINISHED_A': return 'finish_A.jpg';
-    case 'FINISHED_B': return 'finish_A.jpg';
-    case 'FINISHED_H': return 'finish_H.jpg';
-    default:     return 'final_finished.jpg';
-  }
-}
-function updateSketchByCategory(){
-  const sel = document.getElementById('category');
-  const img = document.getElementById('sketchImg');
-  const note = document.querySelector('.sketch-note');
-  if (!img) return;
-  const file = getSketchFileForCategory(sel ? sel.value : '');
-  img.src = file;
-  if (note){
-    // Use i18n text and fill in {file}
-    const base = t('sketchHint');
-    note.innerHTML = String(base || '').replace('{file}', file);
-  }
-}
-// 產品類別下拉（雙語選單）
-const CATEGORIES = [
-  { code:'PLUG',        zh:'塞子',         cn:'塞子',       en:'plug' },
-  { code:'SLEEVE_A',    zh:'管子_A type',  cn:'管子_A type', en:'sleeve_A type' },
-  { code:'SLEEVE_B',    zh:'管子_B type',  cn:'管子_B type', en:'sleeve_B type' },
-  { code:'SLEEVE_H',    zh:'管子_H type',  cn:'管子_H type', en:'sleeve_H type' },
-  { code:'FINISHED_A',  zh:'成品_A type',  cn:'成品_A type', en:'Finished_A type' },
-  { code:'FINISHED_B',  zh:'成品_B type',  cn:'成品_B type', en:'Finished_B type' },
-  { code:'FINISHED_H',  zh:'成品_H type',  cn:'成品_H type', en:'Finished_H type' },
-  { code:'TOOL',        zh:'內迫工具',     cn:'内迫工具',    en:'special tool' }
-];
-function _categoryLabel(code){
-  const lang = getLang() || 'zh-TW';
-  const c = CATEGORIES.find(x => x.code === String(code||'').toUpperCase());
-  if (!c) return String(code||'');
-  if (lang==='en') return c.en;
-  if (lang==='zh-CN') return `${c.cn} (${c.en})`;
-  return `${c.zh} (${c.en})`;
-}
-function fillCategorySelect(){
-  const sel = document.getElementById('category');
-  if (!sel) return;
-  const prev = sel.value;
-  // 先放一個空白選項（可保持舊邏輯允許空白）
-  sel.innerHTML = '<option value=""></option>' + CATEGORIES.map(c => 
-    `<option value="${c.code}">${c.zh} (${c.en})</option>`
-  ).join('');
-  if (prev) sel.value = prev;
-  // 綁定事件並立即套用一次
-  sel.removeEventListener('change', updateSketchByCategory);
-  sel.addEventListener('change', updateSketchByCategory);
-  updateSketchByCategory();
-}
+  async function login(){ const user = document.getElementById('inspector').value.trim(); const pass = document.getElementById('passcode').value.trim(); if (!user || !pass){ document.getElementById('loginMsg').textContent = '請輸入帳號與密碼/通關碼'; return; } document.getElementById('loginMsg').textContent = '驗證中…'; const h = { 'x-user': user, 'x-pass': pass, 'x-passcode': pass }; try{ const r = await fetch('/api/inspections?auth=1', { headers: h }); const j = await r.json(); if (j && j.ok){ AUTH = { ...j, user, pass, passcode: pass }; sessionStorage.setItem('qci_auth', JSON.stringify(AUTH)); loginView.classList.add('hidden'); if (j.role === 'viewer'){ viewOnlyTip.classList.remove('hidden'); } else { formView.classList.remove('hidden'); } applyI18n(); await loadTemplates(); bindAutoApplyListeners(); tryAutoApply(); } else { document.getElementById('loginMsg').textContent = '登入失敗'; } }catch(e){ document.getElementById('loginMsg').textContent = '登入失敗'; } }
 
+  function applyI18n(){ document.querySelectorAll('[data-i18n]').forEach(el=>{ const k = el.getAttribute('data-i18n'); if (k) el.innerHTML = t(k); }); const ph = { '#inspector':'phAccount','#passcode':'phPassword', '#orderNo':'phOrderNo','#lotNo':'phLotNo','#material':'phMaterial','#spec':'phSpec','#category':'phCategory' }; Object.entries(ph).forEach(([sel,key])=>{ const el=document.querySelector(sel); if (el) el.placeholder=t(key); }); fillSupplierSelect(); fillProcessSelect(); fillCategorySelect(); }
+  function bindAutoApplyListeners(){ const ids = ['supplier','partNo','drawingNo','material','spec','category','process']; ids.forEach(id => { const el = document.getElementById(id); if (!el) return; el.addEventListener('change', tryAutoApply, { passive:true }); el.addEventListener('blur', tryAutoApply, { passive:true }); if (el.tagName === 'INPUT') el.addEventListener('input', tryAutoApply, { passive:true }); }); }
 
+  document.getElementById('btnLogin').addEventListener('click', login);
+  document.getElementById('btnResetPass').addEventListener('click', ()=>{ localStorage.clear(); sessionStorage.clear(); location.reload(); });
+  document.getElementById('btnLang').addEventListener('click', ()=>{ document.getElementById('langModal').style.display='flex'; });
+  document.getElementById('btnLang2').addEventListener('click', ()=>{ document.getElementById('langModal').style.display='flex'; });
+  document.getElementById('btnAdd').addEventListener('click', ()=>{ addMeasureRow(); });
+  document.getElementById('btnRemove').addEventListener('click', removeLastMeasureRow);
+  document.getElementById('btnClearRows').addEventListener('click', ()=>{ clearMeasureRows(); ensureMeasureRows(1); });
+  document.getElementById('btnSaveTpl').addEventListener('click', saveTemplate);
 
-    // 表格建置
-    const tbody = document.getElementById('tbody');
-    function ensureAppearanceRow(){
-      if (!tbody.querySelector('tr[data-type="appearance"]')){
-        const tr = document.createElement('tr');
-        tr.setAttribute('data-type','appearance');
-        tr.innerHTML = `
-          <td></td>
-<td><strong data-i18n="appearanceTitle">外觀檢查</strong></td>
-<td colspan="3" class="muted">（可留空）</td>
-<td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-<td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-<td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-<td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-<td><select class="ap"><option value=""></option><option value="OK">O.K</option><option value="NG">NG</option></select></td>
-<td></td>`;
-        tbody.appendChild(tr);
-      updateDecisionForRow(tr);
-      }
-    }
-    function addMeasureRow(){
-      const tr = document.createElement('tr');
-      tr.setAttribute('data-type','measure');
-      tr.innerHTML = `
-        <td><input class="code" placeholder="${t('phCode')}" /></td>
-        <td><input class="name" placeholder="項目/尺寸名稱" /></td>
-        <td><input class="nom" type="number" step="0.001" placeholder="${t('phNominal')}" /></td>
-        <td><input class="lo"  type="number" step="0.001" placeholder="${t('phTolMinus')}" /></td>
-        <td><input class="hi"  type="number" step="0.001" placeholder="${t('phTolPlus')}" /></td>
-        <td><input class="m m1" type="number" step="0.001" placeholder="${t('phM1')}" /></td>
-        <td><input class="m m2" type="number" step="0.001" placeholder="${t('phM2')}" /></td>
-        <td><input class="m m3" type="number" step="0.001" placeholder="${t('phM3')}" /></td>
-        <td><input class="m m4" type="number" step="0.001" placeholder="${t('phM4')}" /></td>
-        <td><input class="m m5" type="number" step="0.001" placeholder="${t('phM5')}" /></td>
-        <td></td>`;
-      updateDecisionForRow(tr);;
-      tbody.appendChild(tr);
-    }
-    function countMeasureRows(){ return tbody.querySelectorAll('tr[data-type="measure"]').length; }
-    function ensureMeasureRows(n){
-      while (countMeasureRows() < n) addMeasureRow();
-    }
-    function removeLastMeasureRow(){
-      const rows = tbody.querySelectorAll('tr[data-type="measure"]');
-      if (rows.length) rows[rows.length - 1].remove();
-    }
-    function clearMeasureRows(){
-      tbody.querySelectorAll('tr[data-type="measure"]').forEach(tr=>tr.remove());
-    }
-    // 判定單列 PASS/FAIL（有名目 & 公差 & 至少一筆實測才判）
-    function decidePass(nom, lo, hi, measured){
-      const hasNom = (nom===0 || nom) && !isNaN(Number(nom));
-      const hasLo  = (lo===0  || lo)  && !isNaN(Number(lo));
-      const hasHi  = (hi===0  || hi)  && !isNaN(Number(hi));
-      const vals = Array.isArray(measured) ? measured.filter(v => v===0 || v).map(Number) : [];
-      if (!(hasNom && hasLo && hasHi) || vals.length===0) return undefined; // 不顯示
-      const min = Number(nom) + Number(lo), max = Number(nom) + Number(hi);
-      return vals.every(v => v>=min && v<=max);
-    }
-    function updateDecisionForRow(tr){
-      if (!tr) return;
-      const cell = tr.querySelector('td:last-child');
-      if (!cell) return;
-      if (tr.getAttribute('data-type')==='appearance'){
-        const oks = Array.from(tr.querySelectorAll('select.ap')).map(s => (s.value||'').toUpperCase());
-        const filled = oks.filter(v => v==='OK' || v==='O.K' || v==='NG');
-        if (!filled.length){ cell.textContent=''; cell.className=''; return; }
-        const allOk = oks.every(v => v==='OK' || v==='O.K');
-        cell.textContent = allOk ? 'PASS' : 'FAIL';
-        cell.className = allOk ? 'pass' : 'fail';
-        return;
-      }
-      // measure
-      const nom = tr.querySelector('.nom').value;
-      const lo  = tr.querySelector('.lo').value;
-      const hi  = tr.querySelector('.hi').value;
-      const ms  = [1,2,3,4,5].map(i => tr.querySelector('.m'+i).value===''?null:Number(tr.querySelector('.m'+i).value));
-      const dec = decidePass(nom, lo, hi, ms);
-      if (typeof dec==='boolean'){
-        cell.textContent = dec ? 'PASS' : 'FAIL';
-        cell.className = dec ? 'pass' : 'fail';
-      }else{
-        cell.textContent = ''; cell.className='';
-      }
-    }
-    function updateAllDecisions(){
-      tbody.querySelectorAll('tr').forEach(updateDecisionForRow);
-    }
-    
-
-    // 登入與權限（與後端 inspections.js 相容）
-    async function authCheck(u,p){
-      try{
-        const r = await fetch('/api/inspections?auth=1', { headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p }});
-        const t = await r.text(); let j={}; try{ j=JSON.parse(t);}catch{}
-        return (r.ok && j && j.ok!==false) ? { ok:true, role:j.role||'input' } : { ok:false };
-      }catch{ return { ok:false }; }
-    }
-    function showByRole(role){
-  // 成功後一律把登入區移除畫面（保留於 DOM 以便 401 時可再顯示）
-  loginView.classList.add('hidden');
-  loginView.style.display = 'none';
-  if (role === 'viewer'){
-    formView.classList.add('hidden');
-    viewOnlyTip.classList.remove('hidden');
-  } else {
-    formView.classList.remove('hidden');
-    viewOnlyTip.classList.add('hidden');
-  }
-}
-    // 建立要儲存的紀錄
-    function buildRecord(){
-      const user = localStorage.getItem('qci_user') || '';
-      const pass = localStorage.getItem('qci_pass') || '';
-      if (!user || !pass){ alert(t('login_msg_need')); return null; }
-
-      const orderNo = document.getElementById('orderNo').value.trim();
-      const lotNo = document.getElementById('lotNo').value.trim();
-      const partNo = document.getElementById('partNo').value.trim();
-      const drawingNo = document.getElementById('drawingNo').value.trim();
-      const material = document.getElementById('material').value.trim();
-      const spec = document.getElementById('spec').value.trim();
-      const category = document.getElementById('category').value.trim();
-      const notes = document.getElementById('notes').value.trim();
-
-      const selS = document.getElementById('supplier');
-      const sOpt = selS.options[selS.selectedIndex];
-      const selP = document.getElementById('process');
-      const pOpt = selP.options[selP.selectedIndex];
-
-      // 允許儲存空白報告（無供應商或料號），詢問確認
-if (!sOpt || !partNo) {
-  const go = confirm(t('confirm_save_empty') || '偵測到未填供應商/料號，是否仍要儲存為「空白報告」？');
-  if (!go) return null;
-}
-
-
-      // 外觀
-      const apSel = Array.from(tbody.querySelectorAll('tr[data-type="appearance"] select.ap'));
-      const apHas = apSel.some(x => x.value);
-      const appearance = apHas ? apSel.map((s,i)=>({ sample:`樣品${i+1}`, result: s.value||'' })) : [];
-
-      // 尺寸
-      const rows = Array.from(tbody.querySelectorAll('tr[data-type="measure"]'));
-  const measurements = rows.map(tr => {
-    const codes = tr.querySelectorAll('.code');
-    const code1 = (codes[0]?.value || '').trim();
-    const code2 = (codes[1]?.value || '').trim();
-    const name = tr.querySelector('.name').value.trim();
-    const nom = tr.querySelector('.nom').value;
-    const lo  = tr.querySelector('.lo').value;
-    const hi  = tr.querySelector('.hi').value;
-    const ms = [1,2,3,4,5].map(i => {
-      const v = tr.querySelector('.m'+i).value;
-      return v==='' ? null : Number(v);
-    });
-    
-    return {
-      code: code1 + (code2 ? '/' + code2 : ''), // 合併兩個代號
-      name,
-      nominal: nom===''?null:Number(nom),
-      tolMinus: lo===''?null:Number(lo),
-      tolPlus: hi===''?null:Number(hi),
-      measured: ms,
-      pass: decidePass(nom, lo, hi, ms)
-    };
-  });
-
-      // 整體結果
-      function calcOverall(){
-        const apOK = !appearance.length || appearance.every(a => String(a.result||'').toUpperCase()==='OK');
-        const msOK = !measurements.length || measurements.every(m => {
-          const nom = Number(m.nominal); const lo=Number(m.tolMinus); const hi=Number(m.tolPlus);
-          if (isNaN(nom) || isNaN(lo) || isNaN(hi)) return true;
-          const min = nom + lo, max = nom + hi;
-          const arr = Array.isArray(m.measured)?m.measured:[];
-          const vals = arr.filter(v=>v===0 || v).map(Number);
-          return vals.length===0 || vals.every(v => v>=min && v<=max);
-        });
-        return (apOK && msOK) ? 'PASS' : 'FAIL';
-      }
-
-      const now = new Date();
-      const id = `INS-${now.toISOString().replace(/[-:T]/g,'').slice(0,14)}-${Math.floor(100+Math.random()*900)}`;
-
-      return {
-        id, timestamp: now.toISOString(),
-        inspector: user,
-        supplier: (sOpt ? sOpt.dataset.zh : ''), supplierEn: (sOpt ? sOpt.dataset.en : ''), supplierCode: (sOpt ? sOpt.value : ''),
-        orderNo, lotNo, partNo, drawingNo, material, spec, category, revision: '', // 相容舊欄位存在，但不使用
-        process: pOpt ? pOpt.value : '', processLabel: pOpt ? (pOpt.dataset.zh + ' (' + pOpt.dataset.en + ')') : '',
-        notes, appearance, measurements,
-        overallResult: calcOverall()
-      };
-    }
-
-    // 儲存
-    async function save(){
-      const btn = document.getElementById('btnSave');
-      const msg = document.getElementById('msg');
-      btn.disabled = true; msg.textContent = t('save_saving');
-      const rec = buildRecord();
-      if (!rec){ btn.disabled = false; return; }
-      const u = localStorage.getItem('qci_user') || '';
-      const p = localStorage.getItem('qci_pass') || '';
-      try{
-        const r = await fetch('/api/inspections', {
-          method:'POST',
-          headers: { 'Content-Type':'application/json', 'x-user':u, 'x-pass':p, 'x-passcode':p },
-          body: JSON.stringify({ record: rec })
-        });
-        const ttxt = await r.text(); let j={}; try{ j=JSON.parse(ttxt);}catch{}
-        if (!r.ok || (j && j.error)) throw new Error(j.error || ttxt);
-        msg.textContent = t('save_ok');
-        // 清空尺寸列（保留外觀）
-        clearMeasureRows(); ensureMeasurementTemplate();
-        try{ await loadTemplates(); }catch{}
-        tryAutoApplyTemplate();
-      }catch(e){
-        msg.textContent = t('save_fail') + (e.message||e);
-      }finally{
-        btn.disabled = false;
-      }
-    }
-
-    // 登入
-    async function onLogin(){
-      const u = document.getElementById('inspector').value.trim();
-      const p = document.getElementById('passcode').value.trim();
-      if (!u || !p){ document.getElementById('loginMsg').textContent = t('login_msg_need'); return; }
-      const info = await authCheck(u,p);
-      if (!info.ok){ document.getElementById('loginMsg').textContent = t('login_msg_wrong'); return; }
-      localStorage.setItem('qci_user', u);
-      localStorage.setItem('qci_pass', p);
-      localStorage.setItem('qci_role', info.role || '');
-      document.getElementById('loginMsg').textContent = '';
-      showByRole(info.role);
-      ensureMeasurementTemplate();
-      try{ await loadTemplates(); }catch{}
-      tryAutoApplyTemplate();
-    }
-
-    // 初始外觀 + 至少 1 列尺寸
-    function ensureMeasurementTemplate(){
-      ensureAppearanceRow();
-      if (countMeasureRows() === 0) ensureMeasureRows(1);
-      updateAllDecisions();
-    }
-
-    // 綁定事件
-    document.getElementById('btnLogin').addEventListener('click', onLogin);
-    document.getElementById('btnResetPass').addEventListener('click', () => {
-      ['qci_user','qci_pass','qci_role','qci_passcode','qci_inspector','qci_lang'].forEach(k => localStorage.removeItem(k));
-      alert('Cleared. / 已清除。');
-      location.reload();
-    });
-    document.getElementById('btnLang').addEventListener('click', ()=>{ _afterPick = applyI18n; openLangModal(); });
-    document.getElementById('btnLang2').addEventListener('click', ()=>{ _afterPick = applyI18n; openLangModal(); });
-    document.getElementById('btnAdd').addEventListener('click', addMeasureRow);
-    document.getElementById('btnRemove').addEventListener('click', removeLastMeasureRow);
-    document.getElementById('btnClearRows').addEventListener('click', ()=>{ clearMeasureRows(); });
-
-    
-    
-    // ====== 預設版型：儲存與自動套用 ======
-    let _tplCache = [];
-
-    function t(key){ 
-      try{
-        const lang = (localStorage.getItem('qci_lang') || navigator.language || 'zh-TW');
-        const L = I18N[lang==='zh-CN'?'zh-CN':(lang.startsWith('en')?'en':'zh-TW')] || I18N['zh-TW'];
-        return L[key] || key;
-      }catch{ return key; }
-    }
-
-    function norm(s){ return String(s||'').trim().toUpperCase(); }
-    function getKeyFromForm(){
-      const supSel = document.getElementById('supplier');
-      const supplier = supSel && supSel.value ? supSel.value : (supSel && supSel.options[supSel.selectedIndex] ? supSel.options[supSel.selectedIndex].value : '');
-      return {
-        supplier: supplier,
-        partNo: document.getElementById('partNo').value,
-        drawingNo: document.getElementById('drawingNo').value,
-        material: document.getElementById('material').value,
-        spec: document.getElementById('spec').value,
-        category: document.getElementById('category').value,
-        process: document.getElementById('process').value
-      };
-    }
-
-    function buildTemplateForSave(){
-      const key = getKeyFromForm();
-      const supSel = document.getElementById('supplier');
-      const supplierText = supSel && supSel.value ? supSel.value : '';
-      const tpl = {
-        key, 
-        type: 'template',
-        basic: { supplier: supplierText },
-        part: {
-          partNo: document.getElementById('partNo').value,
-          drawingNo: document.getElementById('drawingNo').value,
-          material: document.getElementById('material').value,
-          spec: document.getElementById('spec').value,
-          category: document.getElementById('category').value,
-          process: document.getElementById('process').value
-        },
-        rows: []
-      };
-      // appearance row
-      const ap = document.querySelector('tr[data-type="appearance"]');
-      if (ap) tpl.rows.push({ appearance:true });
-      // dimension definitions
-      document.querySelectorAll('#tbody tr[data-type="measure"]').forEach(tr => {
-        const get = sel => (tr.querySelector(sel)?.value || '').trim();
-        const row = {
-          code: get('.code'),
-          item: get('.name'),
-          nominal: get('.nom'),
-          tolMinus: get('.lo'),
-          tolPlus: get('.hi')
-        };
-        if (row.code || row.item || row.nominal || row.tolMinus || row.tolPlus){
-          tpl.rows.push(row);
-        }
-      });
-      return tpl;
-    }
-
-    async function saveTemplate(){
-      const u = localStorage.getItem('qci_user') || '';
-      const p = localStorage.getItem('qci_pass') || '';
-      if (!u || !p){ alert(t('login_msg_need')); return; }
-      const btn = document.getElementById('btnSaveTpl');
-      const msg = document.getElementById('msg');
-      if (btn) btn.disabled = true; msg.textContent = t('tplSaving');
-      try{
-        const body = { template: buildTemplateForSave() };
-        const r = await fetch('/api/inspections?template=1', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json', 'x-user':u, 'x-pass':p, 'x-passcode':p },
-          body: JSON.stringify(body)
-        });
-        const txt = await r.text(); let j={}; try{ j = JSON.parse(txt);}catch{}
-        if (!r.ok || (j && j.error)) throw new Error(j.error || txt);
-        msg.textContent = t('tplSaved');
-        try{ await loadTemplates(); }catch{}
-      }catch(e){
-        msg.textContent = t('tplFail') + (e.message || e);
-      }finally{
-        if (btn) btn.disabled = false;
-      }
-    }
-
-    async function loadTemplates(){
-      const u = localStorage.getItem('qci_user') || '';
-      const p = localStorage.getItem('qci_pass') || '';
-      if (!u || !p) return;
-      try{
-        const r = await fetch('/api/inspections?templates=1', { headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p } });
-        const txt = await r.text(); let j={}; try{ j = JSON.parse(txt);}catch{}
-        const arr = Array.isArray(j) ? j : (j.templates || j.records || j.record || []);
-        _tplCache = Array.isArray(arr) ? arr : [];
-      }catch{ _tplCache = []; }
-    }
-
-    function scoreTemplate(tpl, key){
-      const fields = ['supplier','partNo','drawingNo','material','spec','category','process'];
-      let need = 0, hit = 0;
-      for(const f of fields){
-        const tv = norm(tpl?.key?.[f] || '');
-        if (!tv) continue;
-        need++;
-        const kv = norm(key[f] || '');
-        if (!kv) continue;
-        if (kv === tv || kv.includes(tv) || tv.includes(kv)) hit++;
-      }
-      return { need, hit, score: hit };
-    }
-
-    function applyTemplate(tpl){
-      if (!tpl) return false;
-      // 填基本與料件資訊（只覆蓋空白）
-      const setIfEmpty = (id, val) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const cur = (el.tagName==='SELECT' ? el.value : el.value).trim();
-        if (cur === '' && String(val||'').trim()!==''){
-          el.value = val;
-        }
-      };
-      const p = tpl.part || {};
-      setIfEmpty('partNo', p.partNo);
-      setIfEmpty('drawingNo', p.drawingNo);
-      setIfEmpty('material', p.material);
-      setIfEmpty('spec', p.spec);
-      setIfEmpty('category', p.category);
-      setIfEmpty('process', p.process);
-
-      // 若目前尚未輸入任何尺寸定義（只有空白列），就以模板建立尺寸列
-      const tbody = document.getElementById('tbody');
-      const rows = Array.from(tbody.querySelectorAll('tr[data-type="measure"]'));
-      const hasAnyDefinition = rows.some(tr => {
-        const get = sel => (tr.querySelector(sel)?.value || '').trim();
-        return get('.code') || get('.name') || get('.nom') || get('.lo') || get('.hi');
-      });
-
-      if (rows.length === 0 || !hasAnyDefinition){
-        // 清空（保留外觀列），再依模板建立定義
-        clearMeasureRows(); ensureAppearanceRow();
-        (tpl.rows || []).forEach(r => {
-          if (r.appearance){
-            ensureAppearanceRow();
-          }else{
-            addMeasureRow();
-            const last = tbody.querySelector('tr[data-type="measure"]:last-child');
-            if (last){
-              if (r.code) last.querySelector('.code').value = r.code;
-              if (r.item) last.querySelector('.name').value = r.item;
-              if (r.nominal) last.querySelector('.nom').value = r.nominal;
-              if (r.tolMinus) last.querySelector('.lo').value = r.tolMinus;
-              if (r.tolPlus) last.querySelector('.hi').value = r.tolPlus;
-              updateDecisionForRow(last);
-            }
-          }
-        });
-        updateAllDecisions();
-      }
-      return true;
-    }
-
-    let _tplAppliedOnce = false;
-    function tryAutoApplyTemplate(){
-      if (!_tplCache || !_tplCache.length) return;
-      const key = getKeyFromForm();
-      let best = null, bestScore = -1, bestNeed = 0;
-      for(const tpl of _tplCache){
-        const s = scoreTemplate(tpl, key);
-        if (s.score > bestScore){ best = tpl; bestScore = s.score; bestNeed = s.need; }
-      }
-      const msg = document.getElementById('msg');
-      if (best && (bestScore >= 2 || (bestNeed <= 1 && bestScore >=1))){
-        applyTemplate(best);
-        if (!_tplAppliedOnce){
-          msg.textContent = t('tplApplied');
-          _tplAppliedOnce = true;
-        }
-      }else{
-        if (!_tplAppliedOnce){
-          msg.textContent = t('tplNoMatch');
-        }
-      }
-    }
-
-    function debounce(fn, wait){
-      let timer=null;
-      return function(){ clearTimeout(timer); timer = setTimeout(fn, wait); };
-    }
-    const debouncedTryAutoApply = debounce(tryAutoApplyTemplate, 300);
-
-    // 綁事件：關鍵欄位輸入時嘗試套用
-    ;['partNo','drawingNo','material','spec','category','process','orderNo','lotNo','revision','notes'].forEach(id=>{
-      const el = document.getElementById(id);
-      if (el){ el.addEventListener('input', debouncedTryAutoApply); el.addEventListener('change', debouncedTryAutoApply); }
-    });
-    const selSupplier = document.getElementById('supplier');
-    if (selSupplier){ selSupplier.addEventListener('change', debouncedTryAutoApply); }
-
-    // 綁定儲存模板鈕
-    const _btnSaveTpl = document.getElementById('btnSaveTpl');
-    if (_btnSaveTpl){ _btnSaveTpl.addEventListener('click', saveTemplate); }
-    // 及時判定：輸入/變更時重新計算 PASS/FAIL
-    tbody.addEventListener('input', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
-    tbody.addEventListener('change', (e)=>{ const tr = e.target.closest('tr'); if (tr) updateDecisionForRow(tr); });
-
-    // 綁定儲存
-    document.getElementById('btnSave').addEventListener('click', save);
-    document.getElementById('btnSaveTpl')?.addEventListener('click', saveTemplate);
-window.addEventListener('DOMContentLoaded', async ()=>{
-      // 首次渲染 i18n 與選單
-      applyI18n();
-      // 若曾經登入過，自動顯示表單
-      const u = localStorage.getItem('qci_user') || '';
-      const p = localStorage.getItem('qci_pass') || '';
-      if (u && p){
-        showByRole(localStorage.getItem('qci_role') || 'input');
-        ensureMeasurementTemplate();
-        try{ await loadTemplates(); }catch{}
-        tryAutoApplyTemplate();
-      }
-    });
+  (function init(){ applyI18n(); const cached = sessionStorage.getItem('qci_auth'); if (cached){ try { AUTH = JSON.parse(cached); } catch {} if (AUTH && AUTH.role){ loginView.classList.add('hidden'); if (AUTH.role === 'viewer') viewOnlyTip.classList.remove('hidden'); else formView.classList.remove('hidden'); loadTemplates().then(()=>{ bindAutoApplyListeners(); tryAutoApply(); }); } } })();
   </script>
 </body>
 </html>
