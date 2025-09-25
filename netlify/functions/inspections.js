@@ -1,13 +1,20 @@
+
 // netlify/functions/inspections.js
-// 擴充帳號模式 + 舊通關碼相容；GET 列表、POST 新增、DELETE 刪除（boss+admin）。
+// 擴充：加入「模板（預設版型）」API，並維持既有 GET/POST/DELETE 介面不變。
+// 角色權限：
+// - 健康檢查與驗證：任何人可呼叫健康；驗證需正確帳密或通關碼/固定密碼。
+// - 讀清單：admin/viewer（維持原規則）；但讀模板：admin/viewer/input 皆可。
+// - 新增紀錄：admin/input（維持原規則）；新增模板：admin/input。
+// - 刪除：boss+admin（維持原規則）。
+
 exports.handler = async (event) => {
   const ENV = process.env || {};
   const API_KEY   = ENV.JSONBIN_API_KEY;
   const BIN_ID    = ENV.JSONBIN_BIN_ID;
   const PASSCODE  = ENV.PASSCODE;
 
-  // 解析 ACCOUNTS_JSON（舊機制）
-  const BASE_ACCOUNTS = parseAccounts(ENV.ACCOUNTS_JSON);
+  // 舊機制（注意：環境變數名採用 ACCOUNTS_JSON 與使用者提供一致）
+  const BASE_ACCOUNTS = parseAccounts(ENV.ACCOUNT_JSON || ENV.ACCOUNTS_JSON || ENV.ACCOUNT_JSON);
 
   // 依環境變數擴充 input/viewer（新機制）
   const ACCOUNTS = buildAccounts(BASE_ACCOUNTS, {
@@ -31,7 +38,7 @@ exports.handler = async (event) => {
     return json(500, { error: 'Missing env: JSONBIN_API_KEY / JSONBIN_BIN_ID' });
   }
 
-  // --- 驗證 ---
+  // --- 驗證（帳號/固定密碼/通關碼皆支援） ---
   const auth = authenticate(ACCOUNTS, PASSCODE, event.headers);
   if (!auth.ok) return json(auth.status || 401, { ok:false, error: auth.error || 'Unauthorized' });
 
@@ -40,14 +47,38 @@ exports.handler = async (event) => {
     return json(200, { ok: true, mode: auth.mode, role: auth.role, user: auth.user || '' });
   }
 
+  // ====== 模板（預設版型）API ======
+  // GET /api/inspections?templates=1             → 取得模板清單（admin/viewer/input 皆可）
+  if (event.httpMethod === 'GET' && (qs.templates === '1' || qs.templates === 'true')) {
+    if (!allow(auth.role, ['admin', 'viewer', 'input'])) return json(403, { ok:false, error:'Forbidden' });
+    const g = await jsonbinGet(BIN_ID, API_KEY);
+    if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
+    const list = listFromJson(g.json);
+    const templates = list.filter(x => x && x.type === 'template');
+    return json(200, { ok:true, templates });
+  }
+
+  // POST /api/inspections?template=1             → 儲存一筆模板（admin/input）
+  if (event.httpMethod === 'POST' && (qs.template === '1' || qs.template === 'true')) {
+    if (!allow(auth.role, ['admin', 'input'])) return json(403, { ok:false, error:'Forbidden' });
+    let body = {}; try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
+    const t = sanitizeTemplate(body.template || body.record || {}, auth.user);
+    if (!t.ok) return json(400, { ok:false, error: t.error || 'Invalid template' });
+    const rec = t.data;
+    const result = await saveWithRetry(BIN_ID, API_KEY, rec, 5);
+    if (!result.ok) return json(500, { ok:false, error:'Failed to save template', lastStatus: result.lastStatus, lastText: result.lastText });
+    return json(200, { ok:true, id: rec.id });
+  }
+
+  // ====== 原本的診斷/修復/讀取/新增/刪除 ======
   // 診斷資料（admin/viewer）
   if (event.httpMethod === 'GET' && (qs.diag === '1' || qs.diag === 'true')) {
     if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error: 'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
     if (!g.ok) return json(g.status || 500, { ok:false, error: 'JSONBIN GET failed', detail: g.text });
     const list = listFromJson(g.json);
-    const last = list.length ? list[list.length-1] : null;
-    return json(200, { ok:true, count:list.length, last: last ? { id:last.id, timestamp:last.timestamp, inspector:last.inspector, hasMeasurements: Array.isArray(last.measurements) } : null });
+    const last = list.filter(x => x.type !== 'template').pop() || null;
+    return json(200, { ok:true, count:list.filter(x=>x.type!=='template').length, last: last ? { id:last.id, timestamp:last.timestamp, inspector:last.inspector, hasMeasurements: Array.isArray(last.measurements) } : null });
   }
 
   // 修復（admin）
@@ -67,10 +98,10 @@ exports.handler = async (event) => {
     if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error:'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
     if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
-    return json(200, listFromJson(g.json));
+    return json(200, listFromJson(g.json).filter(x => x.type !== 'template'));
   }
 
-  // 新增（admin/input）
+  // 新增紀錄（admin/input）
   if (event.httpMethod === 'POST') {
     if (!allow(auth.role, ['admin', 'input'])) return json(403, { ok:false, error:'Forbidden' });
     let body = {}; try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
@@ -84,6 +115,7 @@ exports.handler = async (event) => {
 
   // 刪除（boss+admin）
   if (event.httpMethod === 'DELETE') {
+    const qs = event.queryStringParameters || {};
     const id = (qs.id || '').trim();
     if (!id) return json(400, { ok:false, error:'Missing id' });
 
@@ -113,7 +145,7 @@ exports.handler = async (event) => {
 function buildAccounts(baseAccounts, env) {
   const base = Array.isArray(baseAccounts) ? baseAccounts : [];
   const admins = base.filter(a => (a.role || '').toLowerCase() === 'admin');
-  const parseCsv = (s) => String(s || '').split(/[,，\n]/).map(x => x.trim()).filter(Boolean);
+  const parseCsv = (s) => String(s || '').split(/[,，\\n]/).map(x => x.trim()).filter(Boolean);
   const inputUsers  = parseCsv(env.INPUT_USERS_CSV);
   const viewerUsers = parseCsv(env.VIEWER_USERS_CSV);
   const inputPwd    = String(env.INPUT_FIXED_PWD || '');
@@ -174,85 +206,141 @@ async function jsonbinGet(binId, apiKey) {
 async function jsonbinPut(binId, apiKey, list) {
   try {
     const r = await fetch('https://api.jsonbin.io/v3/b/' + binId, {
-      method:'PUT', headers:{ 'Content-Type':'application/json', 'X-Master-Key': apiKey },
-      body: JSON.stringify({ record: list })
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': apiKey,
+      },
+      body: JSON.stringify(list),
     });
     const text = await r.text();
-    return { ok:r.ok, status:r.status, text };
+    let json = null; try { json = JSON.parse(text); } catch (e) { json = null; }
+    return { ok: r.ok, status: r.status, text, json };
+  } catch (e) {
+    return { ok:false, status:0, text:String(e) };
+  }
+}
+async function jsonbinPatch(binId, apiKey, list) {
+  try {
+    const r = await fetch('https://api.jsonbin.io/v3/b/' + binId, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': apiKey,
+      },
+      body: JSON.stringify(list),
+    });
+    const text = await r.text();
+    let json = null; try { json = JSON.parse(text); } catch (e) { json = null; }
+    return { ok: r.ok, status: r.status, text, json };
   } catch (e) {
     return { ok:false, status:0, text:String(e) };
   }
 }
 
-/* ======= 資料處理 ======= */
-function listFromJson(data){
-  if (!data) return [];
-  if (Array.isArray(data)) return data;
-  if (data.record) return listFromJson(data.record);
-  if (data.records) return listFromJson(data.records);
-  if (data.id && data.timestamp) return [data];
+/* ======= 資料操作 ======= */
+function listFromJson(json){
+  if (!json) return [];
+  const doc = json.record || json.records || json || [];
+  if (Array.isArray(doc)) return doc;
+  if (Array.isArray(doc.items)) return doc.items;
   return [];
 }
-function dedupById(arr){
+
+function uuid(){
+  return 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function nowIso(){
+  return new Date().toISOString();
+}
+
+function sanitizeRecord(rec, user){
+  const r = rec && typeof rec === 'object' ? JSON.parse(JSON.stringify(rec)) : {};
+  r.id = r.id || uuid();
+  r.type = 'record';
+  r.timestamp = r.timestamp || nowIso();
+  if (user) r.inspector = r.inspector || user;
+  r.basic = r.basic || {};
+  r.part  = r.part  || {};
+  r.measurements = Array.isArray(r.measurements) ? r.measurements : [];
+  return r;
+}
+
+function sanitizeTemplate(tpl, user){
+  if (!tpl || typeof tpl !== 'object') return { ok:false, error:'template missing' };
+  const t = JSON.parse(JSON.stringify(tpl));
+  t.id = t.id || uuid();
+  t.type = 'template';
+  t.timestamp = nowIso();
+  if (user) t.creator = user;
+  const norm = (s)=> String(s||'').trim().toUpperCase();
+  t.key = {
+    supplier: norm(t.key?.supplier || t.basic?.supplier || ''),
+    partNo:   norm(t.key?.partNo   || t.part?.partNo   || ''),
+    drawingNo:norm(t.key?.drawingNo|| t.part?.drawingNo|| ''),
+    material: norm(t.key?.material || t.part?.material || ''),
+    spec:     norm(t.key?.spec     || t.part?.spec     || ''),
+    category: norm(t.key?.category || t.part?.category || ''),
+    process:  norm(t.key?.process  || t.part?.process  || ''),
+  };
+  for (const k of Object.keys(t.key)) if (!t.key[k]) delete t.key[k];
+  t.basic = t.basic || {};
+  t.part  = t.part  || {};
+  t.rows  = Array.isArray(t.rows) ? t.rows.map(slimRow) : [];
+  return { ok:true, data: t };
+
+  function slimRow(r){
+    const o = {};
+    o.code = (r.code||'').trim();
+    o.item = (r.item||'').trim();
+    o.nominal = String(r.nominal ?? '').trim();
+    o.tolMinus = String(r.tolMinus ?? '').trim();
+    o.tolPlus  = String(r.tolPlus  ?? '').trim();
+    o.appearance = !!r.appearance;
+    return o;
+  }
+}
+
+function dedupById(list){
   const seen = new Set(); const out = [];
-  for (const x of arr){
-    const id = String(x && x.id || '');
-    if (!id || seen.has(id)) continue;
-    seen.add(id); out.push(x);
+  for (const it of list){
+    if (!it || !it.id) { out.push(it); continue; }
+    if (seen.has(it.id)) continue;
+    seen.add(it.id); out.push(it);
   }
   return out;
 }
-function sanitizeRecord(r, who){
-  try{
-    const now = new Date().toISOString();
-    const id = r.id && String(r.id) || `INS-${now.replace(/\D/g,'').slice(0,14)}-${Math.floor(100+Math.random()*900)}`;
-    return {
-      id, timestamp: r.timestamp || now,
-      inspector: r.inspector || who || '',
-      supplier: r.supplier || '', supplierEn: r.supplierEn || '', supplierCode: r.supplierCode || '',
-      partNo: r.partNo || '', drawingNo: r.drawingNo || '',
-      revision: r.revision || '',
-      process: r.process || r.processCode || '',
-      orderNo: r.orderNo || '',
-      lotNo: r.lotNo || '',
-      material: r.material || '',
-      spec: r.spec || '',
-      category: r.category || '',
-      notes: r.notes || '',
-      appearance: Array.isArray(r.appearance) ? r.appearance : [],
-      measurements: Array.isArray(r.measurements) ? r.measurements : [],
-      overallResult: r.overallResult || ''
-    };
-  }catch{ return r; }
-}
 
-/* ======= 儲存/刪除（重試） ======= */
-async function saveWithRetry(binId, apiKey, record, maxTry){
-  let tries=0, lastStatus=0, lastText='';
-  while (tries < (maxTry||3)){
-    tries++;
+async function saveWithRetry(binId, apiKey, rec, tries){
+  let last = { ok:false, status:0, text:'' };
+  for (let i=0;i<(tries||3);i++){
     const g = await jsonbinGet(binId, apiKey);
-    if (!g.ok){ lastStatus=g.status; lastText=g.text; continue; }
-    const list = listFromJson(g.json);
-    list.push(record);
-    const p = await jsonbinPut(binId, apiKey, list);
+    if (!g.ok) { last = g; await wait(200*i); continue; }
+    let list = listFromJson(g.json);
+    list.push(rec);
+    list = dedupById(list);
+    const p = await jsonbinPatch(binId, apiKey, list);
     if (p.ok) return { ok:true };
-    lastStatus = p.status; lastText = p.text;
-    await new Promise(r => setTimeout(r, 250*tries));
+    last = p;
+    await wait(200*(i+1));
   }
-  return { ok:false, lastStatus, lastText };
+  return { ok:false, lastStatus:last.status, lastText:last.text };
 }
-async function deleteWithRetry(binId, apiKey, id, maxTry){
-  let tries=0, lastStatus=0, lastText='';
-  while (tries < (maxTry||3)){
-    tries++;
+async function deleteWithRetry(binId, apiKey, id, tries){
+  let last = { ok:false, status:0, text:'' };
+  for (let i=0;i<(tries||3);i++){
     const g = await jsonbinGet(binId, apiKey);
-    if (!g.ok){ lastStatus=g.status; lastText=g.text; continue; }
-    const list = listFromJson(g.json).filter(x => x && x.id !== id);
+    if (!g.ok) { last = g; await wait(200*i); continue; }
+    let list = listFromJson(g.json);
+    const n = list.length;
+    list = list.filter(x => String(x.id) !== String(id));
+    if (list.length === n) return { ok:true, deleted:false };
     const p = await jsonbinPut(binId, apiKey, list);
     if (p.ok) return { ok:true, deleted:true };
-    lastStatus = p.status; lastText = p.text;
-    await new Promise(r => setTimeout(r, 250*tries));
+    last = p;
+    await wait(200*(i+1));
   }
-  return { ok:false, lastStatus, lastText };
+  return { ok:false, lastStatus:last.status, lastText:last.text };
 }
+function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
