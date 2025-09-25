@@ -272,7 +272,7 @@ function showCategory(v){
         const text = await res.text();
         if (!res.ok) throw new Error(text || ('HTTP '+res.status));
         let data={}; try{ data=JSON.parse(text);}catch{ data=text; }
-        records = listFromJson(data).filter(r => r && Array.isArray(r.measurements) && String(r.kind||'') !== 'template');
+        records = listFromJson(data).filter(r => r && Array.isArray(r.measurements));
         records.sort((a,b)=>(b.timestamp||'').localeCompare(a.timestamp||''));
         if (new URLSearchParams(location.search).get('debug')==='1'){
           raw.style.display='block'; raw.textContent = text;
