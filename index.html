@@ -821,11 +821,11 @@ if (!sOpt || !partNo) {
           }else{
             const tr = addMeasureRow();
             if (tr) {
-              if (r.code) last.querySelector('.code').value = r.code;
-              if (r.item) last.querySelector('.name').value = r.item;
-              if (r.nominal) last.querySelector('.nom').value = r.nominal;
-              if (r.tolMinus) last.querySelector('.lo').value = r.tolMinus;
-              if (r.tolPlus) last.querySelector('.hi').value = r.tolPlus;
+              if (r.code) tr.querySelector('.code').value = r.code;
+              if (r.item) tr.querySelector('.name').value = r.item;
+              if (r.nominal) tr.querySelector('.nom').value = r.nominal;
+              if (r.tolMinus) tr.querySelector('.lo').value = r.tolMinus;
+              if (r.tolPlus) tr.querySelector('.hi').value = r.tolPlus;
               updateDecisionForRow(last);
             }
           }
