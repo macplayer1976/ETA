@@ -162,30 +162,23 @@ function parseAccounts(raw) {
     return Array.isArray(arr) ? arr : [];
   } catch { return []; }
 }
-
 function authenticate(accounts, passcodeEnv, headers) {
   const h = headers || {};
   const user = (h['x-user'] || h['X-User'] || '').trim();
   const pass = (h['x-pass'] || h['X-Pass'] || '').trim();
   const team = (h['x-passcode'] || h['X-Passcode'] || '').trim();
 
-  // 1) 若帶有正確的 PASSCODE，直接通過（行動裝置常以通關碼登入），不依賴 ACCOUNTS。
-  if (passcodeEnv && team && team === passcodeEnv) {
-    return { ok:true, mode:'passcode', role:'admin', user:user || '' };
-  }
-
-  // 2) 其次才檢查 ACCOUNTS（帳號密碼）
   if (accounts && accounts.length) {
     const found = accounts.find(a => String(a.user) === user && String(a.pwd) === pass);
     if (!found) return { ok:false, status:401, error:'Unauthorized' };
     const role = (found.role || 'input').toLowerCase();
     return { ok:true, mode:'accounts', role, user };
   }
-
-  // 3) 若無 ACCOUNTS，且也沒有 passcode 命中 → 拒絕
-  return { ok:false, status:401, error:'Unauthorized' };
+  if (!passcodeEnv || team !== passcodeEnv) {
+    return { ok:false, status:401, error:'Unauthorized' };
+  }
+  return { ok:true, mode:'passcode', role:'admin', user:user || '' };
 }
-
 function allow(role, list) { return list.includes((role || '').toLowerCase()); }
 
 /* ======= JSONBIN I/O ======= */
