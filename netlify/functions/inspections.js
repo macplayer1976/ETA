@@ -25,13 +25,7 @@ exports.handler = async (event) => {
   // 健康檢查（不需登入）
   if (event.httpMethod === 'GET' && (qs.health === '1' || qs.health === 'true')) {
     return json(200, { ok: true, runtime: process.version, hasFetch: typeof fetch === 'function' });
-  }
-
-  if (!API_KEY || !BIN_ID) {
-    return json(500, { error: 'Missing env: JSONBIN_API_KEY / JSONBIN_BIN_ID' });
-  }
-
-  // --- 驗證 ---
+  }// --- 驗證 ---
   const auth = authenticate(ACCOUNTS, PASSCODE, event.headers);
   if (!auth.ok) return json(auth.status || 401, { ok:false, error: auth.error || 'Unauthorized' });
 
@@ -47,7 +41,15 @@ exports.handler = async (event) => {
     if (!g.ok) return json(g.status || 500, { ok:false, error: 'JSONBIN GET failed', detail: g.text });
     const list = listFromJson(g.json);
     const last = list.length ? list[list.length-1] : null;
-    return json(200, { ok:true, count:list.length, last: last ? { id:last.id, timestamp:last.timestamp, inspector:last.inspector, hasMeasurements: Array.isArray(last.measurements) } : null });
+    return json(200
+
+  
+
+  if (!API_KEY || !BIN_ID) {
+    return json(500, { error: 'Missing env: JSONBIN_API_KEY / JSONBIN_BIN_ID' });
+  }
+
+  , { ok:true, count:list.length, last: last ? { id:last.id, timestamp:last.timestamp, inspector:last.inspector, hasMeasurements: Array.isArray(last.measurements) } : null });
   }
 
   // 修復（admin）
