@@ -664,6 +664,22 @@ if (!sOpt || !partNo) {
         return L[key] || key;
       }catch{ return key; }
     }
+    // === I18N helpers ===
+    function getLang(){ return localStorage.getItem('qci_lang') || 'zh-TW'; }
+    function setLang(lang){ localStorage.setItem('qci_lang', lang); applyI18n(); if (typeof _afterPick === 'function'){ try{ _afterPick(); }catch{} _afterPick=null; } }
+    function selectLang(lang){ setLang(lang); closeLangModal(); }
+    function openLangModal(){ document.getElementById('langModal').style.display='flex'; }
+    function closeLangModal(){ document.getElementById('langModal').style.display='none'; }
+    function applyI18n(){
+      try{
+        document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); el.innerHTML = t(k); });
+        // placeholders on login
+        const ia = document.getElementById('inspector'); if (ia) ia.placeholder = t('phAccount');
+        const ip = document.getElementById('passcode');  if (ip) ip.placeholder = t('phPassword');
+        // document title
+        const titleEl = document.querySelector('title[data-i18n="title"]'); if (titleEl) titleEl.textContent = t('title');
+      }catch(e){ console.warn('applyI18n error', e); }
+    }
 
     function norm(s){ return String(s||'').trim().toUpperCase(); }
     function getKeyFromForm(){
