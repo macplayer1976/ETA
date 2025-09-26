@@ -52,11 +52,11 @@
       <div class="row">
         <div>
           <label data-i18n="labelAccount">帳號（檢驗人員）</label>
-          <input id="inspector" />
+          <input id="inspector"  autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text" />
         </div>
         <div>
           <label data-i18n="labelPassword">密碼（通關碼/密碼）</label>
-          <input id="passcode" type="password" />
+          <input id="passcode"  type="password"  autocomplete="current-password" inputmode="text" />
         </div>
       </div>
       <div class="toolbar">
@@ -689,19 +689,30 @@ if (!sOpt || !partNo) {
 
     // 登入
     async function onLogin(){
-      const u = document.getElementById('inspector').value.trim();
+      let u = document.getElementById('inspector').value.trim();
       const p = document.getElementById('passcode').value.trim();
       if (!u || !p){ document.getElementById('loginMsg').textContent = t('login_msg_need'); return; }
-      const info = await authCheck(u,p);
+      // First try with original casing; then retry with lowercase username to avoid iOS auto-capitalization issues.
+      let info = await authCheck(u,p);
+      if (!info.ok) {
+        const lower = u.toLowerCase();
+        if (lower !== u) {
+          const info2 = await authCheck(lower, p);
+          if (info2.ok) { u = lower; info = info2; }
+        }
+      }
       if (!info.ok){ document.getElementById('loginMsg').textContent = t('login_msg_wrong'); return; }
-      localStorage.setItem('qci_user', u);
-      localStorage.setItem('qci_pass', p);
-      localStorage.setItem('qci_role', info.role || '');
+      try {
+        localStorage.setItem('qci_user', u);
+        localStorage.setItem('qci_pass', p);
+        localStorage.setItem('qci_role', info.role || '');
+      } catch {}
       document.getElementById('loginMsg').textContent = '';
       showByRole(info.role);
       ensureMeasurementTemplate();
       try{ await loadTemplates(); }catch{}
       tryAutoApplyTemplate();
+
     }
 
     // 初始外觀 + 至少 1 列尺寸
@@ -712,8 +723,19 @@ if (!sOpt || !partNo) {
     }
 
     // 綁定事件
-    document.getElementById('btnLogin').addEventListener('click', onLogin);
-    document.getElementById('btnResetPass').addEventListener('click', () => {
+    \1
+
+// Enable Enter-to-login and ensure mobile keyboards don't alter casing
+;(() => {
+  try {
+    const acc = document.getElementById('inspector');
+    const pwd = document.getElementById('passcode');
+    const enter = (ev) => { if (ev.key === 'Enter') onLogin(); };
+    if (acc) { acc.addEventListener('keydown', enter); }
+    if (pwd) { pwd.addEventListener('keydown', enter); }
+  } catch {}
+})();
+document.getElementById('btnResetPass').addEventListener('click', () => {
       ['qci_user','qci_pass','qci_role','qci_passcode','qci_inspector','qci_lang'].forEach(k => localStorage.removeItem(k));
       alert('Cleared. / 已清除。');
       location.reload();
