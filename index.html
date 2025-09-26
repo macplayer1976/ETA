@@ -309,6 +309,25 @@ let _afterPick = null;
   }
 };
     const PROCESSES = [
+// 供應商下拉
+const SUPPLIERS = [
+  { code:'安可', zh:'安可', en:'AKF' },
+  { code:'安拓', zh:'安拓', en:'ANCHOR' }
+];
+function fillSupplierSelect(){
+  const sel = document.getElementById('supplier');
+  if (!sel) return;
+  sel.innerHTML = SUPPLIERS.map(s=>`<option value="${s.code}" data-zh="${s.zh}" data-en="${s.en}">${s.zh} (${s.en})</option>`).join('');
+  const hint = document.getElementById('supplierEn');
+  if (hint){
+    sel.onchange = ()=>{
+      const opt = sel.options[sel.selectedIndex];
+      hint.textContent = opt ? `English: ${opt.dataset.en}` : '';
+    };
+    sel.dispatchEvent(new Event('change'));
+  }
+}
+
       { code:'WIRE', zh:'線材', en:'WIRE' },
       { code:'FORMING', zh:'成形', en:'FORMING' },
       { code:'TAPING', zh:'攻牙', en:'TAPING' },
@@ -671,8 +690,18 @@ if (!sOpt || !partNo) {
     function openLangModal(){ document.getElementById('langModal').style.display='flex'; }
     function closeLangModal(){ document.getElementById('langModal').style.display='none'; }
     function applyI18n(){
+  try{
+    // 填下拉選單（依語系）
+    if (typeof fillSupplierSelect==='function') fillSupplierSelect();
+    if (typeof fillProcessSelect==='function') fillProcessSelect();
+    if (typeof fillCategorySelect==='function') fillCategorySelect();
+    
+    // 介面文字
+
       try{
-        document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); el.innerHTML = t(k); });
+        document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); el.innerHTML = t(k); 
+  }catch(e){ console.warn('applyI18n error', e); }
+});
         // placeholders on login
         const ia = document.getElementById('inspector'); if (ia) ia.placeholder = t('phAccount');
         const ip = document.getElementById('passcode');  if (ip) ip.placeholder = t('phPassword');
@@ -821,11 +850,11 @@ if (!sOpt || !partNo) {
           }else{
             const tr = addMeasureRow();
             if (tr) {
-              if (r.code) tr.querySelector('.code').value = r.code;
-              if (r.item) tr.querySelector('.name').value = r.item;
-              if (r.nominal) tr.querySelector('.nom').value = r.nominal;
-              if (r.tolMinus) tr.querySelector('.lo').value = r.tolMinus;
-              if (r.tolPlus) tr.querySelector('.hi').value = r.tolPlus;
+              if (r.code) last.querySelector('.code').value = r.code;
+              if (r.item) last.querySelector('.name').value = r.item;
+              if (r.nominal) last.querySelector('.nom').value = r.nominal;
+              if (r.tolMinus) last.querySelector('.lo').value = r.tolMinus;
+              if (r.tolPlus) last.querySelector('.hi').value = r.tolPlus;
               updateDecisionForRow(last);
             }
           }
