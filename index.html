@@ -338,7 +338,7 @@ let _afterPick = null;
 
     // 語言工具
     function getLang(){ return localStorage.getItem('qci_lang') || ''; }
-    function setLang(lang){ localStorage.setItem('qci_lang', lang); applyI18n(); }
+    function setLang(lang){ localStorage.setItem('qci_lang', lang); if (typeof window.applyI18n === 'function') applyI18n(); }
     function selectLang(lang){ setLang(lang); closeLangModal(); if (typeof _afterPick === 'function') _afterPick(); }
     function openLangModal(){ document.getElementById('langModal').style.display='flex'; }
     function closeLangModal(){ document.getElementById('langModal').style.display='none'; }
@@ -698,8 +698,8 @@ if (!sOpt || !partNo) {
       alert('Cleared. / 已清除。');
       location.reload();
     });
-    document.getElementById('btnLang').addEventListener('click', ()=>{ _afterPick = applyI18n; openLangModal(); });
-    document.getElementById('btnLang2').addEventListener('click', ()=>{ _afterPick = applyI18n; openLangModal(); });
+    document.getElementById('btnLang').addEventListener('click', ()=>{ _afterPick = function(){ if (typeof window.applyI18n === 'function') window.if (typeof window.applyI18n === 'function') applyI18n(); }; openLangModal();});
+    document.getElementById('btnLang2').addEventListener('click', ()=>{ _afterPick = function(){ if (typeof window.applyI18n === 'function') window.if (typeof window.applyI18n === 'function') applyI18n(); }; openLangModal();});
     document.getElementById('btnAdd').addEventListener('click', addMeasureRow);
     document.getElementById('btnRemove').addEventListener('click', removeLastMeasureRow);
     document.getElementById('btnClearRows').addEventListener('click', ()=>{ clearMeasureRows(); });
@@ -921,7 +921,7 @@ if (!sOpt || !partNo) {
     document.getElementById('btnSaveTpl')?.addEventListener('click', saveTemplate);
 window.addEventListener('DOMContentLoaded', async ()=>{
       // 首次渲染 i18n 與選單
-      applyI18n();
+      if (typeof window.applyI18n === 'function') applyI18n();
       // 若曾經登入過，自動顯示表單
       const u = localStorage.getItem('qci_user') || '';
       const p = localStorage.getItem('qci_pass') || '';
