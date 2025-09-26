@@ -224,6 +224,9 @@ let _afterPick = null;
 /* ============ I18N 字典（補上 labelProcess，避免顯示 key 本身） ============ */
     const I18N = {
       'zh-TW': {
+        tplReapplied:"✅ 已依五項鍵值重新套用預設版型",
+        tplSwitchConfirm:"偵測到圖號、材質、規格、產品類別與製程已齊全並變更，要切換到相對應的預設版型嗎？此動作會覆蓋目前的尺寸與外觀項目。",
+        tplNoStrictMatch:"（尚未找到符合五項鍵值的預設版型）",
 
         title:'現場品檢（AKF）',
         loginPrompt:'請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。',
@@ -261,7 +264,10 @@ let _afterPick = null;
       ,
           btnSaveTpl:"預設版型儲存", tplSaving:"儲存版型中…", tplSaved:"✅ 已儲存為預設版型", tplFail:"❌ 版型儲存失敗：", tplApplied:"✅ 已自動套用預設版型", tplNoMatch:"（尚未找到可套用的預設版型）"
         },
-      'zh-CN': { thCode:'代号', phCode:'例如 A1 / H1', thCode:'代号', phCode:'例如 A1 / H1',
+      'zh-CN': {
+        tplReapplied:"✅ 已依五项键值重新套用预设版型",
+        tplSwitchConfirm:"检测到图号、材质、规格、产品类别与制程已齐全并变更，是否切换到对应的预设版型？此操作会覆盖目前的尺寸与外观项目。",
+        tplNoStrictMatch:"（尚未找到符合五项键值的预设版型）", thCode:'代号', phCode:'例如 A1 / H1', thCode:'代号', phCode:'例如 A1 / H1',
 
         title:'现场品检（AKF）',
         loginPrompt:'请输入「账号（检验人员）」与「密码（通关码/密码）」。',
@@ -299,7 +305,10 @@ let _afterPick = null;
       ,
           btnSaveTpl:"预设版型保存", tplSaving:"保存版型中…", tplSaved:"✅ 已保存为预设版型", tplFail:"❌ 版型保存失败：", tplApplied:"✅ 已自动套用预设版型", tplNoMatch:"（尚未找到可套用的预设版型）"
         },
-      'en': { thCode:'Code', phCode:'e.g. A1 / H1', thCode:'Code', phCode:'e.g. A1 / H1',
+      'en': {
+        tplReapplied:"✅ Re-applied template based on 5-key match",
+        tplSwitchConfirm:"Detected DRAWING NO., MATERIAL, SPEC, CATEGORY and PROCESS all filled and changed. Switch to the matching default template? This will replace current dimension/appearance items.",
+        tplNoStrictMatch:"(No template matches the 5-key combination)", thCode:'Code', phCode:'e.g. A1 / H1', thCode:'Code', phCode:'e.g. A1 / H1',
         title:'On-site QC (Anchor)',
         loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
         labelAccount:'Account (Inspector)', labelPassword:'Password',
@@ -728,6 +737,42 @@ if (!sOpt || !partNo) {
     
     // ====== 預設版型：儲存與自動套用 ======
     let _tplCache = [];
+    function strictKeyReady(key){
+      return ['drawingNo','material','spec','category','process'].every(k => norm(key[k]||''));
+    }
+    function strictKeyString(key){
+      return ['drawingNo','material','spec','category','process'].map(k=>norm(key[k]||'')).join('|');
+    }
+    function findStrictTemplate(key){
+      const K = ['drawingNo','material','spec','category','process'];
+      const normed = {}; K.forEach(k=>{ normed[k]=norm(key[k]||''); });
+      const candidates = (_tplCache||[]).filter(t=>{
+        const tk = t && t.key || {};
+        return K.every(k => norm(tk[k]||'') === normed[k]);
+      });
+      if (!candidates.length) return null;
+      // Prefer more rows, then latest updatedAt / createdAt
+      candidates.sort((a,b)=>{
+        const ra = (a.rows||[]).length, rb=(b.rows||[]).length;
+        if (rb!==ra) return rb-ra;
+        const ta = Date.parse(a.updatedAt||a.createdAt||0)||0;
+        const tb = Date.parse(b.updatedAt||b.createdAt||0)||0;
+        return tb-ta;
+      });
+      return candidates[0];
+    }
+    function hasAnyUserInputs(){
+      const tbody = document.getElementById('tbody');
+      if (!tbody) return false;
+      // any measured values or checked appearance item
+      const hasMeasure = Array.from(tbody.querySelectorAll('tr[data-type="measure"] input.m1, tr[data-type="measure"] input.m2, tr[data-type="measure"] input.m3, tr[data-type="measure"] input.m4, tr[data-type="measure"] input.m5'))
+        .some(inp => String(inp.value||'').trim()!=='');
+      const hasAppear = Array.from(tbody.querySelectorAll('tr[data-type="appearance"] input[type="checkbox"]'))
+        .some(chk => chk.checked);
+      return hasMeasure || hasAppear;
+    }
+
+    let _lastStrictKey = '';
 
     function t(key){ 
       try{
@@ -754,6 +799,30 @@ if (!sOpt || !partNo) {
 
     function buildTemplateForSave(){
       const key = getKeyFromForm();
+      // If 5-key combo is fully filled and changed, try exact match and force-apply
+      if (strictKeyReady(key)){
+        const strictK = strictKeyString(key);
+        if (strictK !== _lastStrictKey){
+          const tplMatch = findStrictTemplate(key);
+          const msg = document.getElementById('msg');
+          if (tplMatch){
+            // Confirm if user already input measurements/appearance
+            if (!hasAnyUserInputs() || confirm(t('tplSwitchConfirm'))){
+              applyTemplate(tplMatch, { force:true });
+              _lastStrictKey = strictK;
+              msg.textContent = t('tplReapplied');
+              return;
+            } else {
+              // user cancelled switch; remember key to avoid prompting again until top fields change again
+              _lastStrictKey = strictK;
+            }
+          } else {
+            msg.textContent = t('tplNoStrictMatch');
+            _lastStrictKey = strictK;
+          }
+        }
+      }
+
       const supSel = document.getElementById('supplier');
       const supplierText = supSel && supSel.value ? supSel.value : '';
       const tpl = {
@@ -841,7 +910,8 @@ if (!sOpt || !partNo) {
       return { need, hit, score: hit };
     }
 
-    function applyTemplate(tpl){
+    function applyTemplate(tpl, opts){
+      const force = !!(opts && opts.force);
       if (!tpl) return false;
       // 填基本與料件資訊（只覆蓋空白）
       const setIfEmpty = (id, val) => {
@@ -868,7 +938,7 @@ if (!sOpt || !partNo) {
         return get('.code') || get('.name') || get('.nom') || get('.lo') || get('.hi');
       });
 
-      if (rows.length === 0 || !hasAnyDefinition){
+      if (force || rows.length === 0 || !hasAnyDefinition){
         // 清空（保留外觀列），再依模板建立定義
         clearMeasureRows(); ensureAppearanceRow();
         (tpl.rows || []).forEach(r => {
@@ -896,6 +966,30 @@ if (!sOpt || !partNo) {
     function tryAutoApplyTemplate(){
       if (!_tplCache || !_tplCache.length) return;
       const key = getKeyFromForm();
+      // If 5-key combo is fully filled and changed, try exact match and force-apply
+      if (strictKeyReady(key)){
+        const strictK = strictKeyString(key);
+        if (strictK !== _lastStrictKey){
+          const tplMatch = findStrictTemplate(key);
+          const msg = document.getElementById('msg');
+          if (tplMatch){
+            // Confirm if user already input measurements/appearance
+            if (!hasAnyUserInputs() || confirm(t('tplSwitchConfirm'))){
+              applyTemplate(tplMatch, { force:true });
+              _lastStrictKey = strictK;
+              msg.textContent = t('tplReapplied');
+              return;
+            } else {
+              // user cancelled switch; remember key to avoid prompting again until top fields change again
+              _lastStrictKey = strictK;
+            }
+          } else {
+            msg.textContent = t('tplNoStrictMatch');
+            _lastStrictKey = strictK;
+          }
+        }
+      }
+
       let best = null, bestScore = -1, bestNeed = 0;
       for(const tpl of _tplCache){
         const s = scoreTemplate(tpl, key);
