@@ -223,111 +223,165 @@ const viewOnlyTip = document.getElementById('viewOnlyTip');
 let _afterPick = null;
 /* ============ I18N 字典（補上 labelProcess，避免顯示 key 本身） ============ */
     const I18N = {
-  'zh-TW': {
-    title:'現場品檢（AKF）',
-    loginPrompt:'請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。',
-    labelAccount:'帳號（檢驗人員）', labelPassword:'密碼（通關碼/密碼）',
-    btnLogin:'登入', btnReset:'清除本機記錄', btnHealth:'健康檢查',
-    labelSupplier:'供應商', labelPartNo:'料號 (Part No.)', labelDrawingNo:'圖號 (Drawing No.)',
-    labelRevision:'版次 (Revision)', labelProcess:'製程 (Process)', labelNotes:'備註',
-    labelOrderNo:'訂單號碼', labelLotNo:'生產批號', labelMaterial:'材質', labelSpec:'規格', labelCategory:'產品類別',
-    phOrderNo:'例如：PO12345', phLotNo:'例如：2025-09-A', phMaterial:'例如：SCM435', phSpec:'例如：M8 x 30', phCategory:'例如：螺栓',
-    sectionTitle:'尺寸與外觀檢驗',
-    hintAppearance:'第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。',
-    thItem:'項目 / 尺寸名稱', thCode:'代號', thNominal:'標準值', thTolMinus:'下限公差', thTolPlus:'上限公差',
-    thM1:'實測1', thM2:'實測2', thM3:'實測3', thM4:'實測4', thM5:'實測5', thDecision:'結果',
-    btnAdd:'＋新增尺寸', btnRemove:'－刪除最後一列', btnClearRows:'清空尺寸列（保留外觀）',
-    btnSave:'儲存到雲端', btnGoReport:'查看/列印報告',
-    viewOnlyTip:'您的角色是 <strong>viewer</strong>（只能看/印報告）。請改到 <a href="report.html">報告頁</a>。',
-    langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：',
-    phAccount:'例如：boss / work1 / QC1', phPassword:'例如：admin*** / in*** / view***',
-    phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸穩定/外觀無瑕疵',
-    '項目/尺寸名稱':'例：頭部厚度', phCode:'例如 A1 / H1', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
-    phM1:'實測1', phM2:'實測2', phM3:'實測3', phM4:'實測4', phM5:'實測5',
-    login_msg_need:'請輸入帳號與密碼', login_msg_auto:'自動驗證中...', login_msg_wrong:'❌ 帳號或密碼錯誤', login_verifying:'驗證中...',
-    save_saving:'儲存中...', save_ok:'✅ 已儲存到雲端（可到報告頁查看/列印）', save_fail:'❌ 儲存失敗：',
-    need_supplier_part:'請輸入供應商與料號',
-    appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
-    sketchTitle:'參考簡圖', sketchHint:'供檢驗時快速參考主要尺寸與形狀（圖檔：{file}）。',
-    btnSaveTpl:'預設版型儲存', tplSaving:'儲存版型中…', tplSaved:'✅ 已儲存為預設版型', tplFail:'❌ 版型儲存失敗：', tplApplied:'✅ 已自動套用預設版型', tplNoMatch:'（尚未找到可套用的預設版型）'
-  },
-  'zh-CN': {
-    title:'现场品检（AKF）',
-    loginPrompt:'请输入「账号（检验人员）」与「密码（通关码/密码）」。',
-    labelAccount:'账号（检验人员）', labelPassword:'密码（通关码/密码）',
-    btnLogin:'登录', btnReset:'清除本机记录', btnHealth:'健康检查',
-    labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)',
-    labelRevision:'版次 (Revision)', labelProcess:'制程 (Process)', labelNotes:'备注',
-    labelOrderNo:'订单号码', labelLotNo:'生产批号', labelMaterial:'材质', labelSpec:'规格', labelCategory:'产品类别',
-    phOrderNo:'例如：PO12345', phLotNo:'例如：2025-09-A', phMaterial:'例如：SCM435', phSpec:'例如：M8 x 30', phCategory:'例如：螺栓',
-    sectionTitle:'尺寸与外观检验',
-    hintAppearance:'第 <strong>1</strong> 行为 <strong>外观检查</strong>（可留空）；第 <strong>2</strong> 行开始为尺寸量测。',
-    thItem:'项目 / 尺寸名称', thCode:'代号', thNominal:'标准值', thTolMinus:'下限公差', thTolPlus:'上限公差',
-    thM1:'实测1', thM2:'实测2', thM3:'实测3', thM4:'实测4', thM5:'实测5', thDecision:'判定',
-    btnAdd:'＋新增尺寸', btnRemove:'－删除最后一行', btnClearRows:'清空尺寸行（保留外观）',
-    btnSave:'保存到云端', btnGoReport:'查看/打印报告',
-    viewOnlyTip:'您的账号是 <strong>viewer</strong>（只能看/打印）。请前往 <a href="report.html">报告页</a>。',
-    langTitle:'选择语言 / Language', langHint:'请选择界面语言：',
-    phAccount:'例如：boss / work1 / QC1', phPassword:'例如：admin*** / in*** / view***',
-    phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸稳定/外观无瑕疵',
-    '項目/尺寸名稱':'例：头部厚度', phCode:'例如 A1 / H1', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
-    phM1:'实测1', phM2:'实测2', phM3:'实测3', phM4:'实测4', phM5:'实测5',
-    login_msg_need:'请输入账号与密码', login_msg_auto:'自动验证中...', login_msg_wrong:'❌ 账号或密码错误', login_verifying:'验证中...',
-    save_saving:'保存中...', save_ok:'✅ 已保存到云端（可去报告页查看/打印）', save_fail:'❌ 保存失败：',
-    need_supplier_part:'请输入供应商与料号',
-    appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
-    sketchTitle:'参考简图', sketchHint:'便于检验时快速参考主要尺寸与形状（图档：{file}）。',
-    btnSaveTpl:'预设版型保存', tplSaving:'保存版型中…', tplSaved:'✅ 已保存为预设版型', tplFail:'❌ 版型保存失败：', tplApplied:'✅ 已自动套用预设版型', tplNoMatch:'（尚未找到可套用的预设版型）'
-  },
-  'en': {
-    title:'On-site QC (Anchor)',
-    loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
-    labelAccount:'Account (Inspector)', labelPassword:'Password',
-    btnLogin:'Sign in', btnReset:'Clear local data', btnHealth:'Health Check',
-    labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.',
-    labelRevision:'Revision', labelProcess:'Process', labelNotes:'Notes',
-    labelOrderNo:'Order No.', labelLotNo:'Lot No.', labelMaterial:'Material', labelSpec:'Spec', labelCategory:'Product Category',
-    phOrderNo:'e.g. PO12345', phLotNo:'e.g. 2025-09-A', phMaterial:'e.g. SCM435', phSpec:'e.g. M8 x 30', phCategory:'e.g. Bolt',
-    sectionTitle:'Appearance & Dimensional Inspection',
-    hintAppearance:'Row <strong>1</strong> is <strong>Appearance</strong> (optional). From row <strong>2</strong> onwards are dimensions.',
-    thItem:'Item / Dimension', thCode:'Code', thNominal:'Nominal', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
-    thM1:'Sample1', thM2:'Sample2', thM3:'Sample3', thM4:'Sample4', thM5:'Sample5', thDecision:'Decision',
-    btnAdd:'＋Add dimension', btnRemove:'－Remove last row', btnClearRows:'Clear dimension rows (keep appearance)',
-    btnSave:'Save to cloud', btnGoReport:'View/Print Reports',
-    viewOnlyTip:'Your role is <strong>viewer</strong> (view/print only). Go to <a href="report.html">Reports</a>.',
-    langTitle:'Choose language', langHint:'Select UI language:',
-    phAccount:'e.g. boss / work1 / QC1', phPassword:'e.g. admin*** / in*** / view***',
-    phSupplier:'e.g. Anchor / AKF', phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6', phRevision:'e.g. Rev.B', phNotes:'e.g. Dimensions stable / No defects',
-    '項目/尺寸名稱':'e.g. Head thickness', phCode:'e.g. A1 / H1', phNominal:'e.g. 3.000', phTolMinus:'e.g. -0.100', phTolPlus:'e.g. 0.100',
-    phM1:'Sample1', phM2:'Sample2', phM3:'Sample3', phM4:'Sample4', phM5:'Sample5',
-    login_msg_need:'Please enter account and password', login_msg_auto:'Auto verifying...', login_msg_wrong:'❌ Account or password is incorrect', login_verifying:'Verifying...',
-    save_saving:'Saving...', save_ok:'✅ Saved to cloud (see report page)', save_fail:'❌ Save failed:',
-    need_supplier_part:'Please enter supplier and part no.',
-    appearanceTitle:'Appearance', optionDash:'—', optionOK:'O.K', optionNG:'NG',
-    sketchTitle:'Reference Sketch', sketchHint:'For quick reference to key dimensions and shapes (file: {file}).',
-    btnSaveTpl:'Save as Template', tplSaving:'Saving template…', tplSaved:'✅ Template saved', tplFail:'❌ Template save failed:', tplApplied:'✅ Auto‑applied template', tplNoMatch:'(no matching template yet)'
-  }
-};
-    const PROCESSES = [
-// 供應商下拉
-const SUPPLIERS = [
-  { code:'安可', zh:'安可', en:'AKF' },
-  { code:'安拓', zh:'安拓', en:'ANCHOR' }
-];
-function fillSupplierSelect(){
-  const sel = document.getElementById('supplier');
-  if (!sel) return;
-  sel.innerHTML = SUPPLIERS.map(s=>`<option value="${s.code}" data-zh="${s.zh}" data-en="${s.en}">${s.zh} (${s.en})</option>`).join('');
-  const hint = document.getElementById('supplierEn');
-  if (hint){
-    sel.onchange = ()=>{
-      const opt = sel.options[sel.selectedIndex];
-      hint.textContent = opt ? `English: ${opt.dataset.en}` : '';
-    };
-    sel.dispatchEvent(new Event('change'));
-  }
-}
+      'zh-TW': {
 
+        title:'現場品檢（AKF）',
+        loginPrompt:'請輸入「帳號（檢驗人員）」與「密碼（通關碼/密碼）」。',
+        labelAccount:'帳號（檢驗人員）', labelPassword:'密碼（通關碼/密碼）',
+        btnLogin:'登入', btnReset:'清除本機記錄', btnHealth:'健康檢查',
+        labelSupplier:'供應商', labelPartNo:'料號 (Part No.)', labelDrawingNo:'圖號 (Drawing No.)',
+        labelRevision:'版次 (Revision)', labelProcess:'製程 (Process)', labelNotes:'備註',
+        labelOrderNo:'訂單號碼',
+        labelLotNo:'生產批號',
+        labelMaterial:'材質',
+        labelSpec:'規格',
+        labelCategory:'產品類別',
+        phOrderNo:'例如：PO12345',
+        phLotNo:'例如：2025-09-A',
+        phMaterial:'例如：SCM435',
+        phSpec:'例如：M8 x 30',
+        phCategory:'例如：螺栓',
+        sectionTitle:'尺寸與外觀檢驗',
+        hintAppearance:'第 <strong>1</strong> 列為 <strong>外觀檢查</strong>（可留空）；從第 <strong>2</strong> 列開始為尺寸量測。',
+        thItem:'項目 / 尺寸名稱', thCode:'代號', thNominal:'標準值', thTolMinus:'下限公差', thTolPlus:'上限公差',
+        thM1:'實測1', thM2:'實測2', thM3:'實測3', thM4:'實測4', thM5:'實測5', thDecision:'結果',
+        btnAdd:'＋新增尺寸', btnRemove:'－刪除最後一列', btnClearRows:'清空尺寸列（保留外觀）',
+        btnSave:'儲存到雲端', btnGoReport:'查看/列印報告',
+        viewOnlyTip:'您的角色是 <strong>viewer</strong>（只能看/印報告）。請改到 <a href="report.html">報告頁</a>。',
+        langTitle:'選擇語言 / Language', langHint:'請選擇介面語言：',
+        phAccount:'例如：boss / work1 / QC1', phPassword:'例如：admin*** / in*** / view***',
+        phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸穩定/外觀無瑕疵',
+        '項目/尺寸名稱':'例：頭部厚度', phCode:'例如 A1 / H1', phCode:'例如 A1 / H1', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
+        phM1:'實測1', phM2:'實測2', phM3:'實測3', phM4:'實測4', phM5:'實測5',
+        login_msg_need:'請輸入帳號與密碼', login_msg_auto:'自動驗證中...', login_msg_wrong:'❌ 帳號或密碼錯誤', login_verifying:'驗證中...',
+        save_saving:'儲存中...', save_ok:'✅ 已儲存到雲端（可到報告頁查看/列印）', save_fail:'❌ 儲存失敗：',
+        need_supplier_part:'請輸入供應商與料號',
+        appearanceTitle:'外觀檢查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
+        sketchTitle:"\u53c3\u8003\u7c21\u5716", sketchHint:"\u4f9b\u6aa2\u9a57\u6642\u5feb\u901f\u53c3\u8003\u4e3b\u8981\u5c3a\u5bf8\u8207\u5f62\u72c0\uff08\u5716\u6a94\uff1afinal_finished.jpg\uff09\u3002"
+      ,
+          btnSaveTpl:"預設版型儲存", tplSaving:"儲存版型中…", tplSaved:"✅ 已儲存為預設版型", tplFail:"❌ 版型儲存失敗：", tplApplied:"✅ 已自動套用預設版型", tplNoMatch:"（尚未找到可套用的預設版型）"
+        },
+      'zh-CN': { thCode:'代号', phCode:'例如 A1 / H1', thCode:'代号', phCode:'例如 A1 / H1',
+
+        title:'现场品检（AKF）',
+        loginPrompt:'请输入「账号（检验人员）」与「密码（通关码/密码）」。',
+        labelAccount:'账号（检验人员）', labelPassword:'密码（通关码/密码）',
+        btnLogin:'登录', btnReset:'清除本机记录', btnHealth:'健康检查',
+        labelSupplier:'供应商', labelPartNo:'料号 (Part No.)', labelDrawingNo:'图号 (Drawing No.)',
+        labelRevision:'版次 (Revision)', labelProcess:'制程 (Process)', labelNotes:'备注', labelOrderNo:'订单号码', labelLotNo:'生产批号', labelMaterial:'材质', labelSpec:'规格', labelCategory:'产品类别',
+        labelOrderNo:'訂單號碼',
+        labelLotNo:'生產批號',
+        labelMaterial:'材質',
+        labelSpec:'規格',
+        labelCategory:'產品類別',
+        phOrderNo:'例如：PO12345',
+        phLotNo:'例如：2025-09-A',
+        phMaterial:'例如：SCM435',
+        phSpec:'例如：M8 x 30',
+        phCategory:'例如：螺栓',
+        sectionTitle:'尺寸与外观检验',
+        hintAppearance:'第 <strong>1</strong> 行为 <strong>外观检查</strong>（可留空）；第 <strong>2</strong> 行开始为尺寸量测。',
+        thItem:'项目 / 尺寸名称', thCode:'代號', thNominal:'标准值', thTolMinus:'下限公差', thTolPlus:'上限公差',
+        thM1:'实测1', thM2:'实测2', thM3:'实测3', thM4:'实测4', thM5:'实测5', thDecision:'判定',
+        btnAdd:'＋新增尺寸', btnRemove:'－删除最后一行', btnClearRows:'清空尺寸行（保留外观）',
+        btnSave:'保存到云端', btnGoReport:'查看/打印报告',
+        viewOnlyTip:'您的账号是 <strong>viewer</strong>（只能看/打印）。请前往 <a href="report.html">报告页</a>。',
+        langTitle:'选择语言 / Language', langHint:'请选择界面语言：',
+        phAccount:'例如：boss / work1 / QC1', phPassword:'例如：admin*** / in*** / view***',
+        phSupplier:'例如：安拓 / 安可', phPartNo:'例如：RT138', phDrawingNo:'例如：WKNO137-6', phRevision:'例如：Rev.B', phNotes:'例如：尺寸稳定/外观无瑕疵', phOrderNo:'例如：PO12345', phLotNo:'例如：2025-09-A', phMaterial:'例如：SCM435', phSpec:'例如：M8 x 30', phCategory:'例如：螺栓',
+        '項目/尺寸名稱':'例：头部厚度', phCode:'例如 A1 / H1', phNominal:'例：3.000', phTolMinus:'例：-0.100', phTolPlus:'例：0.100',
+        phM1:'实测1', phM2:'实测2', phM3:'实测3', phM4:'实测4', phM5:'实测5',
+        login_msg_need:'请输入账号与密码', login_msg_auto:'自动验证中...', login_msg_wrong:'❌ 账号或密码错误', login_verifying:'验证中...',
+        save_saving:'保存中...', save_ok:'✅ 已保存到云端（可去报告页查看/打印）', save_fail:'❌ 保存失败：',
+        need_supplier_part:'请输入供应商与料号',
+        appearanceTitle:'外观检查', optionDash:'—', optionOK:'O.K', optionNG:'NG',
+        sketchTitle:"\u53c2\u8003\u7b80\u56fe", sketchHint:"\u4fbf\u4e8e\u68c0\u9a8c\u65f6\u5feb\u901f\u53c2\u8003\u4e3b\u8981\u5c3a\u5bf8\u4e0e\u5f62\u72b6\uff08\u56fe\u6863\uff1afinal_finished.jpg\uff09\u3002"
+      ,
+          btnSaveTpl:"预设版型保存", tplSaving:"保存版型中…", tplSaved:"✅ 已保存为预设版型", tplFail:"❌ 版型保存失败：", tplApplied:"✅ 已自动套用预设版型", tplNoMatch:"（尚未找到可套用的预设版型）"
+        },
+      'en': { thCode:'Code', phCode:'e.g. A1 / H1', thCode:'Code', phCode:'e.g. A1 / H1',
+        title:'On-site QC (Anchor)',
+        loginPrompt:'Please enter “Account (Inspector)” and “Password”.',
+        labelAccount:'Account (Inspector)', labelPassword:'Password',
+        btnLogin:'Sign in', btnReset:'Clear local data', btnHealth:'Health Check',
+        labelSupplier:'Supplier', labelPartNo:'Part No.', labelDrawingNo:'Drawing No.',
+        labelRevision:'Revision', labelProcess:'Process', labelNotes:'Notes', labelOrderNo:'Order No.', labelLotNo:'Lot No.', labelMaterial:'Material', labelSpec:'Spec', labelCategory:'Product Category',
+        labelOrderNo:'訂單號碼',
+        labelLotNo:'生產批號',
+        labelMaterial:'材質',
+        labelSpec:'規格',
+        labelCategory:'產品類別',
+        phOrderNo:'例如：PO12345',
+        phLotNo:'例如：2025-09-A',
+        phMaterial:'例如：SCM435',
+        phSpec:'例如：M8 x 30',
+        phCategory:'例如：螺栓',
+        sectionTitle:'Appearance & Dimensional Inspection',
+        hintAppearance:'Row <strong>1</strong> is <strong>Appearance</strong> (optional). From row <strong>2</strong> onwards are dimensions.',
+        thItem:'Item / Dimension', thCode:'Code', thNominal:'Nominal', thTolMinus:'Lower Tol.', thTolPlus:'Upper Tol.',
+        thM1:'Sample1', thM2:'Sample2', thM3:'Sample3', thM4:'Sample4', thM5:'Sample5', thDecision:'Decision',
+        btnAdd:'＋Add dimension', btnRemove:'－Remove last row', btnClearRows:'Clear dimension rows (keep appearance)',
+        btnSave:'Save to cloud', btnGoReport:'View/Print Reports',
+        viewOnlyTip:'Your role is <strong>viewer</strong> (view/print only). Go to <a href="report.html">Reports</a>.',
+        langTitle:'Choose language', langHint:'Select UI language:',
+        sketchTitle:'Reference Sketch', sketchHint:'For quick reference to key dimensions and shapes (file: {file}).',
+        btnSaveTpl:'Save as Template', tplSaving:'Saving template…', tplSaved:'✅ Template saved', tplFail:'❌ Template save failed:', tplApplied:'✅ Auto‑applied template', tplNoMatch:'(no matching template yet)',phAccount:'e.g. boss / work1 / QC1', phPassword:'e.g. admin*** / in*** / view***',
+        phSupplier:'e.g. Anchor / AKF', phPartNo:'e.g. RT138', phDrawingNo:'e.g. WKNO137-6', phRevision:'e.g. Rev.B', phNotes:'e.g. Dimensions stable / No defects', phOrderNo:'e.g. PO12345', phLotNo:'e.g. 2025-09-A', phMaterial:'e.g. SCM435', phSpec:'e.g. M8 x 30', phCategory:'e.g. Bolt',
+        '項目/尺寸名稱':'e.g. Head thickness', phCode:'例如 A1 / H1', phNominal:'e.g. 3.000', phTolMinus:'e.g. -0.100', phTolPlus:'e.g. 0.100',
+        phM1:'Sample1', phM2:'Sample2', phM3:'Sample3', phM4:'Sample4', phM5:'Sample5',
+        login_msg_need:'Please enter account & password', login_msg_auto:'Auto checking...', login_msg_wrong:'❌ Wrong account or password', login_verifying:'Verifying...',
+        save_saving:'Saving...', save_ok:'✅ Saved (check the report page to view/print)', save_fail:'❌ Save failed: ',
+        need_supplier_part:'Enter supplier & part no.',
+        appearanceTitle:'Appearance', optionDash:'—', optionOK:'O.K', optionNG:'NG'
+      }
+    };
+
+    // 語言工具
+    function getLang(){ return localStorage.getItem('qci_lang') || ''; }
+    function setLang(lang){ localStorage.setItem('qci_lang', lang); applyI18n(); }
+    function selectLang(lang){ setLang(lang); closeLangModal(); if (typeof _afterPick === 'function') _afterPick(); }
+    function openLangModal(){ document.getElementById('langModal').style.display='flex'; }
+    function closeLangModal(){ document.getElementById('langModal').style.display='none'; }
+    function t(key){ const lang = getLang() || 'zh-TW'; const dict = I18N[lang] || I18N['zh-TW']; return dict[key] ?? (I18N['zh-TW'][key] ?? key); }
+    function applyI18n(){
+      // 填選單（會用到語言）
+      fillSupplierSelect(); 
+      fillProcessSelect();
+      fillCategorySelect();
+
+      // 文案
+      document.querySelectorAll('[data-i18n]').forEach(el=>{
+        const k = el.getAttribute('data-i18n');
+        if (k) el.innerHTML = t(k);
+      });
+      // placeholder
+      const m = {
+        '#inspector':'phAccount', '#passcode':'phPassword',
+        '#supplier':'phSupplier', '#orderNo':'phOrderNo', '#lotNo':'phLotNo', '#partNo':'phPartNo', '#drawingNo':'phDrawingNo', '#material':'phMaterial', '#spec':'phSpec', '#category':'phCategory', '#notes':'phNotes'
+      };
+      Object.entries(m).forEach(([sel,key])=>{ const el=document.querySelector(sel); if (el) el.placeholder = t(key); });
+      updateSketchByCategory();
+    }
+
+    // 供應商下拉
+    const SUPPLIERS = [
+      { code:'安可', zh:'安可', en:'AKF' },
+      { code:'安拓', zh:'安拓', en:'ANCHOR' }
+    ];
+    function fillSupplierSelect(){
+      const sel = document.getElementById('supplier');
+      if (!sel) return;
+      sel.innerHTML = SUPPLIERS.map(s=>`<option value="${s.code}" data-zh="${s.zh}" data-en="${s.en}">${s.zh} (${s.en})</option>`).join('');
+      const hint = document.getElementById('supplierEn');
+      sel.onchange = ()=>{
+        const opt = sel.options[sel.selectedIndex];
+        hint.textContent = opt ? `English: ${opt.dataset.en}` : '';
+      };
+      sel.dispatchEvent(new Event('change'));
+    }
+
+    // 製程下拉
+    const PROCESSES = [
       { code:'WIRE', zh:'線材', en:'WIRE' },
       { code:'FORMING', zh:'成形', en:'FORMING' },
       { code:'TAPING', zh:'攻牙', en:'TAPING' },
@@ -428,10 +482,10 @@ function fillCategorySelect(){
       updateDecisionForRow(tr);
       }
     }
-    function addMeasureRow() {
-  const tr = document.createElement('tr');
-  tr.setAttribute('data-type','measure');
-  tr.innerHTML = `
+    function addMeasureRow(){
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-type','measure');
+      tr.innerHTML = `
         <td><input class="code" placeholder="${t('phCode')}" /></td>
         <td><input class="name" placeholder="項目/尺寸名稱" /></td>
         <td><input class="nom" type="number" step="0.001" placeholder="${t('phNominal')}" /></td>
@@ -443,10 +497,9 @@ function fillCategorySelect(){
         <td><input class="m m4" type="number" step="0.001" placeholder="${t('phM4')}" /></td>
         <td><input class="m m5" type="number" step="0.001" placeholder="${t('phM5')}" /></td>
         <td></td>`;
-  updateDecisionForRow(tr);
-  tbody.appendChild(tr);
-  return tr;
-}
+      updateDecisionForRow(tr);;
+      tbody.appendChild(tr);
+    }
     function countMeasureRows(){ return tbody.querySelectorAll('tr[data-type="measure"]').length; }
     function ensureMeasureRows(n){
       while (countMeasureRows() < n) addMeasureRow();
@@ -683,32 +736,6 @@ if (!sOpt || !partNo) {
         return L[key] || key;
       }catch{ return key; }
     }
-    // === I18N helpers ===
-    function getLang(){ return localStorage.getItem('qci_lang') || 'zh-TW'; }
-    function setLang(lang){ localStorage.setItem('qci_lang', lang); applyI18n(); if (typeof _afterPick === 'function'){ try{ _afterPick(); }catch{} _afterPick=null; } }
-    function selectLang(lang){ setLang(lang); closeLangModal(); }
-    function openLangModal(){ document.getElementById('langModal').style.display='flex'; }
-    function closeLangModal(){ document.getElementById('langModal').style.display='none'; }
-    function applyI18n(){
-  try{
-    // 填下拉選單（依語系）
-    if (typeof fillSupplierSelect==='function') fillSupplierSelect();
-    if (typeof fillProcessSelect==='function') fillProcessSelect();
-    if (typeof fillCategorySelect==='function') fillCategorySelect();
-    
-    // 介面文字
-
-      try{
-        document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); el.innerHTML = t(k); 
-  }catch(e){ console.warn('applyI18n error', e); }
-});
-        // placeholders on login
-        const ia = document.getElementById('inspector'); if (ia) ia.placeholder = t('phAccount');
-        const ip = document.getElementById('passcode');  if (ip) ip.placeholder = t('phPassword');
-        // document title
-        const titleEl = document.querySelector('title[data-i18n="title"]'); if (titleEl) titleEl.textContent = t('title');
-      }catch(e){ console.warn('applyI18n error', e); }
-    }
 
     function norm(s){ return String(s||'').trim().toUpperCase(); }
     function getKeyFromForm(){
@@ -848,8 +875,9 @@ if (!sOpt || !partNo) {
           if (r.appearance){
             ensureAppearanceRow();
           }else{
-            const tr = addMeasureRow();
-            if (tr) {
+            addMeasureRow();
+            const last = tbody.querySelector('tr[data-type="measure"]:last-child');
+            if (last){
               if (r.code) last.querySelector('.code').value = r.code;
               if (r.item) last.querySelector('.name').value = r.item;
               if (r.nominal) last.querySelector('.nom').value = r.nominal;
