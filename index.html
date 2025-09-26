@@ -483,7 +483,7 @@ function fillCategorySelect(){
       }
     }
     function addMeasureRow(){
-      const tr = document.createElement('tr');
+const tr = document.createElement('tr');
       tr.setAttribute('data-type','measure');
       tr.innerHTML = `
         <td><input class="code" placeholder="${t('phCode')}" /></td>
@@ -499,6 +499,7 @@ function fillCategorySelect(){
         <td></td>`;
       updateDecisionForRow(tr);;
       tbody.appendChild(tr);
+      return tr;
     }
     function countMeasureRows(){ return tbody.querySelectorAll('tr[data-type="measure"]').length; }
     function ensureMeasureRows(n){
@@ -875,15 +876,14 @@ if (!sOpt || !partNo) {
           if (r.appearance){
             ensureAppearanceRow();
           }else{
-            addMeasureRow();
-            const last = tbody.querySelector('tr[data-type="measure"]:last-child');
-            if (last){
-              if (r.code) last.querySelector('.code').value = r.code;
-              if (r.item) last.querySelector('.name').value = r.item;
-              if (r.nominal) last.querySelector('.nom').value = r.nominal;
-              if (r.tolMinus) last.querySelector('.lo').value = r.tolMinus;
-              if (r.tolPlus) last.querySelector('.hi').value = r.tolPlus;
-              updateDecisionForRow(last);
+            const tr = addMeasureRow();
+            if (tr){
+              if (r.code) tr.querySelector('.code').value = r.code;
+              if (r.item) tr.querySelector('.name').value = r.item;
+              if (r.nominal) tr.querySelector('.nom').value = r.nominal;
+              if (r.tolMinus) tr.querySelector('.lo').value = r.tolMinus;
+              if (r.tolPlus) tr.querySelector('.hi').value = r.tolPlus;
+              updateDecisionForRow(tr);
             }
           }
         });
