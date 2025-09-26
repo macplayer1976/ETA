@@ -740,16 +740,24 @@ if (!sOpt || !partNo) {
     function norm(s){ return String(s||'').trim().toUpperCase(); }
     function getKeyFromForm(){
       const supSel = document.getElementById('supplier');
-      const supplier = supSel && supSel.value ? supSel.value : (supSel && supSel.options[supSel.selectedIndex] ? supSel.options[supSel.selectedIndex].value : '');
+      let supplier = '';
+      if (supSel){
+        if (typeof supSel.value === 'string' && supSel.value !== '') {
+          supplier = supSel.value;
+        } else if (supSel.selectedIndex != null && supSel.options && supSel.options[supSel.selectedIndex]) {
+          supplier = supSel.options[supSel.selectedIndex].value || supSel.options[supSel.selectedIndex].text || '';
+        }
+      }
       return {
         supplier: supplier,
-        partNo: document.getElementById('partNo').value,
-        drawingNo: document.getElementById('drawingNo').value,
-        material: document.getElementById('material').value,
-        spec: document.getElementById('spec').value,
-        category: document.getElementById('category').value,
-        process: document.getElementById('process').value
+        partNo: document.getElementById('partNo')?.value || '',
+        drawingNo: document.getElementById('drawingNo')?.value || '',
+        material: document.getElementById('material')?.value || '',
+        spec: document.getElementById('spec')?.value || '',
+        category: document.getElementById('category')?.value || '',
+        process: document.getElementById('process')?.value || ''
       };
+    };
     }
 
     function buildTemplateForSave(){
@@ -820,7 +828,16 @@ if (!sOpt || !partNo) {
       const p = localStorage.getItem('qci_pass') || '';
       if (!u || !p) return;
       try{
-        const r = await fetch('/api/inspections?templates=1', { headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p } });
+        const ts = Date.now();
+        const r = await fetch('/api/inspections?templates=1&_ts=' + ts, { 
+          cache: 'no-store',
+          headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p, 'Pragma':'no-cache', 'Cache-Control':'no-cache' } 
+        });
+        const txt = await r.text(); let j={}; try{ j = JSON.parse(txt);}catch{}
+        const arr = Array.isArray(j) ? j : (j.templates || j.records || j.record || []);
+        _tplCache = Array.isArray(arr) ? arr : [];
+      }catch{ _tplCache = []; }
+    } });
         const txt = await r.text(); let j={}; try{ j = JSON.parse(txt);}catch{}
         const arr = Array.isArray(j) ? j : (j.templates || j.records || j.record || []);
         _tplCache = Array.isArray(arr) ? arr : [];
@@ -876,7 +893,7 @@ if (!sOpt || !partNo) {
             ensureAppearanceRow();
           }else{
             addMeasureRow();
-            const last = (function(){ const arr=tbody.querySelectorAll('tr[data-type="measure"]'); return arr[arr.length-1]||null; })();
+            const last = (function(){ const arr = tbody.querySelectorAll('tr[data-type="measure"]'); return arr[arr.length-1]||null; })();
             if (last){
               if (r.code) last.querySelector('.code').value = r.code;
               if (r.item) last.querySelector('.name').value = r.item;
