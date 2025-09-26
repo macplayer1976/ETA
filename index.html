@@ -342,28 +342,8 @@ let _afterPick = null;
     function selectLang(lang){ setLang(lang); closeLangModal(); if (typeof _afterPick === 'function') _afterPick(); }
     function openLangModal(){ document.getElementById('langModal').style.display='flex'; }
     function closeLangModal(){ document.getElementById('langModal').style.display='none'; }
-    function t(key){ const lang = getLang() || 'zh-TW'; const dict = I18N[lang] || I18N['zh-TW']; return dict[key] ?? (I18N['zh-TW'][key] ?? key); }
-    function applyI18n(){
-      // 填選單（會用到語言）
-      fillSupplierSelect(); 
-      fillProcessSelect();
-      fillCategorySelect();
-
-      // 文案
-      document.querySelectorAll('[data-i18n]').forEach(el=>{
-        const k = el.getAttribute('data-i18n');
-        if (k) el.innerHTML = t(k);
-      });
-      // placeholder
-      const m = {
-        '#inspector':'phAccount', '#passcode':'phPassword',
-        '#supplier':'phSupplier', '#orderNo':'phOrderNo', '#lotNo':'phLotNo', '#partNo':'phPartNo', '#drawingNo':'phDrawingNo', '#material':'phMaterial', '#spec':'phSpec', '#category':'phCategory', '#notes':'phNotes'
-      };
-      Object.entries(m).forEach(([sel,key])=>{ const el=document.querySelector(sel); if (el) el.placeholder = t(key); });
-      updateSketchByCategory();
-    }
-
-    // 供應商下拉
+    // (removed duplicate t) use the i18n t() defined above
+// 供應商下拉
     const SUPPLIERS = [
       { code:'安可', zh:'安可', en:'AKF' },
       { code:'安拓', zh:'安拓', en:'ANCHOR' }
@@ -487,7 +467,7 @@ function fillCategorySelect(){
       tr.setAttribute('data-type','measure');
       tr.innerHTML = `
         <td><input class="code" placeholder="${t('phCode')}" /></td>
-        <td><input class="name" placeholder="項目/尺寸名稱" /></td>
+        <td><input class="name" placeholder="${t('thItem')}" /></td>
         <td><input class="nom" type="number" step="0.001" placeholder="${t('phNominal')}" /></td>
         <td><input class="lo"  type="number" step="0.001" placeholder="${t('phTolMinus')}" /></td>
         <td><input class="hi"  type="number" step="0.001" placeholder="${t('phTolPlus')}" /></td>
@@ -679,7 +659,7 @@ if (!sOpt || !partNo) {
         // 清空尺寸列（保留外觀）
         clearMeasureRows(); ensureMeasurementTemplate();
         try{ await loadTemplates(); }catch{}
-        tryAutoApplyTemplate();
+        try { setTimeout(tryAutoApplyTemplate, 50); } catch(e) {}
       }catch(e){
         msg.textContent = t('save_fail') + (e.message||e);
       }finally{
@@ -701,7 +681,7 @@ if (!sOpt || !partNo) {
       showByRole(info.role);
       ensureMeasurementTemplate();
       try{ await loadTemplates(); }catch{}
-      tryAutoApplyTemplate();
+      try { setTimeout(tryAutoApplyTemplate, 50); } catch(e) {}
     }
 
     // 初始外觀 + 至少 1 列尺寸
@@ -878,11 +858,11 @@ if (!sOpt || !partNo) {
             addMeasureRow();
             const last = tbody.querySelector('tr[data-type="measure"]:last-child');
             if (last){
-              if (r.code) last.querySelector('.code').value = r.code;
-              if (r.item) last.querySelector('.name').value = r.item;
-              if (r.nominal) last.querySelector('.nom').value = r.nominal;
-              if (r.tolMinus) last.querySelector('.lo').value = r.tolMinus;
-              if (r.tolPlus) last.querySelector('.hi').value = r.tolPlus;
+              if (r.code !== undefined) last.querySelector('.code').value = r.code;
+              if (r.item !== undefined) last.querySelector('.name').value = r.item;
+              if (r.nominal !== undefined && r.nominal !== null && r.nominal !== '') last.querySelector('.nom').value = r.nominal;
+              if (r.tolMinus !== undefined && r.tolMinus !== null && r.tolMinus !== '') last.querySelector('.lo').value = r.tolMinus;
+              if (r.tolPlus !== undefined && r.tolPlus !== null && r.tolPlus !== '') last.querySelector('.hi').value = r.tolPlus;
               updateDecisionForRow(last);
             }
           }
@@ -949,7 +929,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
         showByRole(localStorage.getItem('qci_role') || 'input');
         ensureMeasurementTemplate();
         try{ await loadTemplates(); }catch{}
-        tryAutoApplyTemplate();
+        try { setTimeout(tryAutoApplyTemplate, 50); } catch(e) {}
       }
     });
   </script>
