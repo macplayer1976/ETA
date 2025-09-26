@@ -482,11 +482,11 @@ function fillCategorySelect(){
       updateDecisionForRow(tr);
       }
     }
-    function addMeasureRow(){
-const tr = document.createElement('tr');
+    function addMeasureRow() {const tr = document.createElement('tr');
       tr.setAttribute('data-type','measure');
       tr.innerHTML = `
-        <td><input class="code" placeholder="${t('phCode')}" /></td>
+        <td><input class="code" placeholder="${t('phCode')
+      return tr;}" /></td>
         <td><input class="name" placeholder="項目/尺寸名稱" /></td>
         <td><input class="nom" type="number" step="0.001" placeholder="${t('phNominal')}" /></td>
         <td><input class="lo"  type="number" step="0.001" placeholder="${t('phTolMinus')}" /></td>
@@ -499,7 +499,6 @@ const tr = document.createElement('tr');
         <td></td>`;
       updateDecisionForRow(tr);;
       tbody.appendChild(tr);
-      return tr;
     }
     function countMeasureRows(){ return tbody.querySelectorAll('tr[data-type="measure"]').length; }
     function ensureMeasureRows(n){
@@ -877,13 +876,13 @@ if (!sOpt || !partNo) {
             ensureAppearanceRow();
           }else{
             const tr = addMeasureRow();
-            if (tr){
-              if (r.code) tr.querySelector('.code').value = r.code;
-              if (r.item) tr.querySelector('.name').value = r.item;
-              if (r.nominal) tr.querySelector('.nom').value = r.nominal;
-              if (r.tolMinus) tr.querySelector('.lo').value = r.tolMinus;
-              if (r.tolPlus) tr.querySelector('.hi').value = r.tolPlus;
-              updateDecisionForRow(tr);
+            if (tr) {
+              if (r.code) last.querySelector('.code').value = r.code;
+              if (r.item) last.querySelector('.name').value = r.item;
+              if (r.nominal) last.querySelector('.nom').value = r.nominal;
+              if (r.tolMinus) last.querySelector('.lo').value = r.tolMinus;
+              if (r.tolPlus) last.querySelector('.hi').value = r.tolPlus;
+              updateDecisionForRow(last);
             }
           }
         });
