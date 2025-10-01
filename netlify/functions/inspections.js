@@ -10,8 +10,8 @@ exports.handler = async (event) => {
       .split(/[,，\s]+/).map(s=>s.trim()).filter(Boolean)
   ).concat([
     ENV.JSONBIN_TEMPLATE_BIN_ID || ENV.JSONBIN_TPL_BIN_ID || '',
-    ENV.JSONBIN_TEMPLATE_BIN_ID_2 || ENV.JSONBIN_TPL_BIN_ID_2 || '',
-    ENV.JSONBIN_TEMPLATE_BIN_ID_3 || ENV.JSONBIN_TPL_BIN_ID_3 || ''
+    ENV.JSONBIN_TEMPLATE_BIN_ID_2 || ENV.JSONBIN_TPL_BIN_ID_2 || ENV.JSONBIN_TEMPLATE_BIN_ID__2 || ENV.JSONBIN_TPL_BIN_ID__2 || '',
+    ENV.JSONBIN_TEMPLATE_BIN_ID_3 || ENV.JSONBIN_TPL_BIN_ID_3 || ENV.JSONBIN_TEMPLATE_BIN_ID__3 || ENV.JSONBIN_TPL_BIN_ID__3 || ''
   ]).filter(Boolean);
   const HAS_TPL_BINS = Array.isArray(TPL_BINS) && TPL_BINS.length>0;
   const PASSCODE  = ENV.PASSCODE;
@@ -52,7 +52,7 @@ exports.handler = async (event) => {
 
   // 診斷資料（admin/viewer）
   if (event.httpMethod === 'GET' && (qs.diag === '1' || qs.diag === 'true')) {
-    if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error: 'Forbidden' });
+    if (!allow(auth.role, ['admin', 'viewer', 'input'])) return json(403, { ok:false, error: 'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
     if (!g.ok) return json(g.status || 500, { ok:false, error: 'JSONBIN GET failed', detail: g.text });
     const list = listFromJson(g.json);
@@ -178,7 +178,7 @@ function uniqById(list){
 
 // 讀清單（admin/viewer）
   if (event.httpMethod === 'GET') {
-    if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error:'Forbidden' });
+    if (!allow(auth.role, ['admin', 'viewer', 'input'])) return json(403, { ok:false, error:'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
     if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
     return json(200, listFromJson(g.json));
