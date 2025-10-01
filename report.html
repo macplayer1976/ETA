@@ -37,6 +37,7 @@
       <button class="btn btn-outline" id="btnReset" data-i18n="btnReset">重設帳號</button>
       <button class="btn btn-outline" id="btnDiag" data-i18n="btnDiag">診斷資料</button>
       <button class="btn btn-outline" id="btnRepair" style="display:none" data-i18n="btnRepair">一鍵修復</button>
+      <button class="btn btn-outline" id="btnMigrateTpl" style="display:none" data-i18n="btnMigrateTpl">一鍵搬移模板</button>
       <button class="btn" id="btnPrint" data-i18n="btnPrint">列印 / 存成 PDF</button>
 <button class="btn" id="btnExport" data-i18n="btnExport">下載 Excel（離線）</button>
 </button>
@@ -87,7 +88,10 @@
         labelOrderNo:'訂單號碼：', labelLotNo:'生產批號：', labelPartNo:'料號：', labelDrawingNo:'圖號：', labelRevision:'版次：', labelMaterial:'材質：', labelSpec:'規格：', labelCategory:'產品類別：', labelProcess:'製程：', labelNotes:'備註：',
         labelOverall:'整體結果：', btnPrintOne:'單筆列印', btnDelete:'刪除此筆',
         msgNoPerm:'您的帳號沒有檢視報告的權限（input）。', msgVerify:'驗證中...', msgLoading:'載入中...',
-        msgLoadFail:'❌ 載入失敗：', msgEmpty:'目前沒有可顯示的資料。', msgCount:'共 {n} 筆。可用關鍵字快速過濾。',
+        msgLoadFail:'❌ 載入失敗：', msgEmpty:'目前沒有可顯示的資料。', msgCount:'共 {n,
+        btnMigrateTpl:'一鍵搬移模板',
+        msgMigrateOk:'✅ 已搬移 {m} 筆模板。',
+        msgMigrateFail:'❌ 搬移模板失敗：'} 筆。可用關鍵字快速過濾。',
         msgDeleting:'刪除中...', msgDeleted:'✅ 已刪除 1 筆。', msgDeleteFail:'❌ 刪除失敗：', msgReLogin:'❌ 登入已過期，請重新登入再試。',
         theadCode:'代號', theadItem:'項目 / 尺寸', theadNom:'標準值', theadLo:'下限公差', theadHi:'上限公差',
         theadM1:'樣品/實測1', theadM2:'樣品/實測2', theadM3:'樣品/實測3', theadM4:'樣品/實測4', theadM5:'樣品/實測5', theadDecision:'判定',
@@ -104,7 +108,10 @@
         labelOrderNo:'订单号码：', labelLotNo:'生产批号：', labelPartNo:'料号：', labelDrawingNo:'图号：', labelRevision:'版次：', labelMaterial:'材质：', labelSpec:'规格：', labelCategory:'产品类别：', labelProcess:'制程：', labelNotes:'备注：',
         labelOverall:'整体结果：', btnPrintOne:'单笔打印', btnDelete:'删除此笔',
         msgNoPerm:'您的账号没有检视报告的权限（input）。', msgVerify:'验证中...', msgLoading:'载入中...',
-        msgLoadFail:'❌ 载入失败：', msgEmpty:'目前没有可显示的资料。', msgCount:'共 {n} 笔。可用关键字快速过滤。',
+        msgLoadFail:'❌ 载入失败：', msgEmpty:'目前没有可显示的资料。', msgCount:'共 {n,
+        btnMigrateTpl:'一键搬移模板',
+        msgMigrateOk:'✅ 已搬移 {m} 条模板。',
+        msgMigrateFail:'❌ 搬移模板失败：'} 笔。可用关键字快速过滤。',
         msgDeleting:'删除中...', msgDeleted:'✅ 已删除 1 笔。', msgDeleteFail:'❌ 删除失败：', msgReLogin:'❌ 登录已过期，请重新登录再试。',
         theadCode:'代号', theadItem:'项目 / 尺寸', theadNom:'标准值', theadLo:'下限公差', theadHi:'上限公差',
         theadM1:'样品/实测1', theadM2:'样品/实测2', theadM3:'样品/实测3', theadM4:'样品/实测4', theadM5:'样品/实测5', theadDecision:'判定',
@@ -121,7 +128,10 @@
         labelOrderNo:'Order No.: ', labelLotNo:'Lot No.: ', labelPartNo:'Part No.: ', labelDrawingNo:'Drawing No.: ', labelRevision:'Revision: ', labelMaterial:'Material: ', labelSpec:'Spec: ', labelCategory:'Category: ', labelProcess:'Process: ', labelNotes:'Notes: ',
         labelOverall:'Overall: ', btnPrintOne:'Print single', btnDelete:'Delete',
         msgNoPerm:'Your account has no view permission (input).', msgVerify:'Verifying...', msgLoading:'Loading...',
-        msgLoadFail:'❌ Load failed: ', msgEmpty:'No data to display.', msgCount:'Total {n}. Use keyword to filter.',
+        msgLoadFail:'❌ Load failed: ', msgEmpty:'No data to display.', msgCount:'Total {n,
+        btnMigrateTpl:'Migrate Templates',
+        msgMigrateOk:'✅ Migrated {m} templates.',
+        msgMigrateFail:'❌ Migration failed: '}. Use keyword to filter.',
         msgDeleting:'Deleting...', msgDeleted:'✅ Deleted.', msgDeleteFail:'❌ Delete failed: ', msgReLogin:'❌ Session expired. Please sign in again.',
         theadCode:'Code', theadItem:'Item / Dimension', theadNom:'Nominal', theadLo:'Lower Tol.', theadHi:'Upper Tol.',
         theadM1:'Sample1', theadM2:'Sample2', theadM3:'Sample3', theadM4:'Sample4', theadM5:'Sample5', theadDecision:'Decision',
@@ -203,6 +213,24 @@ function showCategory(v){
       alert('Cleared. / 已清除。');
     });
     document.getElementById('btnDiag').addEventListener('click', diag);
+    document.getElementById('btnMigrateTpl').addEventListener('click', async () => {
+      const u = localStorage.getItem('qci_user')||'';
+      const p = localStorage.getItem('qci_pass')||localStorage.getItem('qci_passcode')||'';
+      if (!u || !p) { alert(t('msgReLogin')); return; }
+      const btn = document.getElementById('btnMigrateTpl');
+      const oldDisabled = btn.disabled; btn.disabled = true;
+      try {
+        const res = await fetch('/api/inspections?migrateTemplates=1', { headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p } });
+        const text = await res.text(); let j={}; try{ j=JSON.parse(text);}catch{}
+        if (!res.ok || !j.ok) throw new Error(text || ('HTTP '+res.status));
+        alert(t('msgMigrateOk').replace('{m}', j.moved||0));
+      } catch (e) {
+        alert(t('msgMigrateFail') + (e && e.message ? e.message : ''));
+      } finally {
+        btn.disabled = oldDisabled;
+      }
+    });
+
     document.getElementById('btnRepair').addEventListener('click', repair);
     document.getElementById('btnLang').addEventListener('click', ()=> openLangModal());
     document.getElementById('filterText').addEventListener('input', render);
@@ -245,6 +273,7 @@ function showCategory(v){
         currentUser = (j.user || '');
         canDelete = (role === 'admin' && String(currentUser).toLowerCase() === 'boss');
         document.getElementById('btnRepair').style.display = role === 'admin' ? '' : 'none';
+        document.getElementById('btnMigrateTpl').style.display = role === 'admin' ? '' : 'none';
         return { ok:true };
       } catch { return { ok:false }; }
     }
