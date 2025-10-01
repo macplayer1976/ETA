@@ -5,8 +5,6 @@ exports.handler = async (event) => {
   const API_KEY   = ENV.JSONBIN_API_KEY;
   const BIN_ID    = ENV.JSONBIN_BIN_ID;
   const TPL_BIN_ID = ENV.JSONBIN_TPL_BIN_ID || ENV.JSONBIN_TEMPLATES_BIN_ID || '';
-  const META_BIN_ID = ENV.JSONBIN_META_BIN_ID || '';
-  const LIMIT_BYTES = Number(ENV.JSONBIN_LIMIT_BYTES||'95000');
   const PASSCODE  = ENV.PASSCODE;
 
   // 解析 ACCOUNTS_JSON（舊機制）
@@ -134,43 +132,9 @@ exports.handler = async (event) => {
     if (!body || !body.record) return json(400, { ok:false, error:'Missing record' });
 
     const rec = sanitizeRecord(body.record, auth.user);
-    // ---- smart save with sharding/trim ----
-    // 1) decide target bin
-    let targetBin = BIN_ID;
-    const meta = await getMeta(API_KEY);
-    if (meta && meta.ok && meta.active) targetBin = meta.active;
-
-    // 2) read current records
-    const cur = await jsonbinGet(targetBin, API_KEY);
-    const curArr = Array.isArray(cur.json)?cur.json:[];
-
-    // 3) check size limit; if exceed and have META -> rotate; else trim
-    let needRotate = false;
-    const nextBytes = approxBytesAfter(curArr, rec);
-    if (LIMIT_BYTES && nextBytes > LIMIT_BYTES){
-      needRotate = !!(META_BIN_ID); // rotate only when META configured
-      if (needRotate){
-        const c = await jsonbinCreate(API_KEY, []);
-        if (!c.ok || !c.id) return json(500, { ok:false, error:'Rotate create failed', lastStatus:c.status, lastText:c.text });
-        targetBin = c.id;
-        const nextShards = Array.from(new Set([...(meta.shards||[]), (meta.active||'')].filter(Boolean)));
-        const sm = await setMeta(API_KEY, { active:targetBin, shards: nextShards });
-        if (!sm.ok) return json(500, { ok:false, error:'Rotate meta save failed', lastStatus:sm.lastStatus, lastText:sm.lastText });
-      }else{
-        // fallback: trim oldest until under limit
-        while (curArr.length && approxBytesAfter(curArr, rec) > LIMIT_BYTES){
-          curArr.shift();
-        }
-      }
-    }
-
-    // 4) persist
-    const dataToSave = (needRotate ? [rec] : [...curArr, rec]);
-    const result = await saveRaw(targetBin, API_KEY, dataToSave);
-    if (!result.ok) return json(result.lastStatus || 500, { ok:false, error:'Failed to save after retries', lastStatus: result.lastStatus, lastText: result.lastText, bin: targetBin });
-    // if rotated, also respond with info
-    return json(200, { ok:true, id: rec.id, bin: targetBin, rotated: needRotate });
-
+    const result = await saveWithRetry(BIN_ID, API_KEY, rec, 5);
+    if (!result.ok) return json(500, { ok:false, error: 'Failed to save after retries', lastStatus: result.lastStatus, lastText: result.lastText });
+    return json(200, { ok:true, id: rec.id });
   }
 
   // 刪除（boss+admin）
@@ -389,51 +353,4 @@ async function deleteWithRetry(binId, apiKey, id, maxTry){
     await new Promise(r => setTimeout(r, 250*tries));
   }
   return { ok:false, lastStatus, lastText };
-}
-
-
-// ===== JSONBin helpers for sharding =====
-async function jsonbinCreate(apiKey, initial){
-  try{
-    const r = await fetch('https://api.jsonbin.io/v3/b', {
-      method:'POST',
-      headers:{ 'X-Master-Key': apiKey, 'Content-Type':'application/json' },
-      body: JSON.stringify(Array.isArray(initial)?initial:[])
-    });
-    const txt = await r.text(); let j={}; try{ j=JSON.parse(txt);}catch{}
-    if(!r.ok) return { ok:false, status:r.status, text:txt };
-    const id = (j && (j.metadata?.id || j.id)) || '';
-    return { ok:true, id, raw:j };
-  }catch(e){ return { ok:false, status:0, text:String(e) }; }
-}
-async function getMeta(apiKey){
-  if(!META_BIN_ID) return { ok:true, active:'', shards:[] };
-  const g = await jsonbinGet(META_BIN_ID, apiKey);
-  if(!g.ok) return { ok:false, error:'meta_get_failed', detail:g.text||g.status };
-  const rec = Array.isArray(g.json)? (g.json[0]||{}) : (g.json||{});
-  const active = rec.active || '';
-  const shards = rec.shards || (active?[active]:[]);
-  return { ok:true, active, shards };
-}
-async function setMeta(apiKey, next){
-  if(!META_BIN_ID) return { ok:true };
-  const payload = [ { active: next.active||'', shards: next.shards||[] } ];
-  const r = await saveRaw(META_BIN_ID, apiKey, payload);
-  return r;
-}
-async function saveRaw(binId, apiKey, arrayData){
-  try{
-    const r = await fetch(`https://api.jsonbin.io/v3/b/${encodeURIComponent(binId)}`, {
-      method:'PUT',
-      headers:{ 'X-Master-Key': apiKey, 'Content-Type':'application/json' },
-      body: JSON.stringify(arrayData||[])
-    });
-    const txt = await r.text();
-    let j={}; try{ j=JSON.parse(txt);}catch{}
-    if(!r.ok) return { ok:false, lastStatus:r.status, lastText:txt };
-    return { ok:true, lastStatus:r.status, lastText:'' };
-  }catch(e){ return { ok:false, lastStatus:0, lastText:String(e) }; }
-}
-function approxBytesAfter(arr, addOne){
-  try{ return JSON.stringify([...(arr||[]), addOne]).length; }catch(_){ return Infinity; }
 }
