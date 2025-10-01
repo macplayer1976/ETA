@@ -1,16 +1,16 @@
-
 // netlify/functions/inspections.js
 // 擴充帳號模式 + 舊通關碼相容；GET 列表、POST 新增、DELETE 刪除（boss+admin）。
-// 2025-10-01: 新增 purgeTemplates（admin）以清空 JSONBin 內的模板，避免用量爆表。
-//             其餘路由維持相容：templates=1 仍可讀雲端模板、template=1 仍可寫雲端模板（但前端已改為預設寫本機）。
 exports.handler = async (event) => {
   const ENV = process.env || {};
   const API_KEY   = ENV.JSONBIN_API_KEY;
   const BIN_ID    = ENV.JSONBIN_BIN_ID;
+  const TPL_BIN_ID = ENV.JSONBIN_TEMPLATE_BIN_ID || ENV.JSONBIN_TPL_BIN_ID || ENV.JSONBIN_TEMPLATES_BIN_ID || ENV.JSONBIN_BIN_TPL_ID || '';
   const PASSCODE  = ENV.PASSCODE;
 
+  // 解析 ACCOUNTS_JSON（舊機制）
   const BASE_ACCOUNTS = parseAccounts(ENV.ACCOUNT_JSON || ENV.ACCOUNTS_JSON || ENV.ACCOUNT_JSON);
 
+  // 依環境變數擴充 input/viewer（新機制）
   const ACCOUNTS = buildAccounts(BASE_ACCOUNTS, {
     INPUT_USERS_CSV:   ENV.INPUT_USERS_CSV || '',
     INPUT_FIXED_PWD:   ENV.INPUT_FIXED_PWD || '',
@@ -18,10 +18,12 @@ exports.handler = async (event) => {
     VIEWER_FIXED_PWD:  ENV.VIEWER_FIXED_PWD || '',
   });
 
+  // CORS
   if (event.httpMethod === 'OPTIONS') return text(200, 'OK');
 
   const qs = event.queryStringParameters || {};
 
+  // 健康檢查（不需登入）
   if (event.httpMethod === 'GET' && (qs.health === '1' || qs.health === 'true')) {
     return json(200, { ok: true, runtime: process.version, hasFetch: typeof fetch === 'function' });
   }
@@ -30,13 +32,16 @@ exports.handler = async (event) => {
     return json(500, { error: 'Missing env: JSONBIN_API_KEY / JSONBIN_BIN_ID' });
   }
 
+  // --- 驗證 ---
   const auth = authenticate(ACCOUNTS, PASSCODE, event.headers);
   if (!auth.ok) return json(auth.status || 401, { ok:false, error: auth.error || 'Unauthorized' });
 
+  // 回傳身份（前端登入檢查用）
   if (event.httpMethod === 'GET' && (qs.auth === '1' || qs.auth === 'true')) {
     return json(200, { ok: true, mode: auth.mode, role: auth.role, user: auth.user || '' });
   }
 
+  // 診斷資料（admin/viewer）
   if (event.httpMethod === 'GET' && (qs.diag === '1' || qs.diag === 'true')) {
     if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error: 'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
@@ -46,6 +51,7 @@ exports.handler = async (event) => {
     return json(200, { ok:true, count:list.length, last: last ? { id:last.id, timestamp:last.timestamp, inspector:last.inspector, hasMeasurements: Array.isArray(last.measurements) } : null });
   }
 
+  // 修復（admin）
   if (event.httpMethod === 'GET' && (qs.repair === '1' || qs.repair === 'true')) {
     if (!allow(auth.role, ['admin'])) return json(403, { ok:false, error:'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
@@ -57,38 +63,77 @@ exports.handler = async (event) => {
     return json(200, { ok:true, repaired:list.length });
   }
 
+  
+  // ====== 模板（預設版型）API ======
+  // GET /api/inspections?templates=1             → 取得模板清單（admin/viewer/input 皆可）
   if (event.httpMethod === 'GET' && (qs.templates === '1' || qs.templates === 'true')) {
     if (!allow(auth.role, ['admin', 'viewer', 'input'])) return json(403, { ok:false, error:'Forbidden' });
-    const g = await jsonbinGet(BIN_ID, API_KEY);
-    if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
-    const list = listFromJson(g.json);
-    const templates = list.filter(x => x && x.type === 'template');
-    return json(200, { ok:true, templates });
+    // 讀取模板：優先從 TPL_BIN_ID，並與主 BIN 中的舊模板合併（相容舊資料）
+    let tplList = [];
+    if (TPL_BIN_ID) {
+      const gt = await jsonbinGet(TPL_BIN_ID, API_KEY);
+      if (gt.ok) { tplList = listFromJson(gt.json).filter(x => x && x.type === 'template'); }
+    }
+    const gr = await jsonbinGet(BIN_ID, API_KEY);
+    if (gr.ok) {
+      const oldTpls = listFromJson(gr.json).filter(x => x && x.type === 'template');
+      // 合併去重（以 id 為準）
+      const seen = new Set(tplList.map(x => String(x.id||'')));
+      for (const t of oldTpls) { const id = String(t.id||''); if (id && !seen.has(id)) { seen.add(id); tplList.push(t); } }
+    } else if (!TPL_BIN_ID) {
+      // 若沒有模板 BIN，又讀主 BIN 失敗 → 回錯
+      return json(gr.status || 500, { ok:false, error:'JSONBIN GET failed', detail: gr.text });
+    }
+    return json(200, { ok:true, templates: tplList });
   }
 
-  if (event.httpMethod === 'GET' && (qs.purgeTemplates === '1' || qs.purgeTemplates === 'true')) {
-    if (!allow(auth.role, ['admin'])) return json(403, { ok:false, error:'Forbidden' });
-    const g = await jsonbinGet(BIN_ID, API_KEY);
-    if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
-    const list = listFromJson(g.json);
-    const kept = list.filter(x => !(x && x.type === 'template'));
-    const removed = list.length - kept.length;
-    const p = await jsonbinPut(BIN_ID, API_KEY, kept);
-    if (!p.ok) return json(p.status || 500, { ok:false, error:'JSONBIN PUT failed', detail:p.text });
-    return json(200, { ok:true, removed, kept: kept.length });
-  }
-
+  // POST /api/inspections?template=1             → 儲存一筆模板（admin/input）
   if (event.httpMethod === 'POST' && (qs.template === '1' || qs.template === 'true')) {
     if (!allow(auth.role, ['admin', 'input'])) return json(403, { ok:false, error:'Forbidden' });
     let body = {}; try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
     const t = sanitizeTemplate(body.template || body.record || {}, auth.user);
     if (!t.ok) return json(400, { ok:false, error: t.error || 'Invalid template' });
     const rec = t.data;
-    const result = await saveWithRetry(BIN_ID, API_KEY, rec, 5);
+    const targetBin = TPL_BIN_ID || BIN_ID; // 若未設定模板 BIN，沿用主 BIN（相容舊版）
+    const result = await saveWithRetry(targetBin, API_KEY, rec, 5);
     if (!result.ok) return json(500, { ok:false, error:'Failed to save template', lastStatus: result.lastStatus, lastText: result.lastText });
     return json(200, { ok:true, id: rec.id });
   }
 
+  // GET /api/inspections?migrateTemplates=1     → 將主 BIN 的舊模板搬移到模板 BIN（僅 admin；需要設定 TPL_BIN_ID）
+  if (event.httpMethod === 'GET' && (qs.migrateTemplates === '1' || qs.migrate === 'templates' || qs.moveTemplates === '1')) {
+    if (!allow(auth.role, ['admin'])) return json(403, { ok:false, error:'Forbidden' });
+    if (!TPL_BIN_ID) return json(400, { ok:false, error:'Missing env: JSONBIN_TEMPLATE_BIN_ID (template bin not set)' });
+
+    const gMain = await jsonbinGet(BIN_ID, API_KEY);
+    if (!gMain.ok) return json(gMain.status || 500, { ok:false, error:'JSONBIN GET (main) failed', detail:gMain.text });
+    const gTpl  = await jsonbinGet(TPL_BIN_ID, API_KEY);
+    const mainList = listFromJson(gMain.json);
+    const tplExisting = gTpl.ok ? listFromJson(gTpl.json).filter(x => x && x.type === 'template') : [];
+
+    const moved = [];
+    const remain = [];
+    const seen = new Set(tplExisting.map(x => String(x.id||'')));
+    for (const x of mainList) {
+      if (x && x.type === 'template') {
+        const id = String(x.id||'');
+        if (id && !seen.has(id)) { seen.add(id); moved.push(x); }
+      } else {
+        remain.push(x);
+      }
+    }
+    // 寫回：模板 BIN 追加、主 BIN 去除模板
+    const tplMerged = tplExisting.concat(moved);
+    const pTpl = await jsonbinPut(TPL_BIN_ID, API_KEY, tplMerged);
+    if (!pTpl.ok) return json(pTpl.status || 500, { ok:false, error:'JSONBIN PUT (template bin) failed', detail:pTpl.text });
+    const pMain = await jsonbinPut(BIN_ID, API_KEY, remain);
+    if (!pMain.ok) return json(pMain.status || 500, { ok:false, error:'JSONBIN PUT (main bin) failed', detail:pMain.text });
+
+    return json(200, { ok:true, moved: moved.length, mainCount: remain.length, templateCount: tplMerged.length });
+  }
+
+
+// 讀清單（admin/viewer）
   if (event.httpMethod === 'GET') {
     if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error:'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
@@ -96,6 +141,7 @@ exports.handler = async (event) => {
     return json(200, listFromJson(g.json));
   }
 
+  // 新增（admin/input）
   if (event.httpMethod === 'POST') {
     if (!allow(auth.role, ['admin', 'input'])) return json(403, { ok:false, error:'Forbidden' });
     let body = {}; try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
@@ -107,6 +153,7 @@ exports.handler = async (event) => {
     return json(200, { ok:true, id: rec.id });
   }
 
+  // 刪除（boss+admin）
   if (event.httpMethod === 'DELETE') {
     const id = (qs.id || '').trim();
     if (!id) return json(400, { ok:false, error:'Missing id' });
@@ -121,6 +168,7 @@ exports.handler = async (event) => {
 
   return json(405, { ok:false, error:'Method Not Allowed' });
 
+  // ---- 小工具 ----
   function headers() {
     return {
       'Access-Control-Allow-Origin': '*',
@@ -132,6 +180,7 @@ exports.handler = async (event) => {
   function text(code, s)    { return { statusCode: code, headers: headers(), body: s }; }
 };
 
+/* ======= 帳號擴充 ======= */
 function buildAccounts(baseAccounts, env) {
   const base = Array.isArray(baseAccounts) ? baseAccounts : [];
   const admins = base.filter(a => (a.role || '').toLowerCase() === 'admin');
@@ -151,6 +200,7 @@ function buildAccounts(baseAccounts, env) {
   return base;
 }
 
+/* ======= 驗證與授權 ======= */
 function parseAccounts(raw) {
   try {
     if (!raw) return [];
@@ -179,6 +229,7 @@ function authenticate(accounts, passcodeEnv, headers) {
 }
 function allow(role, list) { return list.includes((role || '').toLowerCase()); }
 
+/* ======= JSONBIN I/O ======= */
 async function jsonbinGet(binId, apiKey) {
   try {
     const r = await fetch('https://api.jsonbin.io/v3/b/' + binId + '/latest', {
@@ -204,6 +255,7 @@ async function jsonbinPut(binId, apiKey, list) {
   }
 }
 
+/* ======= 資料處理 ======= */
 function listFromJson(data){
   if (!data) return [];
   if (Array.isArray(data)) return data;
@@ -244,12 +296,15 @@ function sanitizeRecord(r, who){
     };
   }catch{ return r; }
 }
+
+/* ======= 驗證模板資料 ======= */
 function sanitizeTemplate(tpl, user){
   const now = new Date().toISOString();
   const id = 'TPL-' + Math.random().toString(36).slice(2,10).toUpperCase();
   const key = tpl.key || {};
   const part = tpl.part || {};
   const rows = Array.isArray(tpl.rows) ? tpl.rows : [];
+  // 至少需要有 supplier 或 partNo 等任一關鍵鍵
   const hasKey = ['supplier','partNo','drawingNo','material','spec','category','process'].some(k => String(key[k]||'').trim()!=='');
   if (!hasKey) return { ok:false, error:'Missing key fields' };
   const cleanRows = rows.filter(r => r && (r.appearance || r.code || r.item || r.nominal || r.tolMinus || r.tolPlus)).map(r=>({
@@ -273,6 +328,8 @@ function sanitizeTemplate(tpl, user){
       process: (key.process||'').toString().trim(),
     },
     part: {
+      partNo: (part.partNo||'').toString().trim(),
+      drawingNo: (part.drawingNo||'').toString().trim(),
       material: (part.material||'').toString().trim(),
       spec: (part.spec||'').toString().trim(),
       category: (part.category||'').toString().trim(),
@@ -282,6 +339,8 @@ function sanitizeTemplate(tpl, user){
   };
   return { ok:true, data: rec };
 }
+
+/* ======= 儲存/刪除（重試） ======= */
 async function saveWithRetry(binId, apiKey, record, maxTry){
   let tries=0, lastStatus=0, lastText='';
   while (tries < (maxTry||3)){
