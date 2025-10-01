@@ -127,8 +127,13 @@ function uniqById(list){
     if (!result.ok) return json(500, { ok:false, error:'Failed to save template', lastStatus: result.lastStatus, lastText: result.lastText });
     return json(200, { ok:true, id: rec.id, bin: targetBin });
 
+
+  }
+
 // GET /api/inspections?migrateTemplates=1     → 將主 BIN 的舊模板搬到對應模板 BIN（僅 admin）
-if (event.httpMethod === 'GET' && (qs.migrateTemplates === '1' || qs.migrateTemplates === 'true')) {
+
+  // Standalone migrate route
+  if (event.httpMethod === 'GET' && (qs.migrateTemplates === '1' || qs.migrateTemplates === 'true')) {
   if (!allow(auth.role, ['admin'])) return json(403, { ok:false, error:'Forbidden' });
   if (!HAS_TPL_BINS) return json(400, { ok:false, error:'Missing template bins: set JSONBIN_TEMPLATE_BIN_ID / _2 / _3 or JSONBIN_TEMPLATE_BINS_CSV' });
 
