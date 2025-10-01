@@ -36,8 +36,8 @@
       <button class="btn btn-outline" id="btnClear" data-i18n="btnClear">清除關鍵字</button>
       <button class="btn btn-outline" id="btnReset" data-i18n="btnReset">重設帳號</button>
       <button class="btn btn-outline" id="btnDiag" data-i18n="btnDiag">診斷資料</button>
-      <button class="btn btn-outline" id="btnRepair" style="display:none" style="display:none" data-i18n="btnRepair">一鍵修復</button>
-      <button id="btnMigrateTpl" style="display:none" class="btn btn-outline">一鍵搬移模板</button>
+      <button class="btn btn-outline" id="btnRepair" style="display:none" data-i18n="btnRepair">一鍵修復</button>
+      <button class="btn btn-outline" id="btnMigrateTpl" style="display:none" data-i18n="btnMigrateTpl">一鍵搬移模板</button>
       <button class="btn" id="btnPrint" data-i18n="btnPrint">列印 / 存成 PDF</button>
 <button class="btn" id="btnExport" data-i18n="btnExport">下載 Excel（離線）</button>
 </button>
@@ -211,20 +211,22 @@ function showCategory(v){
     });
     document.getElementById('btnDiag').addEventListener('click', diag);
     document.getElementById('btnRepair').addEventListener('click', repair);
-    const _mb = document.getElementById('btnMigrateTpl');
-    if (_mb) _mb.addEventListener('click', async () => {
+    document.getElementById('btnMigrateTpl').addEventListener('click', async () => {
       const u = localStorage.getItem('qci_user')||'';
       const p = localStorage.getItem('qci_pass')||localStorage.getItem('qci_passcode')||'';
       if (!u || !p) { alert(t('msgReLogin')); return; }
-      const old = _mb.disabled; _mb.disabled = true;
+      const btn = document.getElementById('btnMigrateTpl');
+      const old = btn.disabled; btn.disabled = true;
       try {
         const res = await fetch('/api/inspections?migrateTemplates=1', { headers:{ 'x-user':u, 'x-pass':p, 'x-passcode':p } });
-        const txt = await res.text(); let j={}; try{ j=JSON.parse(txt);}catch{}
-        if (!res.ok || !j.ok) throw new Error(txt || ('HTTP '+res.status));
+        const text = await res.text(); let j={}; try{ j=JSON.parse(text);}catch{}
+        if (!res.ok || !j.ok) throw new Error(text || ('HTTP '+res.status));
         alert(t('msgMigrateOk').replace('{m}', j.moved||0));
-      } catch(e) {
+      } catch (e) {
         alert(t('msgMigrateFail') + (e && e.message ? e.message : ''));
-      } finally { _mb.disabled = old; }
+      } finally {
+        btn.disabled = old;
+      }
     });
     document.getElementById('btnLang').addEventListener('click', ()=> openLangModal());
     document.getElementById('filterText').addEventListener('input', render);
@@ -267,7 +269,7 @@ function showCategory(v){
         currentUser = (j.user || '');
         canDelete = (role === 'admin' && String(currentUser).toLowerCase() === 'boss');
         document.getElementById('btnRepair').style.display = role === 'admin' ? '' : 'none';
-        const _m = document.getElementById('btnMigrateTpl'); if (_m) _m.style.display = role === 'admin' ? '' : 'none';
+        document.getElementById('btnMigrateTpl').style.display = role === 'admin' ? '' : 'none';
         return { ok:true };
       } catch { return { ok:false }; }
     }
@@ -286,7 +288,7 @@ function showCategory(v){
       msg.textContent = t('msgVerify');
       const ok = await ensureAuth();
       if (!ok.ok){ msg.textContent = '❌ Unauthorized'; return; }
-      if (!['admin','viewer','input'].includes(role)){ msg.textContent = t('msgNoPerm'); return; }
+      if (!['admin','viewer'].includes(role)){ msg.textContent = t('msgNoPerm'); return; }
       msg.textContent = t('msgLoading');
       try{
         const u = localStorage.getItem('qci_user')||'';
