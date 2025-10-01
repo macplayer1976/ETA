@@ -286,7 +286,7 @@ function showCategory(v){
       msg.textContent = t('msgVerify');
       const ok = await ensureAuth();
       if (!ok.ok){ msg.textContent = '❌ Unauthorized'; return; }
-      if (!['admin','viewer'].includes(role)){ msg.textContent = t('msgNoPerm'); return; }
+      if (!['admin','viewer','input'].includes(role)){ msg.textContent = t('msgNoPerm'); return; }
       msg.textContent = t('msgLoading');
       try{
         const u = localStorage.getItem('qci_user')||'';
