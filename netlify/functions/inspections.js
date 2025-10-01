@@ -4,7 +4,6 @@ exports.handler = async (event) => {
   const ENV = process.env || {};
   const API_KEY   = ENV.JSONBIN_API_KEY;
   const BIN_ID    = ENV.JSONBIN_BIN_ID;
-  const TPL_BIN_ID = ENV.JSONBIN_TEMPLATE_BIN_ID || ENV.JSONBIN_TPL_BIN_ID || ENV.JSONBIN_TEMPLATES_BIN_ID || ENV.JSONBIN_BIN_TPL_ID || '';
   const PASSCODE  = ENV.PASSCODE;
 
   // 解析 ACCOUNTS_JSON（舊機制）
@@ -68,23 +67,11 @@ exports.handler = async (event) => {
   // GET /api/inspections?templates=1             → 取得模板清單（admin/viewer/input 皆可）
   if (event.httpMethod === 'GET' && (qs.templates === '1' || qs.templates === 'true')) {
     if (!allow(auth.role, ['admin', 'viewer', 'input'])) return json(403, { ok:false, error:'Forbidden' });
-    // 讀取模板：優先從 TPL_BIN_ID，並與主 BIN 中的舊模板合併（相容舊資料）
-    let tplList = [];
-    if (TPL_BIN_ID) {
-      const gt = await jsonbinGet(TPL_BIN_ID, API_KEY);
-      if (gt.ok) { tplList = listFromJson(gt.json).filter(x => x && x.type === 'template'); }
-    }
-    const gr = await jsonbinGet(BIN_ID, API_KEY);
-    if (gr.ok) {
-      const oldTpls = listFromJson(gr.json).filter(x => x && x.type === 'template');
-      // 合併去重（以 id 為準）
-      const seen = new Set(tplList.map(x => String(x.id||'')));
-      for (const t of oldTpls) { const id = String(t.id||''); if (id && !seen.has(id)) { seen.add(id); tplList.push(t); } }
-    } else if (!TPL_BIN_ID) {
-      // 若沒有模板 BIN，又讀主 BIN 失敗 → 回錯
-      return json(gr.status || 500, { ok:false, error:'JSONBIN GET failed', detail: gr.text });
-    }
-    return json(200, { ok:true, templates: tplList });
+    const g = await jsonbinGet(BIN_ID, API_KEY);
+    if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
+    const list = listFromJson(g.json);
+    const templates = list.filter(x => x && x.type === 'template');
+    return json(200, { ok:true, templates });
   }
 
   // POST /api/inspections?template=1             → 儲存一筆模板（admin/input）
@@ -94,45 +81,10 @@ exports.handler = async (event) => {
     const t = sanitizeTemplate(body.template || body.record || {}, auth.user);
     if (!t.ok) return json(400, { ok:false, error: t.error || 'Invalid template' });
     const rec = t.data;
-    const targetBin = TPL_BIN_ID || BIN_ID; // 若未設定模板 BIN，沿用主 BIN（相容舊版）
-    const result = await saveWithRetry(targetBin, API_KEY, rec, 5);
+    const result = await saveWithRetry(BIN_ID, API_KEY, rec, 5);
     if (!result.ok) return json(500, { ok:false, error:'Failed to save template', lastStatus: result.lastStatus, lastText: result.lastText });
     return json(200, { ok:true, id: rec.id });
   }
-
-  // GET /api/inspections?migrateTemplates=1     → 將主 BIN 的舊模板搬移到模板 BIN（僅 admin；需要設定 TPL_BIN_ID）
-  if (event.httpMethod === 'GET' && (qs.migrateTemplates === '1' || qs.migrate === 'templates' || qs.moveTemplates === '1')) {
-    if (!allow(auth.role, ['admin'])) return json(403, { ok:false, error:'Forbidden' });
-    if (!TPL_BIN_ID) return json(400, { ok:false, error:'Missing env: JSONBIN_TEMPLATE_BIN_ID (template bin not set)' });
-
-    const gMain = await jsonbinGet(BIN_ID, API_KEY);
-    if (!gMain.ok) return json(gMain.status || 500, { ok:false, error:'JSONBIN GET (main) failed', detail:gMain.text });
-    const gTpl  = await jsonbinGet(TPL_BIN_ID, API_KEY);
-    const mainList = listFromJson(gMain.json);
-    const tplExisting = gTpl.ok ? listFromJson(gTpl.json).filter(x => x && x.type === 'template') : [];
-
-    const moved = [];
-    const remain = [];
-    const seen = new Set(tplExisting.map(x => String(x.id||'')));
-    for (const x of mainList) {
-      if (x && x.type === 'template') {
-        const id = String(x.id||'');
-        if (id && !seen.has(id)) { seen.add(id); moved.push(x); }
-      } else {
-        remain.push(x);
-      }
-    }
-    // 寫回：模板 BIN 追加、主 BIN 去除模板
-    const tplMerged = tplExisting.concat(moved);
-    const pTpl = await jsonbinPut(TPL_BIN_ID, API_KEY, tplMerged);
-    if (!pTpl.ok) return json(pTpl.status || 500, { ok:false, error:'JSONBIN PUT (template bin) failed', detail:pTpl.text });
-    const pMain = await jsonbinPut(BIN_ID, API_KEY, remain);
-    if (!pMain.ok) return json(pMain.status || 500, { ok:false, error:'JSONBIN PUT (main bin) failed', detail:pMain.text });
-
-    return json(200, { ok:true, moved: moved.length, mainCount: remain.length, templateCount: tplMerged.length });
-  }
-
-
 // 讀清單（admin/viewer）
   if (event.httpMethod === 'GET') {
     if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error:'Forbidden' });
