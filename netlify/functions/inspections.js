@@ -4,16 +4,6 @@ exports.handler = async (event) => {
   const ENV = process.env || {};
   const API_KEY   = ENV.JSONBIN_API_KEY;
   const BIN_ID    = ENV.JSONBIN_BIN_ID;
-  // 支援多個模板 BIN：可用 CSV 或編號後綴設定
-  const TPL_BINS = (
-    (ENV.JSONBIN_TEMPLATE_BINS_CSV || ENV.JSONBIN_TPL_BINS_CSV || '')
-      .split(/[,，\s]+/).map(s=>s.trim()).filter(Boolean)
-  ).concat([
-    ENV.JSONBIN_TEMPLATE_BIN_ID || ENV.JSONBIN_TPL_BIN_ID || '',
-    ENV.JSONBIN_TEMPLATE_BIN_ID_2 || ENV.JSONBIN_TPL_BIN_ID_2 || ENV.JSONBIN_TEMPLATE_BIN_ID__2 || ENV.JSONBIN_TPL_BIN_ID__2 || '',
-    ENV.JSONBIN_TEMPLATE_BIN_ID_3 || ENV.JSONBIN_TPL_BIN_ID_3 || ENV.JSONBIN_TEMPLATE_BIN_ID__3 || ENV.JSONBIN_TPL_BIN_ID__3 || ''
-  ]).filter(Boolean);
-  const HAS_TPL_BINS = Array.isArray(TPL_BINS) && TPL_BINS.length>0;
   const PASSCODE  = ENV.PASSCODE;
 
   // 解析 ACCOUNTS_JSON（舊機制）
@@ -52,7 +42,7 @@ exports.handler = async (event) => {
 
   // 診斷資料（admin/viewer）
   if (event.httpMethod === 'GET' && (qs.diag === '1' || qs.diag === 'true')) {
-    if (!allow(auth.role, ['admin', 'viewer', 'input'])) return json(403, { ok:false, error: 'Forbidden' });
+    if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error: 'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
     if (!g.ok) return json(g.status || 500, { ok:false, error: 'JSONBIN GET failed', detail: g.text });
     const list = listFromJson(g.json);
@@ -73,112 +63,31 @@ exports.handler = async (event) => {
   }
 
   
-  
-// ---- 模板分流工具 ----
-function tplKey5(rec){
-  const r = rec || {};
-  const get = (k)=>String((r[k]??'')||'').trim().toUpperCase();
-  return [get('drawingNo'), get('material'), get('spec'), get('category'), get('process')].join('|');
-}
-function hashStr(s){ let h=0; for(let i=0;i<s.length;i++){ h=((h<<5)-h)+s.charCodeAt(i); h|=0; } return Math.abs(h); }
-function selectTplBin(rec){
-  if (!HAS_TPL_BINS) return BIN_ID;
-  const basis = String(rec && (rec.id || '')).trim() || tplKey5(rec) || JSON.stringify(rec||{});
-  const idx = hashStr(basis) % TPL_BINS.length;
-  return TPL_BINS[idx];
-}
-function uniqById(list){
-  const out=[]; const seen=new Set();
-  for(const x of list||[]){ const id=String(x && x.id || ''); if(!id || seen.has(id)) continue; seen.add(id); out.push(x); }
-  return out;
-}
-
-// ====== 模板（預設版型）API ======
+  // ====== 模板（預設版型）API ======
   // GET /api/inspections?templates=1             → 取得模板清單（admin/viewer/input 皆可）
   if (event.httpMethod === 'GET' && (qs.templates === '1' || qs.templates === 'true')) {
     if (!allow(auth.role, ['admin', 'viewer', 'input'])) return json(403, { ok:false, error:'Forbidden' });
-    let all = [];
-    // 讀模板 BINs
-    if (HAS_TPL_BINS) {
-      for (const id of TPL_BINS) {
-        const g = await jsonbinGet(id, API_KEY);
-        if (g.ok) all = all.concat(listFromJson(g.json).filter(x => x && x.type === 'template'));
-      }
-    }
-    // 向後相容：也讀主 BIN 的舊模板
-    const gMain = await jsonbinGet(BIN_ID, API_KEY);
-    if (gMain.ok) all = all.concat(listFromJson(gMain.json).filter(x => x && x.type === 'template'));
-    if (!HAS_TPL_BINS && !gMain.ok) return json(gMain.status || 500, { ok:false, error:'JSONBIN GET failed', detail:gMain.text });
-    const templates = uniqById(all);
+    const g = await jsonbinGet(BIN_ID, API_KEY);
+    if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
+    const list = listFromJson(g.json);
+    const templates = list.filter(x => x && x.type === 'template');
     return json(200, { ok:true, templates });
   }
 
-
-  
-// POST /api/inspections?template=1             → 儲存一筆模板（admin/input）
+  // POST /api/inspections?template=1             → 儲存一筆模板（admin/input）
   if (event.httpMethod === 'POST' && (qs.template === '1' || qs.template === 'true')) {
     if (!allow(auth.role, ['admin', 'input'])) return json(403, { ok:false, error:'Forbidden' });
     let body = {}; try { body = JSON.parse(event.body || '{}'); } catch { body = {}; }
     const t = sanitizeTemplate(body.template || body.record || {}, auth.user);
     if (!t.ok) return json(400, { ok:false, error: t.error || 'Invalid template' });
     const rec = t.data;
-    const targetBin = selectTplBin(rec);
-    const result = await saveWithRetry(targetBin, API_KEY, rec, 5);
+    const result = await saveWithRetry(BIN_ID, API_KEY, rec, 5);
     if (!result.ok) return json(500, { ok:false, error:'Failed to save template', lastStatus: result.lastStatus, lastText: result.lastText });
-    return json(200, { ok:true, id: rec.id, bin: targetBin });
-
-
+    return json(200, { ok:true, id: rec.id });
   }
-
-// GET /api/inspections?migrateTemplates=1     → 將主 BIN 的舊模板搬到對應模板 BIN（僅 admin）
-
-  // Standalone migrate route
-  if (event.httpMethod === 'GET' && (qs.migrateTemplates === '1' || qs.migrateTemplates === 'true')) {
-  if (!allow(auth.role, ['admin'])) return json(403, { ok:false, error:'Forbidden' });
-  if (!HAS_TPL_BINS) return json(400, { ok:false, error:'Missing template bins: set JSONBIN_TEMPLATE_BIN_ID / _2 / _3 or JSONBIN_TEMPLATE_BINS_CSV' });
-
-  const gMain = await jsonbinGet(BIN_ID, API_KEY);
-  if (!gMain.ok) return json(gMain.status || 500, { ok:false, error:'JSONBIN GET (main) failed', detail:gMain.text });
-  const mainAll = listFromJson(gMain.json);
-
-  const moved = [];
-  const remain = [];
-  const buckets = new Map(); // binId -> list
-  for (const b of TPL_BINS) buckets.set(b, []);
-
-  for (const x of mainAll) {
-    if (x && x.type === 'template') {
-      const to = selectTplBin(x);
-      if (!buckets.has(to)) buckets.set(to, []);
-      buckets.get(to).push(x);
-      moved.push(String(x.id||''));
-    } else {
-      remain.push(x);
-    }
-  }
-
-  // 寫回模板 BINs
-  for (const [binId, arr] of buckets.entries()) {
-    if (!arr.length) continue;
-    // 讀舊 → 合併 → 去重
-    const g = await jsonbinGet(binId, API_KEY);
-    let list = g.ok ? listFromJson(g.json) : [];
-    list = uniqById(list.concat(arr));
-    const p = await jsonbinPut(binId, API_KEY, list);
-    if (!p.ok) return json(p.status || 500, { ok:false, error:'JSONBIN PUT (template bin) failed', detail:p.text, binId });
-  }
-
-  // 主 BIN 去除模板
-  const pMain = await jsonbinPut(BIN_ID, API_KEY, remain);
-  if (!pMain.ok) return json(pMain.status || 500, { ok:false, error:'JSONBIN PUT (main bin) failed', detail:pMain.text });
-
-  return json(200, { ok:true, moved: moved.length, mainCount: remain.length, bins: TPL_BINS.length });
-}
-  }
-
 // 讀清單（admin/viewer）
   if (event.httpMethod === 'GET') {
-    if (!allow(auth.role, ['admin', 'viewer', 'input'])) return json(403, { ok:false, error:'Forbidden' });
+    if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error:'Forbidden' });
     const g = await jsonbinGet(BIN_ID, API_KEY);
     if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
     return json(200, listFromJson(g.json));
