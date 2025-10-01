@@ -19,7 +19,7 @@ exports.handler = async (event) => {
   const mainId = BIN_ID;
   const tplId  = TPL_BIN_ID || BIN_ID;
 
-  const [gMain, gTpl] = await Promise.all([jsonbinGet(mainId, API_KEY), jsonbinGet(tplId, API_KEY)]);
+  const [gMain, gTpl, gMeta] = await Promise.all([jsonbinGet(mainId, API_KEY), jsonbinGet(tplId, API_KEY), (ENV.JSONBIN_META_BIN_ID? jsonbinGet(ENV.JSONBIN_META_BIN_ID, API_KEY): Promise.resolve({ok:true,json:{}}))]);
 
   const toInfo = (resp) => {
     if (!resp || !resp.ok) return { ok:false, status: resp?.status||0, approxBytes:0, count:0, detail:resp?.text||'' };
@@ -35,10 +35,12 @@ exports.handler = async (event) => {
     };
   };
 
+  const metaRec = Array.isArray(gMeta.json)? (gMeta.json[0]||{}) : (gMeta.json||{});
   return json(200, {
     ok:true,
     main: toInfo(gMain),
     templates: toInfo(gTpl),
+    meta: { ok: gMeta.ok!==false, active: metaRec.active||'', shards: metaRec.shards||[] },
     hint: 'approxMB 接近上限就容易 PUT 失敗；建議拆分 BIN 或清理歷史。'
   });
 };
