@@ -38,7 +38,10 @@
       <button class="btn btn-outline" id="btnDiag" data-i18n="btnDiag">診斷資料</button>
       <button class="btn btn-outline" id="btnRepair" style="display:none" data-i18n="btnRepair">一鍵修復</button>
       <button class="btn" id="btnPrint" data-i18n="btnPrint">列印 / 存成 PDF</button>
+<button id="btnDiag" class="btn btn-secondary" style="margin-left:8px" data-i18n="btnDiag">資料量診斷</button>
+
 <button class="btn" id="btnExport" data-i18n="btnExport">下載 Excel（離線）</button>
+</button>
       <a class="btn" href="index.html" id="btnBack" data-i18n="btnBackToInput">回現場輸入</a>
       <button class="btn btn-outline" id="btnLang">🌐 語言</button>
     </div>
@@ -546,4 +549,40 @@ function showCategory(v){
 
     window.addEventListener('DOMContentLoaded', load);
   </script>
-
+<section id="diagSection" style="display:none; padding:12px; border:1px dashed #999; margin:12px 0;">
+  <pre id="diagOut" style="white-space:pre-wrap;word-break:break-all;margin:0;"></pre>
+</section>
+<script>
+(function(){
+  const btn = document.getElementById('btnDiag');
+  const box = document.getElementById('diagSection');
+  const out = document.getElementById('diagOut');
+  if(!btn) return;
+  btn.addEventListener('click', async () => {
+    btn.disabled = true; out.textContent = '診斷中…'; box.style.display = 'block';
+    try{
+      const h = await buildAuthHeaders();
+      const r = await fetch('/api/diag', { method:'GET', headers:h });
+      const txt = await r.text(); let j={}; try{ j=JSON.parse(txt);}catch(e){}
+      if(!r.ok){ out.textContent = '診斷失敗 HTTP '+r.status+'\\n'+txt; return; }
+      out.textContent = JSON.stringify(j, null, 2);
+    }catch(e){
+      out.textContent = '診斷發生錯誤：'+(e.message||e);
+    }finally{
+      btn.disabled = false;
+    }
+  });
+  async function buildAuthHeaders(){
+    // 從 localStorage 帶入與 report 頁相同的登入資訊
+    const user = localStorage.getItem('login_user')||'';
+    const pass = localStorage.getItem('login_pwd')||'';
+    const headers = {'content-type':'application/json'};
+    if (user && pass){ headers['x-user']=user; headers['x-pass']=pass; }
+    const passcode = localStorage.getItem('login_passcode')||'';
+    if (passcode){ headers['x-passcode']=passcode; }
+    return headers;
+  }
+})();
+</script>
+</body>
+</html>

@@ -683,12 +683,7 @@ if (!sOpt || !partNo) {
           body: JSON.stringify({ record: rec })
         });
         const ttxt = await r.text(); let j={}; try{ j=JSON.parse(ttxt);}catch{}
-        if (!r.ok || (j && j.error)){
-          const extra = (j && (j.lastStatus||j.lastText)) ? ` (HTTP ${j.lastStatus||r.status})` : '';
-          msg.textContent = t('save_fail') + (j?.error || ttxt) + extra;
-          console.error('Save failed', {status:r.status, body:j||ttxt});
-          btn.disabled=false; return;
-        }
+        if (!r.ok || (j && j.error)) throw new Error(j.error || ttxt);
         msg.textContent = t('save_ok');
         // 清空尺寸列（保留外觀）
         clearMeasureRows(); ensureMeasurementTemplate();
