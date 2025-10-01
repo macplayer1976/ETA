@@ -41,15 +41,41 @@ exports.handler = async (event) => {
     return json(200, { ok: true, mode: auth.mode, role: auth.role, user: auth.user || '' });
   }
 
+  
   // 診斷資料（admin/viewer）
+  // GET /api/inspections?diag=1
+  // 回傳目前主 BIN 與模板 BIN 的筆數與估算 PUT 大小（JSON 字串長度）。
   if (event.httpMethod === 'GET' && (qs.diag === '1' || qs.diag === 'true')) {
     if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error: 'Forbidden' });
-    const __BIN_TPL = (TPL_BIN_ID || BIN_ID);
-    const g = await jsonbinGet(__BIN_TPL, API_KEY);
-    if (!g.ok) return json(g.status || 500, { ok:false, error: 'JSONBIN GET failed', detail: g.text });
-    const list = listFromJson(g.json);
-    const last = list.length ? list[list.length-1] : null;
-    return json(200, { ok:true, count:list.length, last: last ? { id:last.id, timestamp:last.timestamp, inspector:last.inspector, hasMeasurements: Array.isArray(last.measurements) } : null });
+
+    const __BIN_MAIN = BIN_ID;
+    const __BIN_TPL  = (TPL_BIN_ID || BIN_ID);
+
+    const [gMain, gTpl] = await Promise.all([
+      jsonbinGet(__BIN_MAIN, API_KEY),
+      jsonbinGet(__BIN_TPL,  API_KEY),
+    ]);
+
+    const toInfo = (resp) => {
+      if (!resp || !resp.ok) return { ok:false, status: resp?.status||0, approxBytes:0, count:0, detail:resp?.text||'' };
+      const arr = listFromJson(resp.json);
+      const str = JSON.stringify(arr || []);
+      return {
+        ok:true,
+        count: Array.isArray(arr)?arr.length:0,
+        approxBytes: str.length,
+        approxKB: Math.round(str.length/102.4)/10,
+        approxMB: Math.round(str.length/10485.76)/100,
+        sampleIds: (arr||[]).slice(-3).map(x=>x && x.id).filter(Boolean)
+      };
+    };
+
+    return json(200, {
+      ok:true,
+      main: toInfo(gMain),
+      templates: toInfo(gTpl),
+      hint: 'JSONBin 免費層單次 PUT 以及 bin 大小有上限，若 approxMB 接近上限，請分 Bin 或裁減歷史。'
+    });
   }
 
   // 修復（admin）
