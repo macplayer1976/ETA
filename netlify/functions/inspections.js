@@ -4,6 +4,7 @@ exports.handler = async (event) => {
   const ENV = process.env || {};
   const API_KEY   = ENV.JSONBIN_API_KEY;
   const BIN_ID    = ENV.JSONBIN_BIN_ID;
+  const TPL_BIN_ID = ENV.JSONBIN_TPL_BIN_ID || ENV.JSONBIN_TEMPLATES_BIN_ID || '';
   const PASSCODE  = ENV.PASSCODE;
 
   // 解析 ACCOUNTS_JSON（舊機制）
@@ -43,7 +44,8 @@ exports.handler = async (event) => {
   // 診斷資料（admin/viewer）
   if (event.httpMethod === 'GET' && (qs.diag === '1' || qs.diag === 'true')) {
     if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error: 'Forbidden' });
-    const g = await jsonbinGet(BIN_ID, API_KEY);
+    const __BIN_TPL = (TPL_BIN_ID || BIN_ID);
+    const g = await jsonbinGet(__BIN_TPL, API_KEY);
     if (!g.ok) return json(g.status || 500, { ok:false, error: 'JSONBIN GET failed', detail: g.text });
     const list = listFromJson(g.json);
     const last = list.length ? list[list.length-1] : null;
@@ -53,7 +55,8 @@ exports.handler = async (event) => {
   // 修復（admin）
   if (event.httpMethod === 'GET' && (qs.repair === '1' || qs.repair === 'true')) {
     if (!allow(auth.role, ['admin'])) return json(403, { ok:false, error:'Forbidden' });
-    const g = await jsonbinGet(BIN_ID, API_KEY);
+    const __BIN_TPL = (TPL_BIN_ID || BIN_ID);
+    const g = await jsonbinGet(__BIN_TPL, API_KEY);
     if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
     let list = listFromJson(g.json);
     list = dedupById(list);
@@ -67,7 +70,8 @@ exports.handler = async (event) => {
   // GET /api/inspections?templates=1             → 取得模板清單（admin/viewer/input 皆可）
   if (event.httpMethod === 'GET' && (qs.templates === '1' || qs.templates === 'true')) {
     if (!allow(auth.role, ['admin', 'viewer', 'input'])) return json(403, { ok:false, error:'Forbidden' });
-    const g = await jsonbinGet(BIN_ID, API_KEY);
+    const __BIN_TPL = (TPL_BIN_ID || BIN_ID);
+    const g = await jsonbinGet(__BIN_TPL, API_KEY);
     if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
     const list = listFromJson(g.json);
     const templates = list.filter(x => x && x.type === 'template');
@@ -81,14 +85,16 @@ exports.handler = async (event) => {
     const t = sanitizeTemplate(body.template || body.record || {}, auth.user);
     if (!t.ok) return json(400, { ok:false, error: t.error || 'Invalid template' });
     const rec = t.data;
-    const result = await saveWithRetry(BIN_ID, API_KEY, rec, 5);
-    if (!result.ok) return json(500, { ok:false, error:'Failed to save template', lastStatus: result.lastStatus, lastText: result.lastText });
+    const __BIN_TPL = (TPL_BIN_ID || BIN_ID);
+    const result = await saveWithRetry(__BIN_TPL, API_KEY, rec, 5);
+    if (!result.ok) return json(result.lastStatus || 500, { ok:false, error:'Failed to save template', lastStatus: result.lastStatus, lastText: result.lastText });
     return json(200, { ok:true, id: rec.id });
   }
 // 讀清單（admin/viewer）
   if (event.httpMethod === 'GET') {
     if (!allow(auth.role, ['admin', 'viewer'])) return json(403, { ok:false, error:'Forbidden' });
-    const g = await jsonbinGet(BIN_ID, API_KEY);
+    const __BIN_TPL = (TPL_BIN_ID || BIN_ID);
+    const g = await jsonbinGet(__BIN_TPL, API_KEY);
     if (!g.ok) return json(g.status || 500, { ok:false, error:'JSONBIN GET failed', detail:g.text });
     return json(200, listFromJson(g.json));
   }
