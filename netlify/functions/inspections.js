@@ -133,7 +133,7 @@ exports.handler = async (event) => {
 
     const rec = sanitizeRecord(body.record, auth.user);
     const result = await saveWithRetry(BIN_ID, API_KEY, rec, 5);
-    if (!result.ok) return json(500, { ok:false, error: 'Failed to save after retries', lastStatus: result.lastStatus, lastText: result.lastText });
+    if (!result.ok) return json(result.lastStatus || 500, { ok:false, error: 'Failed to save after retries', lastStatus: result.lastStatus, lastText: result.lastText });
     return json(200, { ok:true, id: rec.id });
   }
 
