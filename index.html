@@ -682,7 +682,6 @@ if (!sOpt || !partNo) {
           headers: { 'Content-Type':'application/json', 'x-user':u, 'x-pass':p, 'x-passcode':p },
           body: JSON.stringify({ record: rec })
         });
-        try{ const ah = await fetch('/api/inspections?auth=1', {headers: buildAuthHeaders()}); const atxt = await ah.text(); let authInfo={}; try{authInfo=JSON.parse(atxt);}catch{} console.log('auth', authInfo);}catch(_e){}
         const ttxt = await r.text(); let j={}; try{ j=JSON.parse(ttxt);}catch{}
         if (!r.ok || (j && j.error)){
           const extra = (j && (j.lastStatus||j.lastText)) ? ` (HTTP ${j.lastStatus||r.status})` : '';
@@ -1052,16 +1051,6 @@ window.addEventListener('DOMContentLoaded', async ()=>{
         tryAutoApplyTemplate();
       }
     });
-  
-function buildAuthHeaders(){
-  const user = localStorage.getItem('qci_user')||'';
-  const pass = localStorage.getItem('qci_pass')||'';
-  const passcode = localStorage.getItem('qci_passcode')||'';
-  const h = {'content-type':'application/json'};
-  if (user && pass){ h['x-user']=user; h['x-pass']=pass; }
-  if (passcode){ h['x-passcode']=passcode; }
-  return h;
-}
-</script>
+  </script>
 </body>
 </html>
