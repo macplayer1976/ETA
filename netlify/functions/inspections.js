@@ -1,7 +1,7 @@
 // netlify/functions/inspections.js
 // 多 JSONBIN 分流：量測資料使用 JSONBIN_BIN_ID；預設版型使用 1~3 個 JSONBIN_TEMPLATE_BIN_ID(_2/_3)
 // 帳號與驗證機制維持不變。
-// GET ?templates=1 會彙整三個模板 BIN 的清單；POST ?template=1 會自動選擇容量較小或第一個可用的模板 BIN 儲存。
+// GET ?templates=1 會彙整三個模板 BIN 的清單；POST ?template=1 會自動挑選容量較小或第一個可用的模板 BIN 儲存。
 
 exports.handler = async (event) => {
   const ENV = process.env || {};
@@ -323,31 +323,68 @@ function sanitizeRecord(raw, user){
     overall: raw.overall || '',
   };
 }
-function sanitizeTemplate(raw, user){
+
+/* ======= 驗證模板資料（相容前端 {key, part, rows} 結構） ======= */
+function sanitizeTemplate(tpl, user){
   const now = new Date().toISOString();
-  const id = raw.id && String(raw.id).trim() ? String(raw.id).trim() : `tpl_${Date.now()}`;
-  // 五鍵：drawingNo / material / spec / category / process
-  const key = {
-    drawingNo: String(raw.drawingNo || '').trim(),
-    material:  String(raw.material  || '').trim(),
-    spec:      String(raw.spec      || '').trim(),
-    category:  String(raw.category  || '').trim(),
-    process:   String(raw.process   || '').trim(),
+  const id = tpl.id && String(tpl.id).trim() ? String(tpl.id).trim() : `tpl_${Date.now()}`;
+  const key = tpl.key || {};
+  const part = tpl.part || {};
+  const rows = Array.isArray(tpl.rows) ? tpl.rows : [];
+
+  // 接受任一關鍵鍵存在（與前端一致）：
+  const hasAnyKey = ['supplier','partNo','drawingNo','material','spec','category','process']
+    .some(k => String(key[k]||'').trim() !== '' || String(part[k]||'').trim() !== '');
+  if (!hasAnyKey) return { ok:false, error:'Missing key fields' };
+
+  const cleanRows = rows
+    .filter(r => r && (r.appearance || r.code || r.item || r.nominal || r.tolMinus || r.tolPlus))
+    .map(r => ({
+      appearance: !!r.appearance,
+      code: String(r.code||'').trim(),
+      item: String(r.item||'').trim(),
+      nominal: String(r.nominal||'').trim(),
+      tolMinus: String(r.tolMinus||'').trim(),
+      tolPlus: String(r.tolPlus||'').trim(),
+    }));
+
+  const rec = {
+    id, type:'template', createdAt: now, updatedAt: now,
+    owner: user || '',
+    key: {
+      supplier: String(key.supplier||part.supplier||'').trim(),
+      partNo:   String(key.partNo  ||part.partNo  ||'').trim(),
+      drawingNo:String(key.drawingNo||part.drawingNo||'').trim(),
+      material: String(key.material||part.material||'').trim(),
+      spec:     String(key.spec    ||part.spec    ||'').trim(),
+      category: String(key.category||part.category||'').trim(),
+      process:  String(key.process ||part.process ||'').trim(),
+    },
+    part: {
+      partNo:   String(part.partNo  ||key.partNo  ||'').trim(),
+      drawingNo:String(part.drawingNo||key.drawingNo||'').trim(),
+      material: String(part.material||key.material||'').trim(),
+      spec:     String(part.spec    ||key.spec    ||'').trim(),
+      category: String(part.category||key.category||'').trim(),
+      process:  String(part.process ||key.process ||'').trim(),
+    },
+    rows: cleanRows
   };
-  if (!(key.drawingNo && key.material && key.spec && key.category && key.process)) {
-    return { ok:false, error:'Missing 5-key fields (drawingNo/material/spec/category/process)' };
+  return { ok:true, data: rec };
+}
+
+/* ======= 儲存/刪除（重試） ======= */
+async function deleteWithRetry(binId, apiKey, id, maxTry){
+  let tries=0, lastStatus=0, lastText='';
+  while (tries < (maxTry||3)){
+    tries++;
+    const g = await jsonbinGet(binId, apiKey);
+    if (!g.ok){ lastStatus=g.status; lastText=g.text; continue; }
+    const list = listFromJson(g.json).filter(x => !(x && String(x.id||'')===String(id)));
+    const p = await jsonbinPut(binId, apiKey, list);
+    if (p.ok) return { ok:true, deleted:true };
+    lastStatus = p.status; lastText = p.text;
+    await new Promise(r => setTimeout(r, 250*tries));
   }
-  return {
-    ok:true,
-    data: {
-      id,
-      type:'template',
-      timestamp: raw.timestamp || now,
-      creator: user || '',
-      key,
-      // 存整張表格（含外觀＋尺寸）
-      table: Array.isArray(raw.table) ? raw.table : [],
-      meta: raw.meta || {}
-    }
-  };
+  return { ok:false, lastStatus, lastText };
 }
